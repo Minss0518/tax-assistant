@@ -36,7 +36,7 @@ app.include_router(chat.router)
 app.include_router(ocr.router)
 
 # 프론트엔드 정적 파일 서빙
-frontend_dist = os.path.join(os.path.dirname(__file__), "../frontend/dist")
+frontend_dist = os.path.join(os.path.dirname(__file__), "../../frontend/dist")
 print(f"=== __file__: {__file__}")
 print(f"=== frontend_dist: {frontend_dist}")
 print(f"=== exists: {os.path.exists(frontend_dist)}")

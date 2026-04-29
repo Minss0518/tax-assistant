@@ -23,7 +23,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
-        "https://tax-assistant-production-1269.up.railway.app",
+        "https://tax-assistant-production-ef21.up.railway.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],

@@ -6,6 +6,23 @@ import ReactMarkdown from 'react-markdown';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
+// 로딩 애니메이션 컴포넌트
+function TypingIndicator() {
+    return (
+        <div className="flex justify-start">
+            <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs mr-2 flex-shrink-0 mt-1">AI</div>
+            <div className="bg-white border border-gray-100 shadow-sm px-4 py-3 rounded-2xl rounded-bl-sm">
+                <div className="flex items-center gap-1">
+                    <span className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                    <span className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                    <span className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                    <span className="text-xs text-gray-400 ml-1">답변 생성 중...</span>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function ChatPage() {
     const navigate = useNavigate();
     const { token } = useAuthStore();
@@ -32,6 +49,7 @@ export default function ChatPage() {
         setInput('');
         setLoading(true);
 
+        // 빈 placeholder 추가 (스트리밍 시작 전 로딩 표시용)
         setMessages((prev) => [...prev, { role: 'assistant', content: '' }]);
 
         try {
@@ -58,17 +76,21 @@ export default function ChatPage() {
 
                 for (const line of lines) {
                     if (!line.startsWith('data: ')) continue;
-                    const json = JSON.parse(line.slice(6));
-                    if (json.done) break;
-                    if (json.token) {
-                        setMessages((prev) => {
-                            const updated = [...prev];
-                            updated[updated.length - 1] = {
-                                role: 'assistant',
-                                content: updated[updated.length - 1].content + json.token,
-                            };
-                            return updated;
-                        });
+                    try {
+                        const json = JSON.parse(line.slice(6));
+                        if (json.done) break;
+                        if (json.token) {
+                            setMessages((prev) => {
+                                const updated = [...prev];
+                                updated[updated.length - 1] = {
+                                    role: 'assistant',
+                                    content: updated[updated.length - 1].content + json.token,
+                                };
+                                return updated;
+                            });
+                        }
+                    } catch (e) {
+                        // JSON 파싱 실패 무시
                     }
                 }
             }
@@ -102,6 +124,9 @@ export default function ChatPage() {
         '종합소득세 신고 기간이 언제인가요?',
         '프리랜서 경비 처리 방법 알려주세요',
     ];
+
+    // 마지막 메시지가 빈 assistant 메시지면 로딩 중
+    const isWaitingResponse = loading && messages[messages.length - 1]?.role === 'assistant' && messages[messages.length - 1]?.content === '';
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -142,34 +167,40 @@ export default function ChatPage() {
                         </div>
                     )}
 
-                    {messages.map((msg, i) => (
-                        <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            {msg.role === 'assistant' && (
-                                <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs mr-2 flex-shrink-0 mt-1">AI</div>
-                            )}
-                            <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl text-sm leading-relaxed ${
-                                msg.role === 'user'
-                                    ? 'bg-blue-600 text-white rounded-br-sm'
-                                    : 'bg-white text-gray-700 shadow-sm border border-gray-100 rounded-bl-sm'
-                            }`}>
-                                {msg.role === 'assistant' ? (
-                                    <ReactMarkdown
-                                        components={{
-                                            p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                                            ol: ({ children }) => <ol className="list-decimal pl-4 space-y-1">{children}</ol>,
-                                            ul: ({ children }) => <ul className="list-disc pl-4 space-y-1">{children}</ul>,
-                                            li: ({ children }) => <li className="leading-relaxed">{children}</li>,
-                                            strong: ({ children }) => <strong className="font-semibold text-gray-900">{children}</strong>,
-                                        }}
-                                    >
-                                        {msg.content || '▌'}
-                                    </ReactMarkdown>
-                                ) : (
-                                    msg.content
+                    {messages.map((msg, i) => {
+                        // 빈 placeholder는 로딩 인디케이터로 대체
+                        if (msg.role === 'assistant' && msg.content === '' && i === messages.length - 1 && loading) {
+                            return <TypingIndicator key={i} />;
+                        }
+                        return (
+                            <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                {msg.role === 'assistant' && (
+                                    <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs mr-2 flex-shrink-0 mt-1">AI</div>
                                 )}
+                                <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl text-sm leading-relaxed ${
+                                    msg.role === 'user'
+                                        ? 'bg-blue-600 text-white rounded-br-sm'
+                                        : 'bg-white text-gray-700 shadow-sm border border-gray-100 rounded-bl-sm'
+                                }`}>
+                                    {msg.role === 'assistant' ? (
+                                        <ReactMarkdown
+                                            components={{
+                                                p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                                                ol: ({ children }) => <ol className="list-decimal pl-4 space-y-1">{children}</ol>,
+                                                ul: ({ children }) => <ul className="list-disc pl-4 space-y-1">{children}</ul>,
+                                                li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+                                                strong: ({ children }) => <strong className="font-semibold text-gray-900">{children}</strong>,
+                                            }}
+                                        >
+                                            {msg.content}
+                                        </ReactMarkdown>
+                                    ) : (
+                                        msg.content
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
 
                     <div ref={bottomRef} />
                 </div>

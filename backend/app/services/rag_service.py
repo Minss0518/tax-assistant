@@ -98,5 +98,6 @@ async def stream_tax_knowledge(question: str) -> AsyncGenerator[str, None]:
         streaming=True,
     )
     streaming_response = query_engine.query(rewritten)
+    # 동기 generator를 async generator로 변환
     for token in streaming_response.response_gen:
         yield token

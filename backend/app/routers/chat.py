@@ -9,6 +9,7 @@ from app.core.dependencies import get_current_user
 from app.services.rag_service import query_tax_knowledge, stream_tax_knowledge
 import uuid
 import json
+import asyncio
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -53,7 +54,6 @@ async def chat_stream(
 ):
     user_id = uuid.UUID(current_user["sub"])
 
-    # 유저 메시지 저장
     user_msg = ChatHistory(
         id=uuid.uuid4(),
         user_id=user_id,
@@ -66,31 +66,34 @@ async def chat_stream(
     full_answer = []
 
     async def event_generator():
-        async for token in stream_tax_knowledge(request.message):
-            full_answer.append(token)
-            # SSE 형식: data: {...}\n\n
-            yield f"data: {json.dumps({'token': token})}\n\n"
+        try:
+            async for token in stream_tax_knowledge(request.message):
+                full_answer.append(token)
+                yield f"data: {json.dumps({'token': token}, ensure_ascii=False)}\n\n"
+                await asyncio.sleep(0)  # 버퍼 즉시 플러시
 
-        # 스트리밍 완료 후 AI 답변 DB 저장
-        answer = "".join(full_answer)
-        ai_msg = ChatHistory(
-            id=uuid.uuid4(),
-            user_id=user_id,
-            role="assistant",
-            content=answer,
-        )
-        db.add(ai_msg)
-        await db.commit()
+            answer = "".join(full_answer)
+            ai_msg = ChatHistory(
+                id=uuid.uuid4(),
+                user_id=user_id,
+                role="assistant",
+                content=answer,
+            )
+            db.add(ai_msg)
+            await db.commit()
 
-        # 완료 신호
-        yield f"data: {json.dumps({'done': True})}\n\n"
+            yield f"data: {json.dumps({'done': True})}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
 
     return StreamingResponse(
         event_generator(),
         media_type="text/event-stream",
         headers={
-            "Cache-Control": "no-cache",
+            "Cache-Control": "no-cache, no-transform",
             "X-Accel-Buffering": "no",
+            "Connection": "keep-alive",
+            "Transfer-Encoding": "chunked",
         }
     )
 

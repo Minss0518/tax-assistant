@@ -32,7 +32,6 @@ export default function ChatPage() {
         setInput('');
         setLoading(true);
 
-        // AI 메시지 placeholder 추가 (스트리밍 중 실시간 업데이트)
         setMessages((prev) => [...prev, { role: 'assistant', content: '' }]);
 
         try {
@@ -55,16 +54,13 @@ export default function ChatPage() {
 
                 buffer += decoder.decode(value, { stream: true });
                 const lines = buffer.split('\n\n');
-                buffer = lines.pop(); // 마지막 미완성 청크는 버퍼에 보관
+                buffer = lines.pop();
 
                 for (const line of lines) {
                     if (!line.startsWith('data: ')) continue;
                     const json = JSON.parse(line.slice(6));
-
                     if (json.done) break;
-
                     if (json.token) {
-                        // 마지막 assistant 메시지에 토큰 누적
                         setMessages((prev) => {
                             const updated = [...prev];
                             updated[updated.length - 1] = {
@@ -175,19 +171,6 @@ export default function ChatPage() {
                         </div>
                     ))}
 
-                    {/* 스트리밍 중엔 bounce 로딩 숨김 (placeholder가 대신함) */}
-                    {loading && messages[messages.length - 1]?.content === '' && (
-                        <div className="flex justify-start">
-                            <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs mr-2 flex-shrink-0">AI</div>
-                            <div className="bg-white border border-gray-100 shadow-sm px-4 py-3 rounded-2xl rounded-bl-sm">
-                                <div className="flex gap-1">
-                                    <span className="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                                    <span className="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                                    <span className="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
                     <div ref={bottomRef} />
                 </div>
 

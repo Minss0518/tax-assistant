@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, Integer, Date, DateTime, func
+from sqlalchemy import Column, String, Integer, Date, DateTime, Boolean, func
 from sqlalchemy.dialects.postgresql import UUID
 from app.database import Base
 
@@ -19,6 +19,9 @@ class Transaction(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), nullable=False)
     category_id = Column(UUID(as_uuid=True), nullable=True)
+    category_name = Column(String, nullable=True)       # 카테고리명 (예: 식비, 교통비)
+    category_emoji = Column(String, nullable=True)      # 이모지 (예: 🍽️)
+    is_deductible = Column(Boolean, nullable=True)      # 경비처리 가능 여부
     type = Column(String, nullable=False)
     amount = Column(Integer, nullable=False)
     memo = Column(String, nullable=True)

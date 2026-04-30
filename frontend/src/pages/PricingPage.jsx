@@ -50,7 +50,8 @@ export default function PricingPage() {
     const handlePayment = async () => {
         try {
             const tossPayments = await loadTossPayments("test_ck_ex6BJGQOVDOkO6Z4NPPn3W4w2zNb");
-            await tossPayments.requestPayment({
+            const payment = tossPayments.payment({ customerKey: "customer-" + Date.now() });
+            await payment.requestPayment({
                 method: "CARD",
                 amount: { currency: "KRW", value: 9900 },
                 orderId: uuidv4(),
@@ -62,7 +63,7 @@ export default function PricingPage() {
             console.error("결제 오류:", e);
         }
     };
-
+    
     return (
         <div className="min-h-screen bg-gray-50">
             <div className="max-w-2xl mx-auto px-4 py-8">

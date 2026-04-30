@@ -6,13 +6,13 @@ from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.llms.openai import OpenAI
 import chromadb
 from app.config import settings as app_settings
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Tuple
 from openai import AsyncOpenAI
+import re
 
 CHROMA_PATH = "./chroma_db"
 RAG_DATA_PATH = "./rag_data"
 
-# 전문 세무사 시스템 프롬프트
 TAX_SYSTEM_PROMPT = PromptTemplate(
     """당신은 대한민국 10년 경력의 전문 세무사입니다. 
 프리랜서와 크리에이터를 전문으로 상담하며, 소득세법·부가가치세법·국세기본법에 정통합니다.
@@ -44,7 +44,6 @@ TAX_SYSTEM_PROMPT = PromptTemplate(
 """
 )
 
-# 줄임말/동의어 사전
 TAX_SYNONYMS = {
     "종소세": "종합소득세",
     "부가세": "부가가치세",
@@ -56,8 +55,6 @@ TAX_SYNONYMS = {
     "국민연금": "국민연금 보험료",
     "건보": "건강보험료",
     "실업급여": "고용보험 실업급여",
-    "종소세": "종합소득세",
-    "취득세": "취득세",
     "양도세": "양도소득세",
     "증여세": "증여세",
     "상속세": "상속세",
@@ -91,6 +88,30 @@ async def rewrite_question(question: str) -> str:
         temperature=0.1,
     )
     return response.choices[0].message.content.strip()
+
+def extract_sources(nodes) -> str:
+    """참조된 노드에서 법령 출처 추출"""
+    sources = set()
+    law_patterns = [
+        r'소득세법\s*제\d+조',
+        r'부가가치세법\s*제\d+조',
+        r'국세기본법\s*제\d+조',
+        r'법인세법\s*제\d+조',
+        r'근로기준법\s*제\d+조',
+        r'고용보험법\s*제\d+조',
+        r'국민연금법\s*제\d+조',
+    ]
+    
+    for node in nodes:
+        text = node.node.text if hasattr(node, 'node') else str(node)
+        for pattern in law_patterns:
+            matches = re.findall(pattern, text)
+            for m in matches:
+                sources.add(m.strip())
+    
+    if sources:
+        return "\n\n📚 **참고 법령:** " + ", ".join(sorted(sources))
+    return ""
 
 def init_llama_settings():
     Settings.llm = OpenAI(
@@ -132,7 +153,15 @@ async def query_tax_knowledge(question: str) -> str:
         text_qa_template=TAX_SYSTEM_PROMPT,
     )
     response = query_engine.query(rewritten)
-    return str(response)
+    answer = str(response)
+    
+    # 출처 추출 후 답변에 추가
+    if hasattr(response, 'source_nodes'):
+        sources = extract_sources(response.source_nodes)
+        if sources:
+            answer += sources
+    
+    return answer
 
 async def stream_tax_knowledge(question: str) -> AsyncGenerator[str, None]:
     rewritten = await rewrite_question(question)
@@ -143,5 +172,12 @@ async def stream_tax_knowledge(question: str) -> AsyncGenerator[str, None]:
         text_qa_template=TAX_SYSTEM_PROMPT,
     )
     streaming_response = query_engine.query(rewritten)
+    
     for token in streaming_response.response_gen:
         yield token
+    
+    # 스트리밍 완료 후 출처 추가
+    if hasattr(streaming_response, 'source_nodes'):
+        sources = extract_sources(streaming_response.source_nodes)
+        if sources:
+            yield sources

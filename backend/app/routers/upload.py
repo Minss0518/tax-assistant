@@ -6,6 +6,7 @@ from app.core.dependencies import get_current_user
 from app.services.category_service import classify_transaction
 import uuid
 import io
+import pandas as pd
 from datetime import date, datetime
 
 router = APIRouter(prefix="/upload", tags=["upload"])

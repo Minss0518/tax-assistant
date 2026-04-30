@@ -6,9 +6,8 @@ from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.llms.openai import OpenAI
 import chromadb
 from app.config import settings as app_settings
-from typing import AsyncGenerator, Tuple
+from typing import AsyncGenerator
 from openai import AsyncOpenAI
-import re
 
 CHROMA_PATH = "./chroma_db"
 RAG_DATA_PATH = "./rag_data"
@@ -38,6 +37,11 @@ TAX_SYSTEM_PROMPT = PromptTemplate(
 
 **주의사항**
 놓치기 쉬운 주의사항이나 예외 케이스가 있으면 알려주세요.
+
+**참고 법령**
+답변에서 근거로 사용한 법령을 아래 형식으로 명시해주세요:
+📚 참고 법령: [법령명 제○조, 법령명 제○조, ...]
+관련 법령이 명확하지 않으면 이 항목은 생략하세요.
 
 ※ 참고 문서에 없는 내용은 일반적인 세무 지식을 바탕으로 답변하되, 반드시 전문가 상담을 권유해주세요.
 ※ 금액, 기한, 세율 등 구체적인 수치는 정확하게 명시해주세요.
@@ -89,30 +93,6 @@ async def rewrite_question(question: str) -> str:
     )
     return response.choices[0].message.content.strip()
 
-def extract_sources(nodes) -> str:
-    """참조된 노드에서 법령 출처 추출"""
-    sources = set()
-    law_patterns = [
-        r'소득세법\s*제\d+조',
-        r'부가가치세법\s*제\d+조',
-        r'국세기본법\s*제\d+조',
-        r'법인세법\s*제\d+조',
-        r'근로기준법\s*제\d+조',
-        r'고용보험법\s*제\d+조',
-        r'국민연금법\s*제\d+조',
-    ]
-    
-    for node in nodes:
-        text = node.node.text if hasattr(node, 'node') else str(node)
-        for pattern in law_patterns:
-            matches = re.findall(pattern, text)
-            for m in matches:
-                sources.add(m.strip())
-    
-    if sources:
-        return "\n\n📚 **참고 법령:** " + ", ".join(sorted(sources))
-    return ""
-
 def init_llama_settings():
     Settings.llm = OpenAI(
         model="gpt-4o-mini",
@@ -153,15 +133,7 @@ async def query_tax_knowledge(question: str) -> str:
         text_qa_template=TAX_SYSTEM_PROMPT,
     )
     response = query_engine.query(rewritten)
-    answer = str(response)
-    
-    # 출처 추출 후 답변에 추가
-    if hasattr(response, 'source_nodes'):
-        sources = extract_sources(response.source_nodes)
-        if sources:
-            answer += sources
-    
-    return answer
+    return str(response)
 
 async def stream_tax_knowledge(question: str) -> AsyncGenerator[str, None]:
     rewritten = await rewrite_question(question)
@@ -172,12 +144,5 @@ async def stream_tax_knowledge(question: str) -> AsyncGenerator[str, None]:
         text_qa_template=TAX_SYSTEM_PROMPT,
     )
     streaming_response = query_engine.query(rewritten)
-    
     for token in streaming_response.response_gen:
         yield token
-    
-    # 스트리밍 완료 후 출처 추가
-    if hasattr(streaming_response, 'source_nodes'):
-        sources = extract_sources(streaming_response.source_nodes)
-        if sources:
-            yield sources

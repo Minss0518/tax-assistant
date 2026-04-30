@@ -6,7 +6,7 @@ import app.models.user
 import app.models.transaction
 import app.models.chat
 import app.models.subscription
-from app.routers import auth, transactions, chat, ocr, users, upload
+from app.routers import auth, transactions, chat, ocr, users, upload, payments
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import os
@@ -36,6 +36,7 @@ app.include_router(chat.router)
 app.include_router(ocr.router)
 app.include_router(users.router)
 app.include_router(upload.router)
+app.include_router(payments.router)
 
 frontend_dist = os.path.join(os.path.dirname(__file__), "../../frontend/dist")
 if os.path.exists(frontend_dist):

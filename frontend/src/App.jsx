@@ -9,6 +9,8 @@ import LandingPage from './pages/LandingPage';
 import PricingPage from './pages/PricingPage';
 import MyInfoPage from './pages/MyInfoPage';
 import UploadPage from './pages/UploadPage';
+import PaymentSuccessPage from "./pages/PaymentSuccessPage";
+import PaymentFailPage from "./pages/PaymentFailPage";
 
 
 export default function App() {
@@ -25,6 +27,8 @@ export default function App() {
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/my-info" element={<MyInfoPage />} />
         <Route path="/upload" element={<UploadPage />} />
+        <Route path="/payment/success" element={<PaymentSuccessPage />} />
+        <Route path="/payment/fail" element={<PaymentFailPage />} />
       </Routes>
     </BrowserRouter>
   );

@@ -20,7 +20,6 @@ def parse_date(value) -> date:
     if isinstance(value, datetime):
         return value.date()
     s = str(value).strip()
-    # xlsx 날짜 숫자 처리 (엑셀 시리얼 번호)
     try:
         num = float(s)
         if num > 1000:
@@ -53,15 +52,37 @@ def find_col(headers, candidates):
                 return h
     return None
 
+def get_cell_value(c, shared_strings, ns):
+    """셀 값 추출 - sharedStrings, 인라인 문자열, 숫자 모두 처리"""
+    t = c.get('t', '')
+    v_el = c.find('ns:v', ns)
+    
+    if t == 's':
+        # 공유 문자열
+        if v_el is not None and v_el.text is not None:
+            return shared_strings[int(v_el.text)]
+        return ''
+    elif t == 'inlineStr':
+        # 인라인 문자열
+        is_el = c.find('.//ns:t', ns)
+        return is_el.text if is_el is not None else ''
+    else:
+        # 숫자, 날짜 등
+        if v_el is not None and v_el.text is not None:
+            return v_el.text
+        # 값 없으면 인라인 텍스트 시도
+        is_el = c.find('.//ns:t', ns)
+        return is_el.text if is_el is not None else ''
+
 def parse_xlsx(contents: bytes) -> list:
-    """openpyxl 없이 xlsx 파싱"""
     rows = []
+    ns = {'ns': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
+    
     with zipfile.ZipFile(io.BytesIO(contents)) as z:
         # 공유 문자열 로드
         shared_strings = []
         if 'xl/sharedStrings.xml' in z.namelist():
             tree = ET.parse(z.open('xl/sharedStrings.xml'))
-            ns = {'ns': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
             for si in tree.findall('.//ns:si', ns):
                 texts = si.findall('.//ns:t', ns)
                 shared_strings.append(''.join(t.text or '' for t in texts))
@@ -69,31 +90,25 @@ def parse_xlsx(contents: bytes) -> list:
         # 시트 파싱
         sheet_name = 'xl/worksheets/sheet1.xml'
         tree = ET.parse(z.open(sheet_name))
-        ns = {'ns': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
 
         sheet_rows = []
         for row in tree.findall('.//ns:row', ns):
             cells = []
             for c in row.findall('ns:c', ns):
-                t = c.get('t', '')
-                v_el = c.find('ns:v', ns)
-                if v_el is None or v_el.text is None:
-                    cells.append('')
-                elif t == 's':
-                    cells.append(shared_strings[int(v_el.text)])
-                else:
-                    cells.append(v_el.text)
+                cells.append(get_cell_value(c, shared_strings, ns))
             sheet_rows.append(cells)
 
         if not sheet_rows:
             return []
 
-        headers = sheet_rows[0]
+        # 최대 컬럼 수 맞추기
+        max_cols = max(len(r) for r in sheet_rows)
+        headers = sheet_rows[0] + [''] * (max_cols - len(sheet_rows[0]))
+        
         for row in sheet_rows[1:]:
+            row = row + [''] * (max_cols - len(row))
             if any(v for v in row):
-                row_dict = {}
-                for i, h in enumerate(headers):
-                    row_dict[h] = row[i] if i < len(row) else ''
+                row_dict = {headers[i]: row[i] for i in range(max_cols)}
                 rows.append(row_dict)
 
     return rows

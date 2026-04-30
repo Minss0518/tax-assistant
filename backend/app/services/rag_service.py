@@ -1,4 +1,5 @@
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, StorageContext, Settings
+from llama_index.core.prompts import PromptTemplate
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.embeddings.openai import OpenAIEmbedding
@@ -10,6 +11,38 @@ from openai import AsyncOpenAI
 
 CHROMA_PATH = "./chroma_db"
 RAG_DATA_PATH = "./rag_data"
+
+# 전문 세무사 시스템 프롬프트
+TAX_SYSTEM_PROMPT = PromptTemplate(
+    """당신은 대한민국 10년 경력의 전문 세무사입니다. 
+프리랜서와 크리에이터를 전문으로 상담하며, 소득세법·부가가치세법·국세기본법에 정통합니다.
+
+아래 참고 문서를 바탕으로 질문에 답변해주세요.
+
+[참고 문서]
+{context_str}
+
+[질문]
+{query_str}
+
+답변 형식을 반드시 지켜주세요:
+
+**핵심 답변**
+질문에 대한 핵심 내용을 2-3문장으로 명확하게 설명해주세요.
+
+**상세 설명**
+구체적인 내용, 조건, 기준 금액 등을 설명해주세요.
+
+**실무 적용 팁**
+프리랜서/크리에이터가 실제로 적용할 수 있는 실용적인 조언을 해주세요.
+
+**주의사항**
+놓치기 쉬운 주의사항이나 예외 케이스가 있으면 알려주세요.
+
+※ 참고 문서에 없는 내용은 일반적인 세무 지식을 바탕으로 답변하되, 반드시 전문가 상담을 권유해주세요.
+※ 금액, 기한, 세율 등 구체적인 수치는 정확하게 명시해주세요.
+"""
+)
 
 # 줄임말/동의어 사전
 TAX_SYNONYMS = {
@@ -23,6 +56,12 @@ TAX_SYNONYMS = {
     "국민연금": "국민연금 보험료",
     "건보": "건강보험료",
     "실업급여": "고용보험 실업급여",
+    "종소세": "종합소득세",
+    "취득세": "취득세",
+    "양도세": "양도소득세",
+    "증여세": "증여세",
+    "상속세": "상속세",
+    "근소세": "근로소득세",
 }
 
 def normalize_question(question: str) -> str:
@@ -56,7 +95,9 @@ async def rewrite_question(question: str) -> str:
 def init_llama_settings():
     Settings.llm = OpenAI(
         model="gpt-4o-mini",
-        api_key=app_settings.OPENAI_API_KEY
+        api_key=app_settings.OPENAI_API_KEY,
+        temperature=0.1,
+        max_tokens=1500,
     )
     Settings.embed_model = OpenAIEmbedding(
         model="text-embedding-3-small",
@@ -86,7 +127,10 @@ def get_or_create_index():
 async def query_tax_knowledge(question: str) -> str:
     rewritten = await rewrite_question(question)
     index = get_or_create_index()
-    query_engine = index.as_query_engine(similarity_top_k=3)
+    query_engine = index.as_query_engine(
+        similarity_top_k=5,
+        text_qa_template=TAX_SYSTEM_PROMPT,
+    )
     response = query_engine.query(rewritten)
     return str(response)
 
@@ -94,10 +138,10 @@ async def stream_tax_knowledge(question: str) -> AsyncGenerator[str, None]:
     rewritten = await rewrite_question(question)
     index = get_or_create_index()
     query_engine = index.as_query_engine(
-        similarity_top_k=3,
+        similarity_top_k=5,
         streaming=True,
+        text_qa_template=TAX_SYSTEM_PROMPT,
     )
     streaming_response = query_engine.query(rewritten)
-    # 동기 generator를 async generator로 변환
     for token in streaming_response.response_gen:
         yield token

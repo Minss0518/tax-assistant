@@ -4,6 +4,13 @@ import { getTransactions, createTransaction, deleteTransaction } from '../api/tr
 import { uploadReceipt } from '../api/ocr';
 import useAuthStore from '../store/authStore';
 
+const BackButton = ({ onClick }) => (
+  <button onClick={onClick}
+    className="flex items-center gap-1.5 bg-gray-600 hover:bg-gray-700 active:scale-95 text-white text-sm font-semibold px-4 py-2 rounded-full shadow-md transition">
+    ← 뒤로
+  </button>
+);
+
 export default function TransactionsPage() {
   const navigate = useNavigate();
   const { token } = useAuthStore();
@@ -11,10 +18,9 @@ export default function TransactionsPage() {
   const [form, setForm] = useState({ type: 'income', amount: '', memo: '', transaction_date: '' });
   const [showForm, setShowForm] = useState(false);
 
-  // OCR 관련 상태
   const [ocrLoading, setOcrLoading] = useState(false);
-  const [ocrPreview, setOcrPreview] = useState(null); // 이미지 미리보기 URL
-  const [ocrResult, setOcrResult] = useState(null);   // 추출 결과
+  const [ocrPreview, setOcrPreview] = useState(null);
+  const [ocrResult, setOcrResult] = useState(null);
   const [ocrError, setOcrError] = useState('');
   const fileInputRef = useRef(null);
 
@@ -43,23 +49,17 @@ export default function TransactionsPage() {
     fetchTransactions();
   };
 
-  // 영수증 이미지 선택 → 미리보기 + OCR 자동 호출
   const handleReceiptChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
-    // 미리보기
     setOcrPreview(URL.createObjectURL(file));
     setOcrError('');
     setOcrResult(null);
     setOcrLoading(true);
-
     try {
       const res = await uploadReceipt(file);
       const extracted = res.data.extracted;
-
       setOcrResult(extracted);
-      // 폼에 자동 입력 (지출로 고정, 백엔드가 항상 expense 반환)
       setForm({
         type: extracted.type || 'expense',
         amount: String(extracted.amount || ''),
@@ -84,19 +84,15 @@ export default function TransactionsPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-2xl mx-auto px-4 py-8">
 
-        {/* 헤더 */}
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/dashboard')}
-              className="text-gray-400 hover:text-gray-600 transition">← 뒤로</button>
+            <BackButton onClick={() => navigate('/dashboard')} />
             <h1 className="text-xl font-bold text-gray-800">📊 거래 내역</h1>
           </div>
           <div className="flex gap-2">
-            {/* 영수증 OCR 버튼 */}
             <button
               onClick={() => { setShowForm(true); fileInputRef.current?.click(); }}
-              className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-1"
-            >
+              className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-1">
               📷 영수증
             </button>
             <button onClick={() => { setShowForm(!showForm); resetOcr(); }}
@@ -106,21 +102,11 @@ export default function TransactionsPage() {
           </div>
         </div>
 
-        {/* 숨겨진 파일 입력 */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleReceiptChange}
-        />
+        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleReceiptChange} />
 
-        {/* 거래 추가 폼 */}
         {showForm && (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-6">
             <h2 className="font-bold text-gray-700 mb-4">새 거래 추가</h2>
-
-            {/* OCR 미리보기 영역 */}
             {ocrPreview && (
               <div className="mb-4 relative">
                 <div className="flex items-center justify-between mb-2">
@@ -128,11 +114,8 @@ export default function TransactionsPage() {
                   <button onClick={resetOcr} className="text-xs text-gray-400 hover:text-gray-600">✕ 초기화</button>
                 </div>
                 <div className="flex gap-3 items-start">
-                  <img
-                    src={ocrPreview}
-                    alt="영수증 미리보기"
-                    className="w-20 h-20 object-cover rounded-xl border border-gray-200 flex-shrink-0"
-                  />
+                  <img src={ocrPreview} alt="영수증 미리보기"
+                    className="w-20 h-20 object-cover rounded-xl border border-gray-200 flex-shrink-0" />
                   <div className="flex-1">
                     {ocrLoading && (
                       <div className="flex items-center gap-2 text-sm text-purple-500 mt-2">
@@ -143,9 +126,7 @@ export default function TransactionsPage() {
                         AI가 영수증을 분석 중이에요...
                       </div>
                     )}
-                    {ocrError && (
-                      <p className="text-xs text-red-400 mt-2">{ocrError}</p>
-                    )}
+                    {ocrError && <p className="text-xs text-red-400 mt-2">{ocrError}</p>}
                     {ocrResult && !ocrLoading && (
                       <div className="text-xs text-gray-500 mt-1 space-y-0.5">
                         <p>✅ 인식 완료! 아래 내용을 확인·수정 후 저장하세요.</p>
@@ -158,8 +139,6 @@ export default function TransactionsPage() {
                 </div>
               </div>
             )}
-
-            {/* 수입/지출 선택 */}
             <div className="flex gap-2 mb-3">
               <button onClick={() => setForm({ ...form, type: 'income' })}
                 className={`flex-1 py-2 rounded-xl text-sm font-semibold transition ${form.type === 'income' ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-500'}`}>
@@ -170,7 +149,6 @@ export default function TransactionsPage() {
                 지출
               </button>
             </div>
-
             <input type="number" placeholder="금액" value={form.amount}
               onChange={(e) => setForm({ ...form, amount: e.target.value })}
               className="w-full border border-gray-200 rounded-xl px-4 py-2 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200" />
@@ -187,7 +165,6 @@ export default function TransactionsPage() {
           </div>
         )}
 
-        {/* 거래 목록 */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
           {transactions.length === 0 ? (
             <p className="text-gray-400 text-sm text-center py-8">거래 내역이 없어요</p>

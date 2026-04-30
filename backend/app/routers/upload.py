@@ -8,6 +8,8 @@ from app.services.category_service import classify_transaction
 import uuid
 import io
 import csv
+import zipfile
+import xml.etree.ElementTree as ET
 from datetime import date, datetime
 
 router = APIRouter(prefix="/upload", tags=["upload"])
@@ -18,6 +20,15 @@ def parse_date(value) -> date:
     if isinstance(value, datetime):
         return value.date()
     s = str(value).strip()
+    # xlsx 날짜 숫자 처리 (엑셀 시리얼 번호)
+    try:
+        num = float(s)
+        if num > 1000:
+            from datetime import timedelta
+            base = datetime(1899, 12, 30)
+            return (base + timedelta(days=num)).date()
+    except ValueError:
+        pass
     for fmt in ["%Y-%m-%d", "%Y/%m/%d", "%m/%d/%Y", "%d/%m/%Y", "%Y.%m.%d"]:
         try:
             return datetime.strptime(s, fmt).date()
@@ -42,6 +53,51 @@ def find_col(headers, candidates):
                 return h
     return None
 
+def parse_xlsx(contents: bytes) -> list:
+    """openpyxl 없이 xlsx 파싱"""
+    rows = []
+    with zipfile.ZipFile(io.BytesIO(contents)) as z:
+        # 공유 문자열 로드
+        shared_strings = []
+        if 'xl/sharedStrings.xml' in z.namelist():
+            tree = ET.parse(z.open('xl/sharedStrings.xml'))
+            ns = {'ns': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
+            for si in tree.findall('.//ns:si', ns):
+                texts = si.findall('.//ns:t', ns)
+                shared_strings.append(''.join(t.text or '' for t in texts))
+
+        # 시트 파싱
+        sheet_name = 'xl/worksheets/sheet1.xml'
+        tree = ET.parse(z.open(sheet_name))
+        ns = {'ns': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
+
+        sheet_rows = []
+        for row in tree.findall('.//ns:row', ns):
+            cells = []
+            for c in row.findall('ns:c', ns):
+                t = c.get('t', '')
+                v_el = c.find('ns:v', ns)
+                if v_el is None or v_el.text is None:
+                    cells.append('')
+                elif t == 's':
+                    cells.append(shared_strings[int(v_el.text)])
+                else:
+                    cells.append(v_el.text)
+            sheet_rows.append(cells)
+
+        if not sheet_rows:
+            return []
+
+        headers = sheet_rows[0]
+        for row in sheet_rows[1:]:
+            if any(v for v in row):
+                row_dict = {}
+                for i, h in enumerate(headers):
+                    row_dict[h] = row[i] if i < len(row) else ''
+                rows.append(row_dict)
+
+    return rows
+
 @router.post("/transactions")
 async def upload_transactions(
     file: UploadFile = File(...),
@@ -57,19 +113,11 @@ async def upload_transactions(
 
     try:
         if filename.endswith('.csv'):
-            # CSV 파싱 (pandas 없이)
             text = contents.decode('utf-8-sig')
             reader = csv.DictReader(io.StringIO(text))
             rows = list(reader)
         else:
-            # xlsx는 openpyxl만 사용
-            import openpyxl
-            wb = openpyxl.load_workbook(io.BytesIO(contents))
-            ws = wb.active
-            headers = [str(cell.value).strip() for cell in ws[1]]
-            for row in ws.iter_rows(min_row=2, values_only=True):
-                if any(v is not None for v in row):
-                    rows.append(dict(zip(headers, row)))
+            rows = parse_xlsx(contents)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"파일 파싱 실패: {str(e)}")
 

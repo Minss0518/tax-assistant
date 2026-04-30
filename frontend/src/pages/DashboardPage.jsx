@@ -74,10 +74,16 @@ export default function DashboardPage() {
                         <h1 className="text-2xl font-bold text-gray-800">💼 AI 세무 비서</h1>
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                        <button onClick={() => { logout(); navigate('/login'); }}
-                            className="text-sm text-gray-400 hover:text-red-500 transition">
-                            로그아웃
-                        </button>
+                        <div className="flex gap-3">
+                            <button onClick={() => navigate('/my-info')}
+                                className="text-sm text-gray-500 hover:text-gray-700 transition">
+                                👤 내 정보
+                            </button>
+                            <button onClick={() => { logout(); navigate('/login'); }}
+                                className="text-sm text-gray-400 hover:text-red-500 transition">
+                                로그아웃
+                            </button>
+                        </div>
                         <button onClick={() => navigate('/pricing')}
                             className="text-xs bg-gradient-to-r from-blue-500 to-violet-500 text-white font-semibold px-3 py-1.5 rounded-full hover:opacity-90 transition shadow-sm">
                             ✨ Pro 업그레이드

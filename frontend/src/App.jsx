@@ -7,6 +7,7 @@ import ChatPage from './pages/ChatPage';
 import TaxCalculatorPage from './pages/TaxCalculatorPage';
 import LandingPage from './pages/LandingPage';
 import PricingPage from './pages/PricingPage';
+import MyInfoPage from './pages/MyInfoPage';
 
 
 export default function App() {
@@ -21,6 +22,7 @@ export default function App() {
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/tax-calculator" element={<TaxCalculatorPage />} />
         <Route path="/pricing" element={<PricingPage />} />
+        <Route path="/my-info" element={<MyInfoPage />} />
       </Routes>
     </BrowserRouter>
   );

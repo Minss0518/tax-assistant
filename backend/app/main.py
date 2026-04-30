@@ -9,6 +9,8 @@ import app.models.subscription
 from app.routers import auth, transactions, chat, ocr
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from app.routers import auth, transactions, chat, ocr, users
+app.include_router(users.router)
 import os
 
 @asynccontextmanager

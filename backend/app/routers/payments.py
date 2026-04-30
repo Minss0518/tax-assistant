@@ -1,12 +1,13 @@
 import httpx
 import base64
 import os
+import uuid
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from ..database import get_db
-from ..core.auth import get_current_user
+from ..core.dependencies import get_current_user
 from ..models.user import User
 from ..models.subscription import Subscription
 
@@ -26,13 +27,13 @@ def get_toss_auth_header():
 async def confirm_payment(
     payload: dict,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user)
 ):
     payment_key = payload.get("paymentKey")
     order_id = payload.get("orderId")
     amount = payload.get("amount")
+    user_id = uuid.UUID(current_user["sub"])
 
-    # 토스 서버에 최종 승인 요청
     async with httpx.AsyncClient() as client:
         res = await client.post(
             TOSS_CONFIRM_URL,
@@ -44,9 +45,8 @@ async def confirm_payment(
         detail = res.json().get("message", "결제 승인 실패")
         raise HTTPException(status_code=400, detail=detail)
 
-    # DB에 구독 저장
     subscription = Subscription(
-        user_id=current_user.id,
+        user_id=user_id,
         plan="pro",
         payment_key=payment_key,
         order_id=order_id,
@@ -57,8 +57,10 @@ async def confirm_payment(
     )
     db.add(subscription)
 
-    # 유저 플랜 업데이트
-    current_user.plan = "pro"
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if user:
+        user.plan = "pro"
     await db.commit()
 
     return {"success": True, "expires_at": str(subscription.expires_at)}
@@ -66,9 +68,13 @@ async def confirm_payment(
 
 @router.get("/status")
 async def get_payment_status(
-    current_user: User = Depends(get_current_user)
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
 ):
+    user_id = uuid.UUID(current_user["sub"])
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
     return {
-        "plan": current_user.plan,
-        "is_pro": current_user.plan == "pro"
+        "plan": user.plan if user else "free",
+        "is_pro": user.plan == "pro" if user else False
     }

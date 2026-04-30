@@ -5,7 +5,7 @@ from app.database import get_db
 from app.models.user import User, SocialAccount
 from app.models.transaction import Transaction
 from app.models.chat import ChatHistory
-from app.core.dependencies import get_current_user
+from ..core.dependencies import get_current_user
 import uuid
 
 router = APIRouter(prefix="/users", tags=["users"])

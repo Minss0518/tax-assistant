@@ -6,11 +6,9 @@ import app.models.user
 import app.models.transaction
 import app.models.chat
 import app.models.subscription
-from app.routers import auth, transactions, chat, ocr, users
+from app.routers import auth, transactions, chat, ocr, users, upload
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from app.routers import auth, transactions, chat, ocr, users, upload
-app.include_router(upload.router)
 import os
 
 @asynccontextmanager
@@ -37,8 +35,8 @@ app.include_router(transactions.router)
 app.include_router(chat.router)
 app.include_router(ocr.router)
 app.include_router(users.router)
+app.include_router(upload.router)
 
-# 프론트엔드 정적 파일 서빙
 frontend_dist = os.path.join(os.path.dirname(__file__), "../../frontend/dist")
 if os.path.exists(frontend_dist):
     app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dist, "assets")), name="assets")

@@ -22,7 +22,9 @@ export default function MyInfoPage() {
   const [info, setInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     api.get('/users/me')
@@ -41,6 +43,22 @@ export default function MyInfoPage() {
       alert('탈퇴 중 오류가 발생했어요. 다시 시도해 주세요.');
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    setCancelling(true);
+    try {
+      const res = await api.post('/payments/cancel');
+      alert(res.data.message);
+      setShowCancelModal(false);
+      // 플랜 정보 새로고침
+      const updated = await api.get('/users/me');
+      setInfo(updated.data);
+    } catch (e) {
+      alert(e.response?.data?.detail || '구독 취소 중 오류가 발생했어요.');
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -111,7 +129,12 @@ export default function MyInfoPage() {
                 {info?.plan === 'pro' ? '모든 기능 무제한 사용 중' : 'AI 상담 월 10회 · OCR 월 5회'}
               </p>
             </div>
-            {info?.plan !== 'pro' && (
+            {info?.plan === 'pro' ? (
+              <button onClick={() => setShowCancelModal(true)}
+                className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-500 px-4 py-2 rounded-xl font-semibold transition">
+                구독 취소
+              </button>
+            ) : (
               <button onClick={() => navigate('/pricing')}
                 className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-semibold transition">
                 업그레이드
@@ -130,6 +153,30 @@ export default function MyInfoPage() {
         </div>
       </div>
 
+      {/* 구독 취소 모달 */}
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4" onClick={() => setShowCancelModal(false)}>
+          <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="text-4xl mb-4 text-center">💳</div>
+            <h3 className="font-bold text-gray-900 text-lg text-center mb-2">구독을 취소할까요?</h3>
+            <p className="text-gray-500 text-sm text-center mb-6 leading-relaxed">
+              취소해도 만료일까지는<br />Pro 기능을 계속 사용할 수 있어요.
+            </p>
+            <div className="flex gap-2">
+              <button onClick={() => setShowCancelModal(false)}
+                className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold transition hover:bg-gray-50">
+                유지하기
+              </button>
+              <button onClick={handleCancelSubscription} disabled={cancelling}
+                className="flex-1 py-3 rounded-xl bg-gray-500 hover:bg-gray-600 text-white text-sm font-semibold transition disabled:opacity-50">
+                {cancelling ? '취소 중...' : '구독 취소'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 회원 탈퇴 모달 */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4" onClick={() => setShowDeleteModal(false)}>
           <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>

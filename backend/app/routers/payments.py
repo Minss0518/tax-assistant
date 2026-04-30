@@ -78,3 +78,33 @@ async def get_payment_status(
         "plan": user.plan if user else "free",
         "is_pro": user.plan == "pro" if user else False
     }
+
+@router.post("/cancel")
+async def cancel_subscription(
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    user_id = uuid.UUID(current_user["sub"])
+
+    # 활성 구독 찾기
+    result = await db.execute(
+        select(Subscription).where(
+            Subscription.user_id == user_id,
+            Subscription.status == "active"
+        )
+    )
+    subscription = result.scalar_one_or_none()
+
+    if not subscription:
+        raise HTTPException(status_code=404, detail="활성 구독이 없어요.")
+
+    # 취소 처리 (만료일은 유지, status만 cancelled로)
+    subscription.status = "cancelled"
+    subscription.cancelled_at = datetime.utcnow()
+    await db.commit()
+
+    return {
+        "success": True,
+        "message": "구독이 취소됐어요. 만료일까지 Pro 기능을 사용할 수 있어요.",
+        "expires_at": str(subscription.expires_at)
+    }

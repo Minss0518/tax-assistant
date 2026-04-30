@@ -8,6 +8,7 @@ import TaxCalculatorPage from './pages/TaxCalculatorPage';
 import LandingPage from './pages/LandingPage';
 import PricingPage from './pages/PricingPage';
 import MyInfoPage from './pages/MyInfoPage';
+import UploadPage from './pages/UploadPage';
 
 
 export default function App() {
@@ -23,6 +24,7 @@ export default function App() {
         <Route path="/tax-calculator" element={<TaxCalculatorPage />} />
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/my-info" element={<MyInfoPage />} />
+        <Route path="/upload" element={<UploadPage />} />
       </Routes>
     </BrowserRouter>
   );

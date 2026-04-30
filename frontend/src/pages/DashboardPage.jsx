@@ -70,6 +70,7 @@ export default function DashboardPage() {
         { icon: '📊', label: '거래 내역', sub: '수입/지출 관리', path: '/transactions', from: 'from-blue-500', to: 'to-cyan-400', shadow: 'shadow-blue-200' },
         { icon: '🤖', label: 'AI 세무 상담', sub: '세금 질문하기', path: '/chat', from: 'from-emerald-500', to: 'to-teal-400', shadow: 'shadow-emerald-200' },
         { icon: '🧮', label: '세금 계산기', sub: '예상 세액 계산', path: '/tax-calculator', from: 'from-violet-500', to: 'to-purple-400', shadow: 'shadow-violet-200' },
+        { icon: '📂', label: '일괄 업로드', sub: 'CSV/Excel', path: '/upload', from: 'from-amber-500', to: 'to-orange-400', shadow: 'shadow-amber-200' },
     ];
 
     return (

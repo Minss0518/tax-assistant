@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import useAuthStore from '../store/authStore';
 
 const TAX_BRACKETS = [
     { limit: 14000000, rate: 0.06, deduction: 0 },
@@ -28,6 +29,16 @@ function calcIncomeTax(taxableIncome) {
     return 0;
 }
 
+// JWT token에서 user_id(sub) 추출
+function getUserId(token) {
+    if (!token) return null;
+    try {
+        return JSON.parse(atob(token.split('.')[1])).sub;
+    } catch {
+        return null;
+    }
+}
+
 const BackButton = ({ onClick }) => (
     <button onClick={onClick}
         className="flex items-center gap-1.5 bg-gray-600 hover:bg-gray-700 active:scale-95 text-white text-sm font-semibold px-4 py-2 rounded-full shadow-md transition">
@@ -40,6 +51,9 @@ const LABEL_CLASS = "block text-xs font-semibold text-gray-500 mb-1";
 
 export default function TaxCalculatorPage() {
     const navigate = useNavigate();
+    const token = useAuthStore((state) => state.token);
+    const userId = getUserId(token);
+
     const [income, setIncome] = useState('');
     const [expense, setExpense] = useState('');
     const [basicDeduction, setBasicDeduction] = useState('1500000');
@@ -48,6 +62,50 @@ export default function TaxCalculatorPage() {
     const [healthDeduction, setHealthDeduction] = useState('');
     const [otherDeduction, setOtherDeduction] = useState('');
     const [result, setResult] = useState(null);
+
+    // ✅ 로그인 계정이 바뀔 때마다 해당 계정의 저장값 불러오기
+    useEffect(() => {
+        if (!userId) return;
+        const saved = localStorage.getItem(`taxInput_${userId}`);
+        if (saved) {
+            try {
+                const p = JSON.parse(saved);
+                setIncome(p.income || '');
+                setExpense(p.expense || '');
+                setBasicDeduction(p.basicDeduction || '1500000');
+                setAutoInsurance(p.autoInsurance ?? true);
+                setPensionDeduction(p.pensionDeduction || '');
+                setHealthDeduction(p.healthDeduction || '');
+                setOtherDeduction(p.otherDeduction || '');
+            } catch {
+                // 파싱 실패 시 초기값 유지
+            }
+        } else {
+            // 이 계정으로 처음 → 초기화
+            setIncome('');
+            setExpense('');
+            setBasicDeduction('1500000');
+            setAutoInsurance(true);
+            setPensionDeduction('');
+            setHealthDeduction('');
+            setOtherDeduction('');
+            setResult(null);
+        }
+    }, [userId]);
+
+    // ✅ 입력값 바뀔 때마다 계정별 키로 저장
+    useEffect(() => {
+        if (!userId) return;
+        localStorage.setItem(`taxInput_${userId}`, JSON.stringify({
+            income,
+            expense,
+            basicDeduction,
+            autoInsurance,
+            pensionDeduction,
+            healthDeduction,
+            otherDeduction,
+        }));
+    }, [income, expense, basicDeduction, autoInsurance, pensionDeduction, healthDeduction, otherDeduction, userId]);
 
     const handleCalculate = async () => {
         const incomeNum = parseInt(income) || 0;
@@ -82,12 +140,6 @@ export default function TaxCalculatorPage() {
 
         setResult({ incomeNum, expenseNum, netIncome, pensionNum, healthNum, longcareNum, basicNum, otherNum, totalDeduction, taxableIncome, incomeTax, standardTaxCredit, finalIncomeTax, localTax, totalTax, withheld, isRefund, finalTax });
 
-        localStorage.setItem('lastTaxResult', JSON.stringify({
-            grossIncome: incomeNum, totalTax, finalTax, isRefund,
-            refundAmount: isRefund ? finalTax : 0,
-            calculatedAt: new Date().toLocaleDateString('ko-KR'),
-        }));
-
         try {
             await api.post('/tax-calculator/save', {
                 grossIncome: incomeNum,
@@ -111,6 +163,8 @@ export default function TaxCalculatorPage() {
         setBasicDeduction('1500000');
         setPensionDeduction(''); setHealthDeduction(''); setOtherDeduction('');
         setAutoInsurance(true); setResult(null);
+        // ✅ 초기화 버튼 누르면 이 계정의 저장값도 삭제
+        if (userId) localStorage.removeItem(`taxInput_${userId}`);
     };
 
     const fmt = (n) => (n ?? 0).toLocaleString();

@@ -10,20 +10,20 @@ import {
 const MONTH_NAMES = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 
 const TAX_DEADLINES = [
-    { name: '종합소득세 신고', month: 4, day: 31, icon: '📋', color: 'from-amber-400 to-orange-400', border: 'border-orange-100' },
-    { name: '부가세 신고 (1기)', month: 6, day: 25, icon: '🧾', color: 'from-blue-400 to-cyan-400', border: 'border-blue-100' },
-    { name: '부가세 신고 (2기)', month: 0, day: 25, icon: '🧾', color: 'from-blue-400 to-cyan-400', border: 'border-blue-100' },
-    { name: '원천세 신고', month: new Date().getMonth(), day: 10, icon: '💼', color: 'from-violet-400 to-purple-400', border: 'border-violet-100' },
-    { name: '사업장현황신고', month: 1, day: 10, icon: '🏢', color: 'from-emerald-400 to-teal-400', border: 'border-emerald-100' },
+    { name: '종합소득세 신고', month: 4, day: 31, icon: 'TAX', color: '#b45309', bg: '#fef3c7', border: '#fde68a' },
+    { name: '부가세 신고 (1기)', month: 6, day: 25, icon: 'VAT', color: '#1d4ed8', bg: '#eff6ff', border: '#bfdbfe' },
+    { name: '부가세 신고 (2기)', month: 0, day: 25, icon: 'VAT', color: '#1d4ed8', bg: '#eff6ff', border: '#bfdbfe' },
+    { name: '원천세 신고', month: new Date().getMonth(), day: 10, icon: 'WIT', color: '#6d28d9', bg: '#f5f3ff', border: '#ddd6fe' },
+    { name: '사업장현황신고', month: 1, day: 10, icon: 'BIZ', color: '#065f46', bg: '#ecfdf5', border: '#a7f3d0' },
 ];
 
 function getUpcomingDeadlines() {
     const today = new Date();
-    return TAX_DEADLINES.map(({ name, month, day, icon, color, border }) => {
+    return TAX_DEADLINES.map(({ name, month, day, icon, color, bg, border }) => {
         const deadline = new Date(today.getFullYear(), month, day);
         if (deadline < today) deadline.setFullYear(deadline.getFullYear() + 1);
         const dday = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
-        return { name, icon, color, border, dday, date: `${deadline.getMonth() + 1}월 ${deadline.getDate()}일` };
+        return { name, icon, color, bg, border, dday, date: `${deadline.getMonth() + 1}월 ${deadline.getDate()}일` };
     }).sort((a, b) => a.dday - b.dday).slice(0, 3);
 }
 
@@ -45,19 +45,45 @@ function getMonthlyData(transactions) {
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 px-4 py-3 text-xs">
-                <p className="font-bold text-gray-700 mb-2">{label}</p>
+            <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, padding: '10px 14px', fontSize: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
+                <p style={{ fontWeight: 600, color: '#111827', marginBottom: 6 }}>{label}</p>
                 {payload.map((p, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full" style={{ background: p.color }} />
-                        <span className="text-gray-500">{p.name}:</span>
-                        <span className="font-bold" style={{ color: p.color }}>{p.value.toLocaleString()}원</span>
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: p.color }} />
+                        <span style={{ color: '#6b7280' }}>{p.name}</span>
+                        <span style={{ fontWeight: 600, color: '#111827' }}>{p.value.toLocaleString()}원</span>
                     </div>
                 ))}
             </div>
         );
     }
     return null;
+};
+
+const MenuIcon = ({ type }) => {
+    const icons = {
+        transactions: (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+        ),
+        chat: (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+        ),
+        calculator: (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="14" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="10" y2="18"/><line x1="14" y1="18" x2="16" y2="18"/>
+            </svg>
+        ),
+        upload: (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+        ),
+    };
+    return icons[type] || null;
 };
 
 export default function DashboardPage() {
@@ -72,15 +98,11 @@ export default function DashboardPage() {
 
     useEffect(() => {
         if (!token) { navigate('/login'); return; }
-
-        // 거래 내역 불러오기
         getTransactions().then((res) => setTransactions(res.data));
-
-        // ✅ DB에서 최신 세금 계산 결과 불러오기 (계정별 자동 분리)
         api.get('/tax-calculator/history')
             .then((res) => {
                 if (res.data && res.data.length > 0) {
-                    const latest = res.data[0]; // 가장 최근 결과
+                    const latest = res.data[0];
                     setLastTaxResult({
                         grossIncome: latest.grossIncome,
                         totalTax: latest.totalTax,
@@ -92,7 +114,6 @@ export default function DashboardPage() {
                 }
             })
             .catch((e) => console.error('세금 계산 결과 불러오기 실패:', e));
-
     }, [token]);
 
     const totalIncome = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
@@ -103,244 +124,284 @@ export default function DashboardPage() {
     const today = new Date();
 
     const menus = [
-        { icon: '📊', label: '거래 내역', sub: '수입/지출 관리', path: '/transactions', from: 'from-blue-500', to: 'to-cyan-400', shadow: 'shadow-blue-200' },
-        { icon: '🤖', label: 'AI 세무 상담', sub: '세금 질문하기', path: '/chat', from: 'from-emerald-500', to: 'to-teal-400', shadow: 'shadow-emerald-200' },
-        { icon: '🧮', label: '세금 계산기', sub: '예상 세액 계산', path: '/tax-calculator', from: 'from-violet-500', to: 'to-purple-400', shadow: 'shadow-violet-200' },
-        { icon: '📂', label: '일괄 업로드', sub: 'CSV/Excel', path: '/upload', from: 'from-amber-500', to: 'to-orange-400', shadow: 'shadow-amber-200' },
+        { icon: 'transactions', label: '거래 내역', sub: '수입 · 지출 관리', path: '/transactions', accent: '#1d4ed8' },
+        { icon: 'chat', label: 'AI 세무 상담', sub: '세금 질문하기', path: '/chat', accent: '#065f46' },
+        { icon: 'calculator', label: '세금 계산기', sub: '예상 세액 계산', path: '/tax-calculator', accent: '#6d28d9' },
+        { icon: 'upload', label: '일괄 업로드', sub: 'CSV / Excel', path: '/upload', accent: '#b45309' },
     ];
 
     return (
-        <div className="min-h-screen bg-gray-50 overflow-x-hidden">
+        <div style={{ minHeight: '100vh', background: '#f8f9fa', fontFamily: "'Pretendard', -apple-system, sans-serif" }}>
             <style>{`
-                @keyframes fadeUp {
-                    from { opacity: 0; transform: translateY(20px); }
+                @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap');
+                * { box-sizing: border-box; margin: 0; padding: 0; }
+                @keyframes slideDown {
+                    from { opacity: 0; transform: translateY(-8px); }
                     to { opacity: 1; transform: translateY(0); }
                 }
-                .fade-up { animation: fadeUp 0.5s ease forwards; opacity: 0; }
-                .delay-1 { animation-delay: 0.05s; }
-                .delay-2 { animation-delay: 0.1s; }
-                .delay-3 { animation-delay: 0.15s; }
-                .delay-4 { animation-delay: 0.2s; }
-                .delay-5 { animation-delay: 0.25s; }
-                .delay-6 { animation-delay: 0.3s; }
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(12px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .anim-1 { animation: slideDown 0.4s ease forwards; }
+                .anim-2 { animation: fadeIn 0.4s ease 0.05s both; }
+                .anim-3 { animation: fadeIn 0.4s ease 0.1s both; }
+                .anim-4 { animation: fadeIn 0.4s ease 0.15s both; }
+                .anim-5 { animation: fadeIn 0.4s ease 0.2s both; }
+                .anim-6 { animation: fadeIn 0.4s ease 0.25s both; }
+                .menu-btn:hover { background: #f8fafc !important; border-color: #94a3b8 !important; }
+                .menu-btn:active { transform: scale(0.98); }
+                .txn-row:last-child { border-bottom: none !important; }
+                .deadline-dot { cursor: pointer; transition: all 0.2s; border: none; }
+                .nav-btn { background: none; border: none; cursor: pointer; font-family: inherit; transition: color 0.15s; }
+                .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; }
+                .upgrade-btn:hover { background: #1d4ed8 !important; color: #fff !important; border-color: #1d4ed8 !important; }
+                .tax-card:hover { border-color: #6d28d9 !important; }
             `}</style>
 
-            {/* 상단 헤더 */}
-            <div className="relative bg-gradient-to-br from-blue-600 via-blue-500 to-violet-500 px-6 pt-10 pb-20 overflow-hidden">
-                <div className="absolute top-[-40px] right-[-40px] w-64 h-64 rounded-full bg-white/10 blur-2xl" />
-                <div className="absolute bottom-[-20px] left-[-20px] w-48 h-48 rounded-full bg-violet-400/20 blur-xl" />
-                <div className="relative max-w-2xl mx-auto">
-                    <div className="flex justify-between items-start mb-6">
-                        <div>
-                            <p className="text-blue-200 text-xs mb-1">
-                                {today.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })}
-                            </p>
-                            <h1 className="text-white text-2xl font-extrabold">💼 AI 세무 비서</h1>
+            {/* 상단 네비게이션 */}
+            <div className="anim-1" style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', padding: '0 24px' }}>
+                <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: 56 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ width: 28, height: 28, background: '#1d4ed8', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+                            </svg>
                         </div>
-                        <div className="flex flex-col items-end gap-2">
-                            <div className="flex gap-3">
-                                <button onClick={() => navigate('/my-info')}
-                                    className="text-sm text-white/80 hover:text-white transition font-medium">
-                                    👤 내 정보
-                                </button>
-                                <button onClick={() => { logout(); navigate('/login'); }}
-                                    className="text-sm text-white/60 hover:text-white transition">
-                                    로그아웃
-                                </button>
-                            </div>
-                            <button onClick={() => navigate('/pricing')}
-                                className="text-xs bg-white/20 hover:bg-white/30 text-white font-semibold px-3 py-1.5 rounded-full transition backdrop-blur-sm border border-white/20">
-                                ✨ Pro 업그레이드
-                            </button>
-                        </div>
+                        <span style={{ fontWeight: 700, fontSize: 15, color: '#111827', letterSpacing: '-0.3px' }}>세무비서</span>
                     </div>
-                    <div className="fade-up delay-1">
-                        <p className="text-blue-200 text-sm mb-1">이번 달 순이익</p>
-                        <p className="text-4xl font-extrabold text-white mb-1">
-                            {netProfit >= 0 ? '+' : ''}{fmt(netProfit)}원
-                        </p>
-                        <p className="text-blue-200 text-xs">
-                            수입 +{fmt(totalIncome)}원 · 지출 -{fmt(totalExpense)}원
-                        </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <button className="nav-btn upgrade-btn" onClick={() => navigate('/pricing')}
+                            style={{ fontSize: 12, fontWeight: 600, color: '#1d4ed8', border: '1px solid #bfdbfe', borderRadius: 6, padding: '5px 12px', background: '#eff6ff', transition: 'all 0.15s' }}>
+                            Pro 업그레이드
+                        </button>
+                        <button className="nav-btn" onClick={() => navigate('/my-info')}
+                            style={{ fontSize: 13, color: '#6b7280', padding: '6px 10px', borderRadius: 6 }}>
+                            내 정보
+                        </button>
+                        <button className="nav-btn" onClick={() => { logout(); navigate('/login'); }}
+                            style={{ fontSize: 13, color: '#9ca3af', padding: '6px 10px', borderRadius: 6 }}>
+                            로그아웃
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <div className="max-w-2xl mx-auto px-4 -mt-12 pb-10">
+            {/* 순이익 헤더 */}
+            <div style={{ background: '#111827', padding: '32px 24px 28px' }}>
+                <div style={{ maxWidth: 720, margin: '0 auto' }}>
+                    <p style={{ fontSize: 11, color: '#6b7280', marginBottom: 6, fontWeight: 500, letterSpacing: '0.8px', textTransform: 'uppercase' }}>
+                        {today.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })} 기준
+                    </p>
+                    <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 4 }}>이번 달 순이익</p>
+                    <p style={{ fontSize: 36, fontWeight: 700, color: '#fff', letterSpacing: '-1px', marginBottom: 10 }}>
+                        {netProfit >= 0 ? '+' : ''}{fmt(netProfit)}<span style={{ fontSize: 18, fontWeight: 400, color: '#6b7280', marginLeft: 4 }}>원</span>
+                    </p>
+                    <div style={{ display: 'flex', gap: 20 }}>
+                        <span style={{ fontSize: 13, color: '#6b7280' }}>
+                            수입 <span style={{ color: '#34d399', fontWeight: 600 }}>+{fmt(totalIncome)}원</span>
+                        </span>
+                        <span style={{ fontSize: 13, color: '#374151' }}>·</span>
+                        <span style={{ fontSize: 13, color: '#6b7280' }}>
+                            지출 <span style={{ color: '#f87171', fontWeight: 600 }}>-{fmt(totalExpense)}원</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
 
-                {/* 신고 기간 D-day 배너 — 슬라이드 */}
-                <div className={`fade-up delay-2 bg-white rounded-2xl shadow-lg border ${currentDeadline.border} p-4 mb-5`}>
-                    <div className="flex justify-between items-center mb-3">
-                        <p className="text-xs font-semibold text-gray-400">📅 다가오는 신고 기간</p>
-                        <div className="flex items-center gap-2">
-                            <div className="flex gap-1">
+            <div style={{ maxWidth: 720, margin: '0 auto', padding: '20px 16px 40px' }}>
+
+                {/* 신고 D-day */}
+                <div className="anim-2 card" style={{ padding: '16px 20px', marginBottom: 14 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: '#9ca3af', letterSpacing: '0.8px', textTransform: 'uppercase' }}>다가오는 신고 기간</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <div style={{ display: 'flex', gap: 5 }}>
                                 {upcomingDeadlines.map((_, i) => (
-                                    <button key={i} onClick={() => setDeadlineIdx(i)}
-                                        className={`w-2 h-2 rounded-full transition ${i === deadlineIdx ? 'bg-orange-400' : 'bg-gray-200'}`} />
+                                    <button key={i} className="deadline-dot" onClick={() => setDeadlineIdx(i)}
+                                        style={{ width: 6, height: 6, borderRadius: '50%', background: i === deadlineIdx ? '#1d4ed8' : '#e5e7eb', padding: 0 }} />
                                 ))}
                             </div>
                             <button onClick={() => navigate('/notifications')}
-                                className="text-xs text-blue-500 font-semibold hover:text-blue-700 transition">
+                                style={{ fontSize: 12, color: '#1d4ed8', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
                                 전체보기 →
                             </button>
                         </div>
                     </div>
-                    <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${currentDeadline.color} flex items-center justify-center text-xl`}>
-                                {currentDeadline.icon}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <div style={{ width: 40, height: 40, borderRadius: 8, background: currentDeadline.bg, border: `1px solid ${currentDeadline.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <span style={{ fontSize: 10, fontWeight: 700, color: currentDeadline.color }}>{currentDeadline.icon}</span>
                             </div>
                             <div>
-                                <p className="text-xs text-gray-400">{currentDeadline.name}</p>
-                                <p className="font-bold text-gray-800">{currentDeadline.date}까지</p>
+                                <p style={{ fontSize: 12, color: '#9ca3af', marginBottom: 3 }}>{currentDeadline.name}</p>
+                                <p style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{currentDeadline.date}까지</p>
                             </div>
                         </div>
-                        <div className="text-right">
-                            <p className="text-xs text-gray-400">남은 기간</p>
-                            <p className={`text-2xl font-extrabold ${currentDeadline.dday <= 30 ? 'text-red-500' : 'text-orange-500'}`}>
+                        <div style={{ textAlign: 'right' }}>
+                            <p style={{ fontSize: 11, color: '#9ca3af', marginBottom: 3 }}>남은 기간</p>
+                            <p style={{ fontSize: 26, fontWeight: 700, color: currentDeadline.dday <= 30 ? '#dc2626' : '#111827', letterSpacing: '-0.5px' }}>
                                 D-{currentDeadline.dday}
                             </p>
                         </div>
                     </div>
                 </div>
 
-                {/* 수입/지출 카드 */}
-                <div className="fade-up delay-2 grid grid-cols-2 gap-3 mb-5">
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-                        <div className="flex items-center gap-2 mb-3">
-                            <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-sm">💚</div>
-                            <p className="text-xs text-gray-400 font-medium">총 수입</p>
-                        </div>
-                        <p className="text-xl font-extrabold text-emerald-500">+{fmt(totalIncome)}<span className="text-sm font-normal text-gray-400">원</span></p>
+                {/* 수입/지출 */}
+                <div className="anim-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+                    <div className="card" style={{ padding: '16px 20px' }}>
+                        <p style={{ fontSize: 11, fontWeight: 600, color: '#9ca3af', letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: 8 }}>총 수입</p>
+                        <p style={{ fontSize: 20, fontWeight: 700, color: '#059669', letterSpacing: '-0.5px' }}>
+                            +{fmt(totalIncome)}<span style={{ fontSize: 12, fontWeight: 400, color: '#9ca3af', marginLeft: 2 }}>원</span>
+                        </p>
                     </div>
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-                        <div className="flex items-center gap-2 mb-3">
-                            <div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center text-sm">❤️</div>
-                            <p className="text-xs text-gray-400 font-medium">총 지출</p>
-                        </div>
-                        <p className="text-xl font-extrabold text-rose-500">-{fmt(totalExpense)}<span className="text-sm font-normal text-gray-400">원</span></p>
+                    <div className="card" style={{ padding: '16px 20px' }}>
+                        <p style={{ fontSize: 11, fontWeight: 600, color: '#9ca3af', letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: 8 }}>총 지출</p>
+                        <p style={{ fontSize: 20, fontWeight: 700, color: '#dc2626', letterSpacing: '-0.5px' }}>
+                            -{fmt(totalExpense)}<span style={{ fontSize: 12, fontWeight: 400, color: '#9ca3af', marginLeft: 2 }}>원</span>
+                        </p>
                     </div>
                 </div>
 
                 {/* 월별 차트 */}
-                <div className="fade-up delay-3 bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-5">
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="font-bold text-gray-800">📈 월별 추이</h2>
+                <div className="anim-3 card" style={{ padding: '20px', marginBottom: 14 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                        <p style={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>월별 수입 · 지출 추이</p>
+                        <div style={{ display: 'flex', gap: 14 }}>
+                            <span style={{ fontSize: 11, color: '#059669', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
+                                <span style={{ width: 12, height: 2, background: '#059669', display: 'inline-block', borderRadius: 1 }}></span>수입
+                            </span>
+                            <span style={{ fontSize: 11, color: '#dc2626', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
+                                <span style={{ width: 12, height: 2, background: '#dc2626', display: 'inline-block', borderRadius: 1 }}></span>지출
+                            </span>
+                        </div>
                     </div>
                     {monthlyData.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-10 text-gray-300">
-                            <p className="text-4xl mb-2">📊</p>
-                            <p className="text-sm">거래 내역을 추가하면 차트가 표시돼요</p>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 0' }}>
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="1.5" style={{ marginBottom: 8 }}>
+                                <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+                            </svg>
+                            <p style={{ fontSize: 13, color: '#9ca3af' }}>거래 내역을 추가하면 차트가 표시됩니다</p>
                         </div>
                     ) : (
-                        <ResponsiveContainer width="100%" height={180}>
-                            <AreaChart data={monthlyData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                        <ResponsiveContainer width="100%" height={160}>
+                            <AreaChart data={monthlyData} margin={{ top: 5, right: 0, left: -24, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
-                                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                        <stop offset="5%" stopColor="#059669" stopOpacity={0.1} />
+                                        <stop offset="95%" stopColor="#059669" stopOpacity={0} />
                                     </linearGradient>
                                     <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#fb7185" stopOpacity={0.2} />
-                                        <stop offset="95%" stopColor="#fb7185" stopOpacity={0} />
+                                        <stop offset="5%" stopColor="#dc2626" stopOpacity={0.08} />
+                                        <stop offset="95%" stopColor="#dc2626" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                                <CartesianGrid strokeDasharray="2 4" stroke="#f3f4f6" vertical={false} />
                                 <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
                                 <YAxis tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={false} tickLine={false}
                                     tickFormatter={(v) => v >= 10000 ? `${(v / 10000).toFixed(0)}만` : v} />
                                 <Tooltip content={<CustomTooltip />} />
-                                <Area type="monotone" dataKey="income" name="수입" stroke="#10b981" strokeWidth={2} fill="url(#incomeGrad)" />
-                                <Area type="monotone" dataKey="expense" name="지출" stroke="#fb7185" strokeWidth={2} fill="url(#expenseGrad)" />
+                                <Area type="monotone" dataKey="income" name="수입" stroke="#059669" strokeWidth={1.5} fill="url(#incomeGrad)" dot={false} activeDot={{ r: 4, fill: '#059669' }} />
+                                <Area type="monotone" dataKey="expense" name="지출" stroke="#dc2626" strokeWidth={1.5} fill="url(#expenseGrad)" dot={false} activeDot={{ r: 4, fill: '#dc2626' }} />
                             </AreaChart>
                         </ResponsiveContainer>
                     )}
                 </div>
 
                 {/* 메뉴 */}
-                <div className="fade-up delay-4 grid grid-cols-2 gap-3 mb-5">
+                <div className="anim-4" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
                     {menus.map((m, i) => (
-                        <button key={i} onClick={() => navigate(m.path)}
-                            className={`bg-gradient-to-br ${m.from} ${m.to} text-white rounded-2xl p-4 text-left transition shadow-md ${m.shadow} hover:scale-105 active:scale-95`}
-                            style={{ transition: 'transform 0.15s ease' }}>
-                            <div className="text-2xl mb-2">{m.icon}</div>
-                            <p className="font-bold text-sm leading-tight">{m.label}</p>
-                            <p className="text-white/70 text-xs mt-0.5">{m.sub}</p>
+                        <button key={i} className="menu-btn" onClick={() => navigate(m.path)}
+                            style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '16px 18px', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                            <div style={{ width: 34, height: 34, borderRadius: 8, background: `${m.accent}14`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: m.accent }}>
+                                <MenuIcon type={m.icon} />
+                            </div>
+                            <div>
+                                <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', marginBottom: 2 }}>{m.label}</p>
+                                <p style={{ fontSize: 11, color: '#9ca3af' }}>{m.sub}</p>
+                            </div>
                         </button>
                     ))}
                 </div>
 
-                {/* 세금 계산 결과 위젯 */}
-                <div className="fade-up delay-5">
+                {/* 세금 계산 결과 */}
+                <div className="anim-5" style={{ marginBottom: 14 }}>
                     {lastTaxResult ? (
-                        <div onClick={() => navigate('/tax-calculator')}
-                            className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-5 cursor-pointer hover:border-violet-200 hover:shadow-md transition">
-                            <div className="flex justify-between items-center mb-4">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center text-sm">🧮</div>
-                                    <h2 className="font-bold text-gray-800">세금 계산 결과</h2>
+                        <div className="card tax-card" onClick={() => navigate('/tax-calculator')}
+                            style={{ padding: '20px', cursor: 'pointer', transition: 'border-color 0.15s' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                                <p style={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>세금 계산 결과</p>
+                                <span style={{ fontSize: 11, color: '#9ca3af' }}>{lastTaxResult.calculatedAt}</span>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <span style={{ fontSize: 13, color: '#6b7280' }}>연 수입</span>
+                                    <span style={{ fontSize: 13, fontWeight: 600, color: '#111827' }}>{fmt(lastTaxResult.grossIncome)}원</span>
                                 </div>
-                                <span className="text-xs text-gray-400">{lastTaxResult.calculatedAt}</span>
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <span style={{ fontSize: 13, color: '#6b7280' }}>예상 납부세액</span>
+                                    <span style={{ fontSize: 13, fontWeight: 600, color: '#111827' }}>{fmt(lastTaxResult.totalTax)}원</span>
+                                </div>
                             </div>
-                            <div className="flex justify-between text-sm mb-2">
-                                <span className="text-gray-400">연 수입</span>
-                                <span className="font-semibold text-gray-700">{fmt(lastTaxResult.grossIncome)}원</span>
+                            <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>
+                                    <p style={{ fontSize: 11, color: '#9ca3af', marginBottom: 3 }}>
+                                        {lastTaxResult.isRefund ? '예상 환급세액' : '예상 추가납부세액'}
+                                    </p>
+                                    <p style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.5px', color: lastTaxResult.isRefund ? '#059669' : '#dc2626' }}>
+                                        {lastTaxResult.isRefund ? fmt(lastTaxResult.refundAmount) : fmt(lastTaxResult.finalTax)}원
+                                    </p>
+                                </div>
+                                <span style={{ fontSize: 12, color: '#6d28d9', fontWeight: 600 }}>다시 계산하기 →</span>
                             </div>
-                            <div className="flex justify-between text-sm mb-4">
-                                <span className="text-gray-400">예상 납부세액</span>
-                                <span className="font-semibold text-gray-700">{fmt(lastTaxResult.totalTax)}원</span>
-                            </div>
-                            <div className={`rounded-xl px-4 py-3 text-center ${lastTaxResult.isRefund ? 'bg-emerald-50' : 'bg-rose-50'}`}>
-                                <p className="text-xs text-gray-400 mb-1">
-                                    {lastTaxResult.isRefund ? '🎉 예상 환급' : '⚠️ 예상 추가납부'}
-                                </p>
-                                <p className={`font-extrabold text-xl ${lastTaxResult.isRefund ? 'text-emerald-500' : 'text-rose-500'}`}>
-                                    {lastTaxResult.isRefund ? fmt(lastTaxResult.refundAmount) : fmt(lastTaxResult.finalTax)}원
-                                </p>
-                            </div>
-                            <p className="text-xs text-violet-400 text-center mt-3">탭하여 다시 계산하기 →</p>
                         </div>
                     ) : (
-                        <div onClick={() => navigate('/tax-calculator')}
-                            className="bg-white rounded-2xl border-2 border-dashed border-violet-200 p-6 mb-5 cursor-pointer hover:border-violet-400 hover:bg-violet-50 transition text-center">
-                            <div className="text-3xl mb-2">🧮</div>
-                            <p className="text-sm font-bold text-violet-600">종합소득세 예상 세액 계산하기</p>
-                            <p className="text-xs text-gray-400 mt-1">내 수입 기준으로 세금을 미리 확인해요</p>
+                        <div className="card tax-card" onClick={() => navigate('/tax-calculator')}
+                            style={{ padding: '20px', cursor: 'pointer', borderStyle: 'dashed', transition: 'border-color 0.15s', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div>
+                                <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', marginBottom: 4 }}>종합소득세 예상 세액 계산</p>
+                                <p style={{ fontSize: 12, color: '#9ca3af' }}>수입 기준으로 예상 세금을 미리 확인하세요</p>
+                            </div>
+                            <span style={{ fontSize: 13, color: '#6d28d9', fontWeight: 600, whiteSpace: 'nowrap', marginLeft: 16 }}>계산하기 →</span>
                         </div>
                     )}
                 </div>
 
                 {/* 최근 거래 내역 */}
-                <div className="fade-up delay-6 bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-                    <div className="flex justify-between items-center mb-4">
-                        <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-sm">📋</div>
-                            <h2 className="font-bold text-gray-800">최근 거래 내역</h2>
-                        </div>
+                <div className="anim-6 card" style={{ padding: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                        <p style={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>최근 거래 내역</p>
                         <button onClick={() => navigate('/transactions')}
-                            className="text-xs text-blue-500 hover:text-blue-700 font-semibold bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition">
+                            style={{ fontSize: 12, color: '#1d4ed8', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
                             전체보기 →
                         </button>
                     </div>
                     {transactions.length === 0 ? (
-                        <div className="text-center py-8">
-                            <p className="text-3xl mb-2">📭</p>
-                            <p className="text-gray-400 text-sm">거래 내역이 없어요</p>
+                        <div style={{ textAlign: 'center', padding: '28px 0' }}>
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="1.5" style={{ margin: '0 auto 8px', display: 'block' }}>
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                            </svg>
+                            <p style={{ fontSize: 13, color: '#9ca3af' }}>거래 내역이 없습니다</p>
                         </div>
                     ) : (
-                        <div className="flex flex-col gap-3">
+                        <div>
                             {transactions.slice(0, 5).map((t) => (
-                                <div key={t.id} className="flex justify-between items-center py-2.5 border-b border-gray-50 last:border-0">
-                                    <div className="flex items-center gap-3">
-                                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm ${t.type === 'income' ? 'bg-emerald-50' : 'bg-rose-50'}`}>
-                                            {t.type === 'income' ? '📈' : '📉'}
+                                <div key={t.id} className="txn-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '11px 0', borderBottom: '1px solid #f9fafb' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                        <div style={{ width: 32, height: 32, borderRadius: 8, background: t.type === 'income' ? '#f0fdf4' : '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={t.type === 'income' ? '#059669' : '#dc2626'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                {t.type === 'income'
+                                                    ? <><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></>
+                                                    : <><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></>
+                                                }
+                                            </svg>
                                         </div>
                                         <div>
-                                            <p className="text-sm font-medium text-gray-700">{t.memo || '-'}</p>
-                                            <p className="text-xs text-gray-400">{t.transaction_date}</p>
+                                            <p style={{ fontSize: 13, fontWeight: 500, color: '#111827', marginBottom: 1 }}>{t.memo || '메모 없음'}</p>
+                                            <p style={{ fontSize: 11, color: '#9ca3af' }}>{t.transaction_date}</p>
                                         </div>
                                     </div>
-                                    <span className={`font-bold text-sm ${t.type === 'income' ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                    <span style={{ fontSize: 14, fontWeight: 700, color: t.type === 'income' ? '#059669' : '#dc2626', letterSpacing: '-0.3px', flexShrink: 0 }}>
                                         {t.type === 'income' ? '+' : '-'}{fmt(t.amount)}원
                                     </span>
                                 </div>

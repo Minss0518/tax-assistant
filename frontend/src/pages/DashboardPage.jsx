@@ -12,12 +12,15 @@ function getMonthlyData(transactions) {
     const map = {};
     transactions.forEach((t) => {
         const d = new Date(t.transaction_date);
-        const key = `${d.getFullYear()}-${d.getMonth()}`;
+        const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2, '0')}`;
         if (!map[key]) map[key] = { month: MONTH_NAMES[d.getMonth()], income: 0, expense: 0 };
         if (t.type === 'income') map[key].income += t.amount;
         else map[key].expense += t.amount;
     });
-    return Object.values(map).slice(-6);
+    return Object.entries(map)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .slice(-6)
+        .map(([, v]) => v);
 }
 
 const CustomTooltip = ({ active, payload, label }) => {

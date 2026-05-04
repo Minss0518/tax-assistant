@@ -70,7 +70,7 @@ async def chat_stream(
             async for token in stream_tax_knowledge(request.message):
                 full_answer.append(token)
                 yield f"data: {json.dumps({'token': token}, ensure_ascii=False)}\n\n"
-                await asyncio.sleep(0)  # 버퍼 즉시 플러시
+                await asyncio.sleep(0.02)  # 버퍼 즉시 플러시
 
             answer = "".join(full_answer)
             ai_msg = ChatHistory(

@@ -8,6 +8,24 @@ import {
 
 const MONTH_NAMES = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 
+const TAX_DEADLINES = [
+    { name: '종합소득세 신고', month: 4, day: 31, icon: '📋', color: 'from-amber-400 to-orange-400', border: 'border-orange-100' },
+    { name: '부가세 신고 (1기)', month: 6, day: 25, icon: '🧾', color: 'from-blue-400 to-cyan-400', border: 'border-blue-100' },
+    { name: '부가세 신고 (2기)', month: 0, day: 25, icon: '🧾', color: 'from-blue-400 to-cyan-400', border: 'border-blue-100' },
+    { name: '원천세 신고', month: new Date().getMonth(), day: 10, icon: '💼', color: 'from-violet-400 to-purple-400', border: 'border-violet-100' },
+    { name: '사업장현황신고', month: 1, day: 10, icon: '🏢', color: 'from-emerald-400 to-teal-400', border: 'border-emerald-100' },
+];
+
+function getUpcomingDeadlines() {
+    const today = new Date();
+    return TAX_DEADLINES.map(({ name, month, day, icon, color, border }) => {
+        const deadline = new Date(today.getFullYear(), month, day);
+        if (deadline < today) deadline.setFullYear(deadline.getFullYear() + 1);
+        const dday = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
+        return { name, icon, color, border, dday, date: `${deadline.getMonth() + 1}월 ${deadline.getDate()}일` };
+    }).sort((a, b) => a.dday - b.dday).slice(0, 3);
+}
+
 function getMonthlyData(transactions) {
     const map = {};
     transactions.forEach((t) => {
@@ -46,14 +64,16 @@ export default function DashboardPage() {
     const { token, logout } = useAuthStore();
     const [transactions, setTransactions] = useState([]);
     const [lastTaxResult, setLastTaxResult] = useState(null);
-    const [visible, setVisible] = useState(false);
+    const [deadlineIdx, setDeadlineIdx] = useState(0);
+
+    const upcomingDeadlines = getUpcomingDeadlines();
+    const currentDeadline = upcomingDeadlines[deadlineIdx];
 
     useEffect(() => {
         if (!token) { navigate('/login'); return; }
         getTransactions().then((res) => setTransactions(res.data));
         const saved = localStorage.getItem('lastTaxResult');
         if (saved) setLastTaxResult(JSON.parse(saved));
-        setTimeout(() => setVisible(true), 50);
     }, [token]);
 
     const totalIncome = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
@@ -61,13 +81,7 @@ export default function DashboardPage() {
     const netProfit = totalIncome - totalExpense;
     const monthlyData = getMonthlyData(transactions);
     const fmt = (n) => n?.toLocaleString() ?? '0';
-
     const today = new Date();
-    const taxDday = (() => {
-        const deadline = new Date(today.getFullYear(), 4, 31);
-        if (today > deadline) deadline.setFullYear(deadline.getFullYear() + 1);
-        return Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
-    })();
 
     const menus = [
         { icon: '📊', label: '거래 내역', sub: '수입/지출 관리', path: '/transactions', from: 'from-blue-500', to: 'to-cyan-400', shadow: 'shadow-blue-200' },
@@ -92,14 +106,11 @@ export default function DashboardPage() {
                 .delay-6 { animation-delay: 0.3s; }
             `}</style>
 
-            {/* 상단 헤더 — 그라디언트 배경 */}
+            {/* 상단 헤더 */}
             <div className="relative bg-gradient-to-br from-blue-600 via-blue-500 to-violet-500 px-6 pt-10 pb-20 overflow-hidden">
-                {/* 배경 장식 */}
                 <div className="absolute top-[-40px] right-[-40px] w-64 h-64 rounded-full bg-white/10 blur-2xl" />
                 <div className="absolute bottom-[-20px] left-[-20px] w-48 h-48 rounded-full bg-violet-400/20 blur-xl" />
-
                 <div className="relative max-w-2xl mx-auto">
-                    {/* 날짜 + 버튼 */}
                     <div className="flex justify-between items-start mb-6">
                         <div>
                             <p className="text-blue-200 text-xs mb-1">
@@ -124,11 +135,9 @@ export default function DashboardPage() {
                             </button>
                         </div>
                     </div>
-
-                    {/* 순이익 큰 숫자 */}
-                    <div className={`fade-up delay-1`}>
+                    <div className="fade-up delay-1">
                         <p className="text-blue-200 text-sm mb-1">이번 달 순이익</p>
-                        <p className={`text-4xl font-extrabold text-white mb-1`}>
+                        <p className="text-4xl font-extrabold text-white mb-1">
                             {netProfit >= 0 ? '+' : ''}{fmt(netProfit)}원
                         </p>
                         <p className="text-blue-200 text-xs">
@@ -140,25 +149,44 @@ export default function DashboardPage() {
 
             <div className="max-w-2xl mx-auto px-4 -mt-12 pb-10">
 
-                {/* 종소세 D-day 카드 */}
-                <div className={`fade-up delay-2 bg-white rounded-2xl shadow-lg border border-orange-100 p-4 mb-5 flex justify-between items-center`}>
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-400 flex items-center justify-center text-xl">
-                            📅
-                        </div>
-                        <div>
-                            <p className="text-xs text-gray-400">종합소득세 신고 마감</p>
-                            <p className="font-bold text-gray-800">5월 31일까지</p>
+                {/* 신고 기간 D-day 배너 — 슬라이드 */}
+                <div className={`fade-up delay-2 bg-white rounded-2xl shadow-lg border ${currentDeadline.border} p-4 mb-5`}>
+                    <div className="flex justify-between items-center mb-3">
+                        <p className="text-xs font-semibold text-gray-400">📅 다가오는 신고 기간</p>
+                        <div className="flex items-center gap-2">
+                            <div className="flex gap-1">
+                                {upcomingDeadlines.map((_, i) => (
+                                    <button key={i} onClick={() => setDeadlineIdx(i)}
+                                        className={`w-2 h-2 rounded-full transition ${i === deadlineIdx ? 'bg-orange-400' : 'bg-gray-200'}`} />
+                                ))}
+                            </div>
+                            <button onClick={() => navigate('/notifications')}
+                                className="text-xs text-blue-500 font-semibold hover:text-blue-700 transition">
+                                전체보기 →
+                            </button>
                         </div>
                     </div>
-                    <div className="text-right">
-                        <p className="text-xs text-gray-400">남은 기간</p>
-                        <p className="text-2xl font-extrabold text-orange-500">D-{taxDday}</p>
+                    <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${currentDeadline.color} flex items-center justify-center text-xl`}>
+                                {currentDeadline.icon}
+                            </div>
+                            <div>
+                                <p className="text-xs text-gray-400">{currentDeadline.name}</p>
+                                <p className="font-bold text-gray-800">{currentDeadline.date}까지</p>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-xs text-gray-400">남은 기간</p>
+                            <p className={`text-2xl font-extrabold ${currentDeadline.dday <= 30 ? 'text-red-500' : 'text-orange-500'}`}>
+                                D-{currentDeadline.dday}
+                            </p>
+                        </div>
                     </div>
                 </div>
 
-                {/* 수입/지출 카드 2개 */}
-                <div className={`fade-up delay-2 grid grid-cols-2 gap-3 mb-5`}>
+                {/* 수입/지출 카드 */}
+                <div className="fade-up delay-2 grid grid-cols-2 gap-3 mb-5">
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
                         <div className="flex items-center gap-2 mb-3">
                             <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-sm">💚</div>
@@ -176,7 +204,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* 월별 차트 */}
-                <div className={`fade-up delay-3 bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-5`}>
+                <div className="fade-up delay-3 bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-5">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="font-bold text-gray-800">📈 월별 추이</h2>
                     </div>
@@ -210,8 +238,8 @@ export default function DashboardPage() {
                     )}
                 </div>
 
-                {/* 메뉴 3개 */}
-                <div className={`fade-up delay-4 grid grid-cols-3 gap-3 mb-5`}>
+                {/* 메뉴 */}
+                <div className="fade-up delay-4 grid grid-cols-3 gap-3 mb-5">
                     {menus.map((m, i) => (
                         <button key={i} onClick={() => navigate(m.path)}
                             className={`bg-gradient-to-br ${m.from} ${m.to} text-white rounded-2xl p-4 text-left transition shadow-md ${m.shadow} hover:scale-105 active:scale-95`}
@@ -224,7 +252,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* 세금 계산 결과 위젯 */}
-                <div className={`fade-up delay-5`}>
+                <div className="fade-up delay-5">
                     {lastTaxResult ? (
                         <div onClick={() => navigate('/tax-calculator')}
                             className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-5 cursor-pointer hover:border-violet-200 hover:shadow-md transition">
@@ -264,7 +292,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* 최근 거래 내역 */}
-                <div className={`fade-up delay-6 bg-white rounded-2xl shadow-sm border border-gray-100 p-5`}>
+                <div className="fade-up delay-6 bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
                     <div className="flex justify-between items-center mb-4">
                         <div className="flex items-center gap-2">
                             <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-sm">📋</div>
@@ -301,7 +329,6 @@ export default function DashboardPage() {
                         </div>
                     )}
                 </div>
-
             </div>
         </div>
     );

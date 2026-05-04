@@ -20,14 +20,24 @@ def parse_date(value) -> date:
     if isinstance(value, datetime):
         return value.date()
     s = str(value).strip()
+
+    # 8자리 숫자면 무조건 YYYYMMDD로 먼저 시도
+    if s.isdigit() and len(s) == 8:
+        try:
+            return datetime.strptime(s, "%Y%m%d").date()
+        except ValueError:
+            pass
+
+    # 그 외 숫자면 Excel 날짜 숫자로 처리
     try:
         num = float(s)
-        if num > 1000:
+        if num > 1000 and not s.isdigit():
             from datetime import timedelta
             base = datetime(1899, 12, 30)
             return (base + timedelta(days=num)).date()
     except ValueError:
         pass
+
     for fmt in [
         "%Y-%m-%d", "%Y/%m/%d", "%m/%d/%Y", "%d/%m/%Y",
         "%Y.%m.%d", "%Y%m%d", "%m-%d-%Y", "%d-%m-%Y",

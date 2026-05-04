@@ -40,10 +40,10 @@ const plans = [
     color: 'border-gray-200',
     badge: '',
     features: [
-      'AI 세무 상담 월 10회',
+      'AI 세무 상담 월 5회',
       '거래 내역 관리',
       '세금 계산기',
-      '영수증 OCR 월 5회',
+      '영수증 OCR 월 3회',
     ],
     cta: '무료로 시작하기',
     ctaStyle: 'bg-gray-800 hover:bg-gray-700 text-white',

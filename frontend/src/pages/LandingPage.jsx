@@ -115,10 +115,10 @@ export default function LandingPage() {
             <span className="font-bold text-gray-900 text-lg">세무비서</span>
           </div>
           <div className="flex gap-3">
-            <button onClick={() => navigate('/login')}
+            {/* <button onClick={() => navigate('/login')}
               className="text-sm text-gray-600 hover:text-gray-900 px-4 py-2 rounded-xl transition font-semibold">
               로그인
-            </button>
+            </button> */}
             <button onClick={() => navigate('/login')}
               className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl transition font-semibold">
               무료 시작

@@ -126,7 +126,7 @@ export default function MyInfoPage() {
             <div>
               <p className="font-semibold text-gray-800">{plan.label} 플랜</p>
               <p className="text-xs text-gray-400 mt-0.5">
-                {info?.plan === 'pro' ? '모든 기능 무제한 사용 중' : 'AI 상담 월 10회 · OCR 월 5회'}
+                {info?.plan === 'pro' ? '모든 기능 무제한 사용 중' : 'AI 상담 월 5회 · OCR 월 3회'}
               </p>
             </div>
             {info?.plan === 'pro' ? (

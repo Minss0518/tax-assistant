@@ -1,6 +1,10 @@
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.database import get_db
 from app.core.dependencies import get_current_user
+from app.core.limits import check_ocr_limit
 from app.services.ocr_service import extract_receipt_info
+import uuid
 
 router = APIRouter(prefix="/ocr", tags=["ocr"])
 
@@ -8,9 +12,13 @@ router = APIRouter(prefix="/ocr", tags=["ocr"])
 async def upload_receipt(
     file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="이미지 파일만 업로드 가능합니다.")
+
+    user_id = uuid.UUID(current_user["sub"])
+    await check_ocr_limit(user_id, db)
 
     image_bytes = await file.read()
     receipt_info = await extract_receipt_info(image_bytes)

@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from app.database import get_db
 from app.models.chat import ChatHistory
 from app.core.dependencies import get_current_user
+from app.core.limits import check_chat_limit
 from app.services.rag_service import query_tax_knowledge, stream_tax_knowledge
 import uuid
 import json
@@ -23,6 +24,7 @@ async def chat(
     db: AsyncSession = Depends(get_db)
 ):
     user_id = uuid.UUID(current_user["sub"])
+    await check_chat_limit(user_id, db)
 
     user_msg = ChatHistory(
         id=uuid.uuid4(),
@@ -53,6 +55,7 @@ async def chat_stream(
     db: AsyncSession = Depends(get_db)
 ):
     user_id = uuid.UUID(current_user["sub"])
+    await check_chat_limit(user_id, db)
 
     user_msg = ChatHistory(
         id=uuid.uuid4(),
@@ -70,7 +73,7 @@ async def chat_stream(
             async for token in stream_tax_knowledge(request.message):
                 full_answer.append(token)
                 yield f"data: {json.dumps({'token': token}, ensure_ascii=False)}\n\n"
-                await asyncio.sleep(0.02)  # 버퍼 즉시 플러시
+                await asyncio.sleep(0.02)
 
             answer = "".join(full_answer)
             ai_msg = ChatHistory(

@@ -1,7 +1,7 @@
 import uuid
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from ..database import get_db
 from ..core.dependencies import get_current_user
 from ..models.tax_calculation import TaxCalculation
@@ -60,3 +60,17 @@ async def get_calculation_history(
         }
         for c in calcs
     ]
+
+
+# ✅ 내 계산 기록 전체 삭제
+@router.delete("/clear")
+async def clear_calculation_history(
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    user_id = uuid.UUID(current_user["sub"])
+    await db.execute(
+        delete(TaxCalculation).where(TaxCalculation.user_id == user_id)
+    )
+    await db.commit()
+    return {"success": True}

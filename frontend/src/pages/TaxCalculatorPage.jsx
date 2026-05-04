@@ -158,13 +158,19 @@ export default function TaxCalculatorPage() {
         }
     };
 
-    const handleReset = () => {
+    const handleReset = async () => {
         setIncome(''); setExpense('');
         setBasicDeduction('1500000');
         setPensionDeduction(''); setHealthDeduction(''); setOtherDeduction('');
         setAutoInsurance(true); setResult(null);
-        // ✅ 초기화 버튼 누르면 이 계정의 저장값도 삭제
+        // ✅ 이 계정의 localStorage 저장값 삭제
         if (userId) localStorage.removeItem(`taxInput_${userId}`);
+        // ✅ DB에 저장된 계산 기록도 전체 삭제
+        try {
+            await api.delete('/tax-calculator/clear');
+        } catch (e) {
+            console.error('계산 기록 삭제 실패:', e);
+        }
     };
 
     const fmt = (n) => (n ?? 0).toLocaleString();

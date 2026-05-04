@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import { getTransactions } from '../api/transactions';
+import api from '../api/axios';
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
@@ -71,9 +72,27 @@ export default function DashboardPage() {
 
     useEffect(() => {
         if (!token) { navigate('/login'); return; }
+
+        // 거래 내역 불러오기
         getTransactions().then((res) => setTransactions(res.data));
-        const saved = localStorage.getItem('lastTaxResult');
-        if (saved) setLastTaxResult(JSON.parse(saved));
+
+        // ✅ DB에서 최신 세금 계산 결과 불러오기 (계정별 자동 분리)
+        api.get('/tax-calculator/history')
+            .then((res) => {
+                if (res.data && res.data.length > 0) {
+                    const latest = res.data[0]; // 가장 최근 결과
+                    setLastTaxResult({
+                        grossIncome: latest.grossIncome,
+                        totalTax: latest.totalTax,
+                        finalTax: latest.finalTax,
+                        isRefund: latest.isRefund,
+                        refundAmount: latest.refundAmount,
+                        calculatedAt: latest.createdAt,
+                    });
+                }
+            })
+            .catch((e) => console.error('세금 계산 결과 불러오기 실패:', e));
+
     }, [token]);
 
     const totalIncome = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);

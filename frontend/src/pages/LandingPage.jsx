@@ -267,7 +267,7 @@ export default function LandingPage() {
                     <span className="text-gray-400 mb-1">원 / 월</span>
                   </div>
                 </div>
-                <ul className="flex flex-col gap-3 mb-8 min-h-[144px]">
+                <ul className="flex flex-col gap-3 mb-8 min-h-[200px]">
                   {plan.features.map((feat, j) => (
                     <li key={j} className="flex items-center gap-2 text-sm text-gray-600">
                       <span className="text-emerald-500 font-bold">✓</span> {feat}

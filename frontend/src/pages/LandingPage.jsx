@@ -30,6 +30,13 @@ const features = [
     color: 'from-blue-400 to-cyan-400',
     bg: 'bg-blue-50',
   },
+  {
+    icon: '📂',
+    title: '일괄 업로드',
+    desc: 'CSV, Excel 파일로 거래 내역을 한 번에 업로드할 수 있어요. 기존 가계부 데이터도 바로 가져올 수 있어요.',
+    color: 'from-rose-400 to-pink-400',
+    bg: 'bg-rose-50',
+  },
 ];
 
 const plans = [
@@ -44,6 +51,7 @@ const plans = [
       '거래 내역 관리',
       '세금 계산기',
       '영수증 OCR 월 3회',
+      'CSV/Excel 일괄 업로드',
     ],
     cta: '무료로 시작하기',
     ctaStyle: 'bg-gray-800 hover:bg-gray-700 text-white',
@@ -59,6 +67,7 @@ const plans = [
       '거래 내역 관리',
       '세금 계산기',
       '영수증 OCR 무제한',
+      'CSV/Excel 일괄 업로드',
       '신고 기간 알림',
       '월별 세금 리포트',
     ],
@@ -115,10 +124,6 @@ export default function LandingPage() {
             <span className="font-bold text-gray-900 text-lg">세무비서</span>
           </div>
           <div className="flex gap-3">
-            {/* <button onClick={() => navigate('/login')}
-              className="text-sm text-gray-600 hover:text-gray-900 px-4 py-2 rounded-xl transition font-semibold">
-              로그인
-            </button> */}
             <button onClick={() => navigate('/login')}
               className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl transition font-semibold">
               무료 시작
@@ -129,7 +134,6 @@ export default function LandingPage() {
 
       {/* 히어로 섹션 */}
       <section className="relative pt-32 pb-24 px-6 overflow-hidden">
-        {/* 배경 블롭 */}
         <div className="absolute top-16 right-[-100px] w-96 h-96 bg-blue-100 blob opacity-60 animate-pulse" style={{ animationDuration: '4s' }} />
         <div className="absolute bottom-0 left-[-80px] w-72 h-72 bg-violet-100 blob opacity-50 animate-pulse" style={{ animationDuration: '6s' }} />
         <div className="absolute top-40 left-1/2 w-64 h-64 bg-emerald-100 blob opacity-40 animate-pulse" style={{ animationDuration: '5s' }} />
@@ -200,8 +204,9 @@ export default function LandingPage() {
             </h2>
             <p className="text-gray-500 text-lg">복잡한 세금, 이제 하나의 앱으로 해결하세요</p>
           </div>
+          {/* ✅ 5개 카드: 2x2 + 마지막 1개 가운데 정렬 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {features.map((f, i) => (
+            {features.slice(0, 4).map((f, i) => (
               <div key={i} className={`reveal reveal-delay-${i % 3 + 1} ${f.bg} rounded-3xl p-7 border border-white`}>
                 <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${f.color} flex items-center justify-center text-2xl mb-5 shadow-lg`}>
                   {f.icon}
@@ -210,6 +215,16 @@ export default function LandingPage() {
                 <p className="text-gray-500 text-sm leading-relaxed">{f.desc}</p>
               </div>
             ))}
+          </div>
+          {/* 5번째 카드 가운데 정렬 */}
+          <div className="flex justify-center mt-6">
+            <div className={`reveal reveal-delay-1 ${features[4].bg} rounded-3xl p-7 border border-white w-full md:w-1/2`}>
+              <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${features[4].color} flex items-center justify-center text-2xl mb-5 shadow-lg`}>
+                {features[4].icon}
+              </div>
+              <h3 className="font-bold text-gray-900 text-lg mb-2">{features[4].title}</h3>
+              <p className="text-gray-500 text-sm leading-relaxed">{features[4].desc}</p>
+            </div>
           </div>
         </div>
       </section>

@@ -258,7 +258,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* 메뉴 */}
-                <div className="fade-up delay-4 grid grid-cols-3 gap-3 mb-5">
+                <div className="fade-up delay-4 grid grid-cols-2 gap-3 mb-5">
                     {menus.map((m, i) => (
                         <button key={i} onClick={() => navigate(m.path)}
                             className={`bg-gradient-to-br ${m.from} ${m.to} text-white rounded-2xl p-4 text-left transition shadow-md ${m.shadow} hover:scale-105 active:scale-95`}

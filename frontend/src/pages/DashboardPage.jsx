@@ -309,6 +309,11 @@ export default function DashboardPage() {
                     )}
                 </div>
 
+                {/* AI 인사이트 */}
+                <div className="anim-4" style={{ marginBottom: 14 }}>
+                    <AIInsightWidget />
+                </div>
+
                 {/* 메뉴 */}
                 <div className="anim-4" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
                     {menus.map((m, i) => (

@@ -32,7 +32,7 @@ client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 # ────────────────────────────────────────────
 async def fetch_transactions_for_llm(current_user: dict, db: AsyncSession) -> dict:
     """최근 3개월 거래 내역을 LLM에게 넘기기 좋은 구조로 변환"""
-    three_months_ago = datetime.now() - timedelta(days=90)
+    three_months_ago = datetime.now() - timedelta(days=365)
 
     result = await db.execute(
         select(Transaction)

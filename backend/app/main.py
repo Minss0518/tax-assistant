@@ -7,7 +7,7 @@ import app.models.user
 import app.models.transaction
 import app.models.chat
 import app.models.subscription
-from routers.ai_insights import router as ai_insights_router
+from app.routers.ai_insights import router as ai_insights_router
 from app.routers import auth, transactions, chat, ocr, users, upload, payments, tax_calculator
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse

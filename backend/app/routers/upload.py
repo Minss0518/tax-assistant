@@ -21,14 +21,12 @@ def parse_date(value) -> date:
         return value.date()
     s = str(value).strip()
 
-    # 8자리 숫자면 무조건 YYYYMMDD로 먼저 시도
     if s.isdigit() and len(s) == 8:
         try:
             return datetime.strptime(s, "%Y%m%d").date()
         except ValueError:
             pass
 
-    # 그 외 숫자면 Excel 날짜 숫자로 처리
     try:
         num = float(s)
         if num > 1000 and not s.isdigit():
@@ -49,12 +47,14 @@ def parse_date(value) -> date:
             continue
     raise ValueError(f"날짜 형식을 인식할 수 없어요: {value}")
 
+
 def parse_amount(value) -> int:
     s = str(value).replace(",", "").replace("원", "").replace(" ", "").replace("+", "").strip()
     try:
         return abs(int(float(s)))
     except ValueError:
         raise ValueError(f"금액 형식을 인식할 수 없어요: {value}")
+
 
 def parse_type(value) -> str:
     s = str(value).strip().lower()
@@ -68,8 +68,10 @@ def parse_type(value) -> str:
             return "expense"
     return "expense"
 
+
 def normalize_header(h: str) -> str:
     return str(h).strip().lower().replace(" ", "").replace("_", "").replace("-", "")
+
 
 def find_col(headers, candidates):
     normalized_headers = {normalize_header(h): h for h in headers}
@@ -77,13 +79,13 @@ def find_col(headers, candidates):
         nc = normalize_header(c)
         if nc in normalized_headers:
             return normalized_headers[nc]
-    # 부분 매칭
     for c in candidates:
         nc = normalize_header(c)
         for nh, orig in normalized_headers.items():
             if nc in nh or nh in nc:
                 return orig
     return None
+
 
 def decode_csv(contents: bytes) -> str:
     for encoding in ['utf-8-sig', 'utf-8', 'euc-kr', 'cp949', 'latin-1']:
@@ -92,6 +94,7 @@ def decode_csv(contents: bytes) -> str:
         except (UnicodeDecodeError, LookupError):
             continue
     raise ValueError("파일 인코딩을 인식할 수 없어요.")
+
 
 def get_cell_value(c, shared_strings, ns):
     t = c.get('t', '')
@@ -109,6 +112,7 @@ def get_cell_value(c, shared_strings, ns):
         is_el = c.find('.//ns:t', ns)
         return is_el.text if is_el is not None else ''
 
+
 def parse_xlsx(contents: bytes) -> list:
     rows = []
     ns = {'ns': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
@@ -121,7 +125,6 @@ def parse_xlsx(contents: bytes) -> list:
                 texts = si.findall('.//ns:t', ns)
                 shared_strings.append(''.join(t.text or '' for t in texts))
 
-        # 첫 번째 시트 자동 탐색
         sheet_name = 'xl/worksheets/sheet1.xml'
         available = [n for n in z.namelist() if n.startswith('xl/worksheets/sheet') and n.endswith('.xml')]
         if available:
@@ -133,7 +136,6 @@ def parse_xlsx(contents: bytes) -> list:
             cells = []
             for c in row.findall('ns:c', ns):
                 cells.append(get_cell_value(c, shared_strings, ns))
-            # 빈 행 스킵
             if any(str(v).strip() for v in cells):
                 sheet_rows.append(cells)
 
@@ -150,6 +152,7 @@ def parse_xlsx(contents: bytes) -> list:
                 rows.append(row_dict)
 
     return rows
+
 
 @router.post("/transactions")
 async def upload_transactions(
@@ -184,7 +187,6 @@ async def upload_transactions(
 
     for i, row in enumerate(rows):
         try:
-            # 완전히 빈 행 스킵
             if not any(str(v).strip() for v in row.values()):
                 continue
 
@@ -222,6 +224,7 @@ async def upload_transactions(
                 category_name=category_info.get("category"),
                 category_emoji=category_info.get("emoji"),
                 is_deductible=category_info.get("is_deductible"),
+                source="upload",  # ← 출처 표시
             )
             db.add(transaction)
             success += 1
@@ -237,6 +240,7 @@ async def upload_transactions(
         "failed": failed,
         "errors": errors[:5],
     }
+
 
 @router.get("/template/csv")
 async def download_csv_template():

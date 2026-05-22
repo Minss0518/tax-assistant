@@ -47,7 +47,7 @@ export default function TransactionsPage() {
   const navigate = useNavigate();
   const { token } = useAuthStore();
   const [transactions, setTransactions] = useState([]);
-  const [form, setForm] = useState({ type: 'income', amount: '', memo: '', transaction_date: '' });
+  const [form, setForm] = useState({ type: 'income', amount: '', memo: '', transaction_date: '', source: 'manual' });
   const [showForm, setShowForm] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrPreview, setOcrPreview] = useState(null);
@@ -145,7 +145,7 @@ export default function TransactionsPage() {
   const handleSubmit = async () => {
     if (!form.amount || !form.transaction_date) return;
     await createTransaction({ ...form, amount: parseInt(form.amount) });
-    setForm({ type: 'income', amount: '', memo: '', transaction_date: '' });
+    setForm({ type: 'income', amount: '', memo: '', transaction_date: '', source: 'manual' });
     setShowForm(false);
     setOcrPreview(null);
     setOcrResult(null);

@@ -239,7 +239,7 @@ async def ask_question(
 {context}"""
 
     async def stream_response():
-        async with client.chat.completions.stream(
+        response = await client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": system_prompt},
@@ -247,11 +247,12 @@ async def ask_question(
             ],
             temperature=0.4,
             max_tokens=500,
-        ) as stream:
-            async for chunk in stream:
-                delta = chunk.choices[0].delta.content
-                if delta:
-                    yield delta
+            stream=True,
+        )
+        async for chunk in response:
+            delta = chunk.choices[0].delta.content
+            if delta:
+                yield delta
 
     
     return StreamingResponse(

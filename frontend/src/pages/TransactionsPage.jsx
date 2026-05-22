@@ -28,9 +28,17 @@ const CATEGORIES = [
   { name: "기타수입", emoji: "💰", is_deductible: null },
 ];
 
+// 출처 뱃지
+const SOURCE_BADGE = {
+  ocr:    { label: 'OCR', color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE' },
+  upload: { label: '업로드', color: '#1D4ED8', bg: '#EFF6FF', border: '#BFDBFE' },
+  manual: { label: '직접입력', color: '#065F46', bg: '#ECFDF5', border: '#A7F3D0' },
+};
+
 const BackButton = ({ onClick }) => (
   <button onClick={onClick}
-    className="flex items-center gap-1.5 bg-gray-600 hover:bg-gray-700 active:scale-95 text-white text-sm font-semibold px-4 py-2 rounded-full shadow-md transition">
+    style={{ display:'flex', alignItems:'center', gap:6, background:'#4B5563', color:'#fff',
+      fontSize:13, fontWeight:600, padding:'6px 14px', borderRadius:20, border:'none', cursor:'pointer' }}>
     ← 뒤로
   </button>
 );
@@ -45,8 +53,19 @@ export default function TransactionsPage() {
   const [ocrPreview, setOcrPreview] = useState(null);
   const [ocrResult, setOcrResult] = useState(null);
   const [ocrError, setOcrError] = useState('');
-  const [editCategoryId, setEditCategoryId] = useState(null); // 카테고리 수정 중인 거래 ID
+  const [editCategoryId, setEditCategoryId] = useState(null);
   const fileInputRef = useRef(null);
+
+  // ── 필터 상태 ──────────────────────────────────────────────
+  const [filterType, setFilterType] = useState('all');       // all | income | expense
+  const [filterDateFrom, setFilterDateFrom] = useState('');
+  const [filterDateTo, setFilterDateTo] = useState('');
+  const [showFilter, setShowFilter] = useState(false);
+
+  // ── 체크박스 삭제 상태 ────────────────────────────────────
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState(new Set());
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     if (!token) { navigate('/login'); return; }
@@ -56,8 +75,73 @@ export default function TransactionsPage() {
   const fetchTransactions = async () => {
     const res = await getTransactions();
     setTransactions(res.data);
+    setSelected(new Set());
   };
 
+  // ── 필터링된 거래 목록 ────────────────────────────────────
+  const filtered = transactions.filter((t) => {
+    if (filterType !== 'all' && t.type !== filterType) return false;
+    if (filterDateFrom && t.transaction_date < filterDateFrom) return false;
+    if (filterDateTo && t.transaction_date > filterDateTo) return false;
+    return true;
+  });
+
+  const activeFilterCount = [
+    filterType !== 'all',
+    !!filterDateFrom,
+    !!filterDateTo,
+  ].filter(Boolean).length;
+
+  const resetFilter = () => {
+    setFilterType('all');
+    setFilterDateFrom('');
+    setFilterDateTo('');
+  };
+
+  // ── 체크박스 ──────────────────────────────────────────────
+  const toggleSelect = (id) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (selected.size === filtered.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(filtered.map(t => t.id)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selected.size === 0) return;
+    if (!window.confirm(`선택한 ${selected.size}개를 삭제할까요?`)) return;
+    setDeleteLoading(true);
+    await Promise.all([...selected].map(id => deleteTransaction(id)));
+    setDeleteLoading(false);
+    setSelectMode(false);
+    fetchTransactions();
+  };
+
+  const handleDeleteAll = async () => {
+    if (!window.confirm(`전체 ${filtered.length}개를 삭제할까요? 이 작업은 되돌릴 수 없습니다.`)) return;
+    setDeleteLoading(true);
+    await Promise.all(filtered.map(t => deleteTransaction(t.id)));
+    setDeleteLoading(false);
+    setSelectMode(false);
+    fetchTransactions();
+  };
+
+  // ── 단건 삭제 ─────────────────────────────────────────────
+  const handleDelete = async (id) => {
+    if (!window.confirm('이 거래를 삭제할까요?')) return;
+    await deleteTransaction(id);
+    fetchTransactions();
+  };
+
+  // ── 폼 제출 ───────────────────────────────────────────────
   const handleSubmit = async () => {
     if (!form.amount || !form.transaction_date) return;
     await createTransaction({ ...form, amount: parseInt(form.amount) });
@@ -68,11 +152,7 @@ export default function TransactionsPage() {
     fetchTransactions();
   };
 
-  const handleDelete = async (id) => {
-    await deleteTransaction(id);
-    fetchTransactions();
-  };
-
+  // ── OCR ───────────────────────────────────────────────────
   const handleReceiptChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -84,13 +164,8 @@ export default function TransactionsPage() {
       const res = await uploadReceipt(file);
       const extracted = res.data.extracted;
       setOcrResult(extracted);
-      setForm({
-        type: extracted.type || 'expense',
-        amount: String(extracted.amount || ''),
-        memo: extracted.memo || '',
-        transaction_date: extracted.date || '',
-      });
-    } catch (err) {
+      setForm({ type: extracted.type || 'expense', amount: String(extracted.amount || ''), memo: extracted.memo || '', transaction_date: extracted.date || '' });
+    } catch {
       setOcrError('영수증 인식에 실패했어요. 다시 시도해 주세요.');
     } finally {
       setOcrLoading(false);
@@ -98,176 +173,323 @@ export default function TransactionsPage() {
   };
 
   const resetOcr = () => {
-    setOcrPreview(null);
-    setOcrResult(null);
-    setOcrError('');
+    setOcrPreview(null); setOcrResult(null); setOcrError('');
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  // ── 카테고리 수정 ─────────────────────────────────────────
   const handleCategoryUpdate = async (transactionId, cat) => {
     await api.patch(`/transactions/${transactionId}/category`, {
-      category_name: cat.name,
-      category_emoji: cat.emoji,
-      is_deductible: cat.is_deductible ?? false,
+      category_name: cat.name, category_emoji: cat.emoji, is_deductible: cat.is_deductible ?? false,
     });
     setEditCategoryId(null);
     fetchTransactions();
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-2xl mx-auto px-4 py-8">
+  // ── 출처 추론 (source 필드 없으면 memo로 추론) ────────────
+  const getSource = (t) => {
+    if (t.source) return t.source;
+    return 'manual';
+  };
 
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-2 min-w-0">
+  // ── 스타일 상수 ───────────────────────────────────────────
+  const card = { background:'#fff', border:'1px solid #E5E7EB', borderRadius:12 };
+  const btnBase = { border:'none', cursor:'pointer', fontFamily:'inherit', transition:'all 0.15s' };
+
+  return (
+    <div style={{ minHeight:'100vh', background:'#F8F9FA', fontFamily:"'Pretendard', -apple-system, sans-serif" }}>
+      <style>{`
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        .row-hover:hover { background: #F9FAFB; }
+        .filter-btn { transition: all 0.15s; }
+        .filter-btn:hover { background: #EFF6FF !important; border-color: #93C5FD !important; color: #1D4ED8 !important; }
+        .cb-row:hover .cb-check { border-color: #3B82F6; }
+      `}</style>
+
+      <div style={{ maxWidth:720, margin:'0 auto', padding:'24px 16px 48px' }}>
+
+        {/* 헤더 */}
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
             <BackButton onClick={() => navigate('/dashboard')} />
-            <h1 className="text-lg font-bold text-gray-800 whitespace-nowrap">📊 거래 내역</h1>
+            <span style={{ fontWeight:700, fontSize:15, color:'#111827' }}>거래 내역</span>
           </div>
-          <div className="flex gap-2 flex-shrink-0">
+          <div style={{ display:'flex', gap:8 }}>
             <button onClick={() => { setShowForm(true); fileInputRef.current?.click(); }}
-              className="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded-xl text-xs font-semibold transition whitespace-nowrap">
+              style={{ ...btnBase, background:'#7C3AED', color:'#fff', fontSize:12, fontWeight:600, padding:'7px 12px', borderRadius:8 }}>
               📷 영수증
             </button>
             <button onClick={() => { setShowForm(!showForm); resetOcr(); }}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-xl text-xs font-semibold transition whitespace-nowrap">
+              style={{ ...btnBase, background:'#1D4ED8', color:'#fff', fontSize:12, fontWeight:600, padding:'7px 12px', borderRadius:8 }}>
               + 추가
             </button>
           </div>
         </div>
 
-        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleReceiptChange} />
+        <input ref={fileInputRef} type="file" accept="image/*" style={{ display:'none' }} onChange={handleReceiptChange} />
 
+        {/* 폼 */}
         {showForm && (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-6">
-            <h2 className="font-bold text-gray-700 mb-4">새 거래 추가</h2>
+          <div style={{ ...card, padding:20, marginBottom:16 }}>
+            <p style={{ fontWeight:700, color:'#111827', marginBottom:16, fontSize:14 }}>새 거래 추가</p>
             {ocrPreview && (
-              <div className="mb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-semibold text-purple-600">📷 영수증 인식 결과</span>
-                  <button onClick={resetOcr} className="text-xs text-gray-400 hover:text-gray-600">✕ 초기화</button>
+              <div style={{ marginBottom:16 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
+                  <span style={{ fontSize:11, fontWeight:600, color:'#7C3AED' }}>📷 영수증 인식 결과</span>
+                  <button onClick={resetOcr} style={{ ...btnBase, fontSize:11, color:'#9CA3AF', background:'none' }}>✕ 초기화</button>
                 </div>
-                <div className="flex gap-3 items-start">
-                  <img src={ocrPreview} alt="영수증 미리보기" className="w-20 h-20 object-cover rounded-xl border border-gray-200 flex-shrink-0" />
-                  <div className="flex-1">
-                    {ocrLoading && (
-                      <div className="flex items-center gap-2 text-sm text-purple-500 mt-2">
-                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-                        </svg>
-                        AI가 영수증을 분석 중이에요...
-                      </div>
-                    )}
-                    {ocrError && <p className="text-xs text-red-400 mt-2">{ocrError}</p>}
+                <div style={{ display:'flex', gap:12 }}>
+                  <img src={ocrPreview} alt="영수증" style={{ width:72, height:72, objectFit:'cover', borderRadius:8, border:'1px solid #E5E7EB', flexShrink:0 }} />
+                  <div>
+                    {ocrLoading && <p style={{ fontSize:12, color:'#7C3AED' }}>AI가 분석 중이에요...</p>}
+                    {ocrError && <p style={{ fontSize:12, color:'#EF4444' }}>{ocrError}</p>}
                     {ocrResult && !ocrLoading && (
-                      <div className="text-xs text-gray-500 mt-1 space-y-0.5">
-                        <p>✅ 인식 완료! 아래 내용을 확인·수정 후 저장하세요.</p>
-                        <p>금액: <span className="font-semibold text-gray-700">{ocrResult.amount?.toLocaleString()}원</span></p>
-                        <p>날짜: <span className="font-semibold text-gray-700">{ocrResult.date}</span></p>
-                        <p>메모: <span className="font-semibold text-gray-700">{ocrResult.memo}</span></p>
+                      <div style={{ fontSize:12, color:'#6B7280', lineHeight:1.7 }}>
+                        <p>✅ 인식 완료! 확인 후 저장하세요.</p>
+                        <p>금액: <b style={{ color:'#111827' }}>{ocrResult.amount?.toLocaleString()}원</b></p>
+                        <p>날짜: <b style={{ color:'#111827' }}>{ocrResult.date}</b></p>
                       </div>
                     )}
                   </div>
                 </div>
               </div>
             )}
-            <div className="flex gap-2 mb-3">
-              <button onClick={() => setForm({ ...form, type: 'income' })}
-                className={`flex-1 py-2 rounded-xl text-sm font-semibold transition ${form.type === 'income' ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-500'}`}>수입</button>
-              <button onClick={() => setForm({ ...form, type: 'expense' })}
-                className={`flex-1 py-2 rounded-xl text-sm font-semibold transition ${form.type === 'expense' ? 'bg-red-400 text-white' : 'bg-gray-100 text-gray-500'}`}>지출</button>
+            <div style={{ display:'flex', gap:8, marginBottom:12 }}>
+              {['income','expense'].map(type => (
+                <button key={type} onClick={() => setForm({ ...form, type })}
+                  style={{ ...btnBase, flex:1, padding:'8px 0', borderRadius:8, fontSize:13, fontWeight:600,
+                    background: form.type === type ? (type === 'income' ? '#059669' : '#DC2626') : '#F3F4F6',
+                    color: form.type === type ? '#fff' : '#6B7280' }}>
+                  {type === 'income' ? '수입' : '지출'}
+                </button>
+              ))}
             </div>
-            <input type="number" placeholder="금액" value={form.amount}
-              onChange={(e) => setForm({ ...form, amount: e.target.value })}
-              className="w-full border border-gray-200 rounded-xl px-4 py-2 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200" />
-            <input type="text" placeholder="메모 (선택)" value={form.memo}
-              onChange={(e) => setForm({ ...form, memo: e.target.value })}
-              className="w-full border border-gray-200 rounded-xl px-4 py-2 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200" />
-            <input type="date" value={form.transaction_date}
-              onChange={(e) => setForm({ ...form, transaction_date: e.target.value })}
-              className="w-full border border-gray-200 rounded-xl px-4 py-2 mb-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200" />
-            <p className="text-xs text-gray-400 mb-3">💡 메모를 입력하면 저장 시 AI가 카테고리를 자동 분류해요</p>
+            {[
+              { placeholder:'금액', type:'number', key:'amount' },
+              { placeholder:'메모 (선택)', type:'text', key:'memo' },
+              { placeholder:'날짜', type:'date', key:'transaction_date' },
+            ].map(({ placeholder, type, key }) => (
+              <input key={key} type={type} placeholder={placeholder} value={form[key]}
+                onChange={e => setForm({ ...form, [key]: e.target.value })}
+                style={{ width:'100%', border:'1px solid #E5E7EB', borderRadius:8, padding:'8px 12px',
+                  marginBottom:10, fontSize:13, outline:'none', fontFamily:'inherit' }} />
+            ))}
+            <p style={{ fontSize:11, color:'#9CA3AF', marginBottom:12 }}>💡 메모를 입력하면 AI가 카테고리를 자동 분류해요</p>
             <button onClick={handleSubmit}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl text-sm font-semibold transition">저장</button>
+              style={{ ...btnBase, width:'100%', background:'#1D4ED8', color:'#fff', padding:'10px 0', borderRadius:8, fontSize:13, fontWeight:600 }}>
+              저장
+            </button>
           </div>
         )}
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-          {transactions.length === 0 ? (
-            <p className="text-gray-400 text-sm text-center py-8">거래 내역이 없어요</p>
+        {/* ── 필터 + 선택 모드 툴바 ── */}
+        <div style={{ ...card, padding:'12px 16px', marginBottom:12 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+
+            {/* 수입/지출 탭 */}
+            <div style={{ display:'flex', gap:6 }}>
+              {[['all','전체'],['income','수입'],['expense','지출']].map(([val, label]) => (
+                <button key={val} onClick={() => setFilterType(val)}
+                  style={{ ...btnBase, padding:'5px 12px', borderRadius:20, fontSize:12, fontWeight:600,
+                    background: filterType === val
+                      ? (val === 'income' ? '#059669' : val === 'expense' ? '#DC2626' : '#111827')
+                      : '#F3F4F6',
+                    color: filterType === val ? '#fff' : '#6B7280',
+                    border: '1px solid transparent' }}>
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+              {/* 날짜 필터 */}
+              <button onClick={() => setShowFilter(!showFilter)}
+                style={{ ...btnBase, padding:'5px 10px', borderRadius:8, fontSize:12, fontWeight:500,
+                  background: activeFilterCount > 0 ? '#EFF6FF' : '#F3F4F6',
+                  color: activeFilterCount > 0 ? '#1D4ED8' : '#6B7280',
+                  border: `1px solid ${activeFilterCount > 0 ? '#BFDBFE' : '#E5E7EB'}` }}>
+                📅 날짜{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+              </button>
+              {/* 선택 모드 */}
+              <button onClick={() => { setSelectMode(!selectMode); setSelected(new Set()); }}
+                style={{ ...btnBase, padding:'5px 10px', borderRadius:8, fontSize:12, fontWeight:500,
+                  background: selectMode ? '#FEF2F2' : '#F3F4F6',
+                  color: selectMode ? '#DC2626' : '#6B7280',
+                  border: `1px solid ${selectMode ? '#FECACA' : '#E5E7EB'}` }}>
+                {selectMode ? '취소' : '선택'}
+              </button>
+            </div>
+          </div>
+
+          {/* 날짜 필터 펼침 */}
+          {showFilter && (
+            <div style={{ marginTop:12, paddingTop:12, borderTop:'1px solid #F3F4F6', display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+              <input type="date" value={filterDateFrom} onChange={e => setFilterDateFrom(e.target.value)}
+                style={{ border:'1px solid #E5E7EB', borderRadius:8, padding:'5px 10px', fontSize:12, fontFamily:'inherit', outline:'none', color:'#374151' }} />
+              <span style={{ color:'#9CA3AF', fontSize:12 }}>~</span>
+              <input type="date" value={filterDateTo} onChange={e => setFilterDateTo(e.target.value)}
+                style={{ border:'1px solid #E5E7EB', borderRadius:8, padding:'5px 10px', fontSize:12, fontFamily:'inherit', outline:'none', color:'#374151' }} />
+              {(filterDateFrom || filterDateTo) && (
+                <button onClick={() => { setFilterDateFrom(''); setFilterDateTo(''); }}
+                  style={{ ...btnBase, fontSize:11, color:'#9CA3AF', background:'none', padding:'4px 6px' }}>초기화</button>
+              )}
+            </div>
+          )}
+
+          {/* 선택 모드 액션바 */}
+          {selectMode && (
+            <div style={{ marginTop:12, paddingTop:12, borderTop:'1px solid #F3F4F6', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+              <label style={{ display:'flex', alignItems:'center', gap:6, fontSize:12, color:'#374151', cursor:'pointer', userSelect:'none' }}>
+                <input type="checkbox" checked={selected.size === filtered.length && filtered.length > 0}
+                  onChange={toggleAll} style={{ width:14, height:14, accentColor:'#1D4ED8' }} />
+                전체선택 ({selected.size}/{filtered.length})
+              </label>
+              <div style={{ display:'flex', gap:8 }}>
+                <button onClick={handleBulkDelete} disabled={selected.size === 0 || deleteLoading}
+                  style={{ ...btnBase, padding:'5px 12px', borderRadius:8, fontSize:12, fontWeight:600,
+                    background: selected.size > 0 ? '#EF4444' : '#F3F4F6',
+                    color: selected.size > 0 ? '#fff' : '#9CA3AF',
+                    opacity: deleteLoading ? 0.6 : 1 }}>
+                  선택 삭제 {selected.size > 0 ? `(${selected.size})` : ''}
+                </button>
+                <button onClick={handleDeleteAll} disabled={deleteLoading || filtered.length === 0}
+                  style={{ ...btnBase, padding:'5px 12px', borderRadius:8, fontSize:12, fontWeight:600,
+                    background:'#FEF2F2', color:'#DC2626', border:'1px solid #FECACA',
+                    opacity: deleteLoading ? 0.6 : 1 }}>
+                  전체삭제
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* 거래 목록 */}
+        <div style={{ ...card, overflow:'hidden' }}>
+          {filtered.length === 0 ? (
+            <div style={{ textAlign:'center', padding:'40px 0', color:'#9CA3AF', fontSize:13 }}>
+              {transactions.length === 0 ? '거래 내역이 없어요' : '필터 조건에 맞는 내역이 없어요'}
+            </div>
           ) : (
-            <div className="flex flex-col gap-3">
-              {transactions.map((t) => (
-                <div key={t.id} className="py-3 border-b border-gray-50 last:border-0">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-start gap-3">
-                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 mt-0.5 ${t.type === 'income' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-500'}`}>
-                        {t.type === 'income' ? '수입' : '지출'}
-                      </span>
-                      <div>
-                        <p className="text-sm text-gray-700">{t.memo || '-'}</p>
-                        <p className="text-xs text-gray-400">{t.transaction_date}</p>
-                        {/* 카테고리 뱃지 */}
-                        {t.category_name && (
-                          <button
-                            onClick={() => setEditCategoryId(editCategoryId === t.id ? null : t.id)}
-                            className={`mt-1 inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border transition ${
-                              t.is_deductible
-                                ? 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100'
-                                : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100'
-                            }`}>
-                            <span>{t.category_emoji}</span>
-                            <span>{t.category_name}</span>
-                            {t.is_deductible && <span className="text-emerald-400">· 경비</span>}
-                            <span className="text-gray-300">✎</span>
-                          </button>
-                        )}
-                        {!t.category_name && t.memo && (
-                          <button
-                            onClick={() => setEditCategoryId(editCategoryId === t.id ? null : t.id)}
-                            className="mt-1 inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border border-dashed border-gray-200 text-gray-400 hover:bg-gray-50 transition">
-                            + 카테고리 추가
-                          </button>
-                        )}
+            filtered.map((t, idx) => {
+              const src = getSource(t);
+              const srcBadge = SOURCE_BADGE[src] || SOURCE_BADGE.manual;
+              const isChecked = selected.has(t.id);
+
+              return (
+                <div key={t.id} className="row-hover cb-row"
+                  style={{ padding:'14px 20px', borderBottom: idx < filtered.length - 1 ? '1px solid #F9FAFB' : 'none',
+                    background: isChecked ? '#EFF6FF' : undefined, transition:'background 0.1s' }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:12 }}>
+
+                    {/* 체크박스 */}
+                    {selectMode && (
+                      <input type="checkbox" checked={isChecked} onChange={() => toggleSelect(t.id)}
+                        className="cb-check"
+                        style={{ width:15, height:15, marginTop:2, flexShrink:0, accentColor:'#1D4ED8', cursor:'pointer' }} />
+                    )}
+
+                    {/* 왼쪽 정보 */}
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap', marginBottom:3 }}>
+                        {/* 수입/지출 뱃지 */}
+                        <span style={{ fontSize:11, fontWeight:600, padding:'2px 7px', borderRadius:10,
+                          background: t.type === 'income' ? '#F0FDF4' : '#FEF2F2',
+                          color: t.type === 'income' ? '#059669' : '#DC2626', flexShrink:0 }}>
+                          {t.type === 'income' ? '수입' : '지출'}
+                        </span>
+                        {/* 출처 뱃지 */}
+                        <span style={{ fontSize:10, fontWeight:600, padding:'2px 6px', borderRadius:8,
+                          background: srcBadge.bg, color: srcBadge.color, border:`1px solid ${srcBadge.border}`, flexShrink:0 }}>
+                          {srcBadge.label}
+                        </span>
+                        <span style={{ fontSize:13, color:'#111827', fontWeight:500, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                          {t.memo || '-'}
+                        </span>
                       </div>
+                      <p style={{ fontSize:11, color:'#9CA3AF', marginBottom:4 }}>{t.transaction_date}</p>
+
+                      {/* 카테고리 뱃지 */}
+                      {t.category_name ? (
+                        <button onClick={() => setEditCategoryId(editCategoryId === t.id ? null : t.id)}
+                          style={{ ...btnBase, display:'inline-flex', alignItems:'center', gap:4, fontSize:11,
+                            padding:'2px 8px', borderRadius:10,
+                            background: t.is_deductible ? '#ECFDF5' : '#F9FAFB',
+                            color: t.is_deductible ? '#065F46' : '#6B7280',
+                            border: `1px solid ${t.is_deductible ? '#A7F3D0' : '#E5E7EB'}` }}>
+                          <span>{t.category_emoji}</span>
+                          <span>{t.category_name}</span>
+                          {t.is_deductible && <span style={{ color:'#059669' }}>· 경비</span>}
+                          <span style={{ color:'#D1D5DB' }}>✎</span>
+                        </button>
+                      ) : t.memo && (
+                        <button onClick={() => setEditCategoryId(editCategoryId === t.id ? null : t.id)}
+                          style={{ ...btnBase, display:'inline-flex', alignItems:'center', gap:4, fontSize:11,
+                            padding:'2px 8px', borderRadius:10, background:'none',
+                            border:'1px dashed #E5E7EB', color:'#9CA3AF' }}>
+                          + 카테고리
+                        </button>
+                      )}
                     </div>
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                      <span className={`font-bold text-sm ${t.type === 'income' ? 'text-green-500' : 'text-red-400'}`}>
+
+                    {/* 오른쪽 금액 + 삭제 */}
+                    <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:6, flexShrink:0 }}>
+                      <span style={{ fontSize:14, fontWeight:700, color: t.type === 'income' ? '#059669' : '#DC2626' }}>
                         {t.type === 'income' ? '+' : '-'}{t.amount.toLocaleString()}원
                       </span>
-                      <button onClick={() => handleDelete(t.id)} className="text-xs text-gray-400 hover:text-red-500 transition">삭제</button>
+                      {!selectMode && (
+                        <button onClick={() => handleDelete(t.id)}
+                          style={{ ...btnBase, fontSize:11, color:'#D1D5DB', background:'none', padding:'2px 4px',
+                            borderRadius:4, border:'1px solid transparent' }}
+                          onMouseEnter={e => { e.target.style.color='#EF4444'; e.target.style.borderColor='#FECACA'; }}
+                          onMouseLeave={e => { e.target.style.color='#D1D5DB'; e.target.style.borderColor='transparent'; }}>
+                          삭제
+                        </button>
+                      )}
                     </div>
                   </div>
 
                   {/* 카테고리 선택 드롭다운 */}
                   {editCategoryId === t.id && (
-                    <div className="mt-3 p-3 bg-gray-50 rounded-xl">
-                      <p className="text-xs font-semibold text-gray-500 mb-2">카테고리 선택</p>
-                      <div className="grid grid-cols-3 gap-1.5">
+                    <div style={{ marginTop:12, padding:12, background:'#F9FAFB', borderRadius:8 }}>
+                      <p style={{ fontSize:11, fontWeight:600, color:'#6B7280', marginBottom:8 }}>카테고리 선택</p>
+                      <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:6 }}>
                         {CATEGORIES.filter(cat =>
-                          t.type === 'income'
-                            ? cat.is_deductible === null
-                            : cat.is_deductible !== null
-                        ).map((cat) => (
-                          <button key={cat.name}
-                            onClick={() => handleCategoryUpdate(t.id, cat)}
-                            className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs transition text-left ${
-                              t.category_name === cat.name
-                                ? 'bg-blue-100 text-blue-700 font-semibold'
-                                : 'bg-white hover:bg-blue-50 text-gray-600 border border-gray-100'
-                            }`}>
+                          t.type === 'income' ? cat.is_deductible === null : cat.is_deductible !== null
+                        ).map(cat => (
+                          <button key={cat.name} onClick={() => handleCategoryUpdate(t.id, cat)}
+                            style={{ ...btnBase, display:'flex', alignItems:'center', gap:4, padding:'6px 8px',
+                              borderRadius:8, fontSize:11, textAlign:'left',
+                              background: t.category_name === cat.name ? '#EFF6FF' : '#fff',
+                              color: t.category_name === cat.name ? '#1D4ED8' : '#374151',
+                              border: `1px solid ${t.category_name === cat.name ? '#BFDBFE' : '#E5E7EB'}`,
+                              fontWeight: t.category_name === cat.name ? 600 : 400 }}>
                             <span>{cat.emoji}</span>
-                            <span className="truncate">{cat.name}</span>
+                            <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{cat.name}</span>
                           </button>
                         ))}
                       </div>
                     </div>
                   )}
                 </div>
-              ))}
-            </div>
+              );
+            })
           )}
         </div>
+
+        {/* 하단 요약 */}
+        {filtered.length > 0 && (
+          <div style={{ display:'flex', justifyContent:'space-between', padding:'12px 4px', fontSize:12, color:'#9CA3AF' }}>
+            <span>총 {filtered.length}건</span>
+            <div style={{ display:'flex', gap:16 }}>
+              <span style={{ color:'#059669' }}>
+                수입 +{filtered.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0).toLocaleString()}원
+              </span>
+              <span style={{ color:'#DC2626' }}>
+                지출 -{filtered.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0).toLocaleString()}원
+              </span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

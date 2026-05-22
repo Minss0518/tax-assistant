@@ -7,6 +7,7 @@ import app.models.user
 import app.models.transaction
 import app.models.chat
 import app.models.subscription
+from routers.ai_insights import router as ai_insights_router
 from app.routers import auth, transactions, chat, ocr, users, upload, payments, tax_calculator
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -39,6 +40,7 @@ app.include_router(users.router)
 app.include_router(upload.router)
 app.include_router(payments.router)
 app.include_router(tax_calculator.router)
+app.include_router(ai_insights_router)
 
 frontend_dist = os.path.join(os.path.dirname(__file__), "../../frontend/dist")
 if os.path.exists(frontend_dist):

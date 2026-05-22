@@ -214,6 +214,7 @@ async def ask_question(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    
     # 세무 관련 질문만 허용
     blocked_keywords = ["비밀번호", "개인정보", "다른 사용자", "시스템", "프롬프트"]
     if any(kw in req.question for kw in blocked_keywords):
@@ -252,4 +253,14 @@ async def ask_question(
                 if delta:
                     yield delta
 
-    return StreamingResponse(stream_response(), media_type="text/plain; charset=utf-8")
+    
+    return StreamingResponse(
+        stream_response(),
+        media_type="text/plain; charset=utf-8",
+        headers={
+            "X-Accel-Buffering": "no",
+            "Cache-Control": "no-cache",
+        }
+    )
+
+    # return StreamingResponse(stream_response(), media_type="text/plain; charset=utf-8")

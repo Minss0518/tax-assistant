@@ -5,6 +5,34 @@ import { uploadReceipt } from '../api/ocr';
 import useAuthStore from '../store/authStore';
 import api from '../api/axios';
 
+const ScrollTopButton = () => {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setShow(window.scrollY > 300);
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+  if (!show) return null;
+  return (
+    <button
+      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      style={{
+        position: 'fixed', bottom: 28, right: 24, width: 44, height: 44,
+        background: '#111827', color: '#fff', border: 'none', borderRadius: '50%',
+        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.2)', zIndex: 100, transition: 'all 0.2s',
+      }}
+      onMouseEnter={e => e.currentTarget.style.background = '#1D4ED8'}
+      onMouseLeave={e => e.currentTarget.style.background = '#111827'}
+      title="위로가기"
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="18 15 12 9 6 15"/>
+      </svg>
+    </button>
+  );
+};
+
 const CATEGORIES = [
   { name: "식비", emoji: "🍽️", is_deductible: true },
   { name: "교통비", emoji: "🚗", is_deductible: true },
@@ -282,8 +310,10 @@ export default function TransactionsPage() {
           </div>
         )}
 
+        <ScrollTopButton />
+
         {/* ── 필터 + 선택 모드 툴바 ── */}
-        <div style={{ ...card, padding:'12px 16px', marginBottom:12 }}>
+        <div style={{ ...card, padding:'12px 16px', marginBottom:12, position:'sticky', top:0, zIndex:10, backdropFilter:'blur(8px)' }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
 
             {/* 수입/지출 탭 */}

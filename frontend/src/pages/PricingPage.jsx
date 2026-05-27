@@ -47,6 +47,7 @@ export default function PricingPage() {
     const navigate = useNavigate();
     const [showModal, setShowModal] = useState(false);
     const [openFaq, setOpenFaq] = useState(null);
+
     const handlePayment = async () => {
         try {
             const tossPayments = await loadTossPayments("test_ck_ex6BJGQOVDOkO6Z4NPPn3W4w2zNb");
@@ -63,7 +64,9 @@ export default function PricingPage() {
             console.error("결제 오류:", e);
         }
     };
-    
+
+    const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+
     return (
         <div className="min-h-screen bg-gray-50">
             <div className="max-w-2xl mx-auto px-4 py-8">
@@ -129,7 +132,22 @@ export default function PricingPage() {
                         ))}
                     </div>
                 </div>
-                <p className="text-xs text-gray-400 text-center">결제 관련 문의는 support@semubisheo.com으로 연락해주세요</p>
+
+                {/* ✅ 이메일 수정 */}
+                <p className="text-xs text-gray-400 text-center mb-6">
+                    결제 관련 문의는 <a href="mailto:support@semubisheo.com" className="underline hover:text-gray-600">kmj24545@naver.com</a>으로 연락해주세요
+                </p>
+
+                {/* ✅ 위로가기 버튼 */}
+                <div className="flex justify-center">
+                    <button onClick={scrollToTop}
+                        className="flex items-center gap-2 text-xs text-gray-400 hover:text-gray-600 transition">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="18 15 12 9 6 15"/>
+                        </svg>
+                        위로가기
+                    </button>
+                </div>
             </div>
 
             {showModal && (

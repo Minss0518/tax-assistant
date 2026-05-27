@@ -123,7 +123,7 @@ export default function ChatPage() {
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
                         <BackButton onClick={() => navigate('/dashboard')} />
-                        <h1 className="text-xl font-bold text-gray-800">🤖 AI 세무 상담</h1>
+                        <h1 className="text-xl font-bold text-gray-800"> AI 세무 상담</h1>
                     </div>
                     {messages.length > 0 && (
                         <button onClick={handleClear} disabled={clearing}
@@ -136,7 +136,7 @@ export default function ChatPage() {
                 <div className="flex-1 overflow-y-auto flex flex-col gap-4 pb-4">
                     {messages.length === 0 && (
                         <div className="text-center py-12">
-                            <div className="text-4xl mb-3">🤖</div>
+                            {/* <div className="text-4xl mb-3">🤖</div> */}
                             <p className="text-gray-500 text-sm mb-6">세금 관련 무엇이든 물어보세요!</p>
                             <div className="flex flex-col gap-2">
                                 {suggestions.map((s, i) => (

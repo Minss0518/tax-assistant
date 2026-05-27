@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const features = [
   {
@@ -108,6 +108,7 @@ const stats = [
 export default function LandingPage() {
   const navigate = useNavigate();
   const observerRef = useRef(null);
+  const [showTop, setShowTop] = useState(false);
 
   useEffect(() => {
     observerRef.current = new IntersectionObserver(
@@ -117,8 +118,18 @@ export default function LandingPage() {
       { threshold: 0.08 }
     );
     document.querySelectorAll('.reveal').forEach(el => observerRef.current.observe(el));
-    return () => observerRef.current?.disconnect();
+
+    // 위로가기 버튼 표시 조건
+    const handleScroll = () => setShowTop(window.scrollY > 400);
+    window.addEventListener('scroll', handleScroll);
+
+    return () => {
+      observerRef.current?.disconnect();
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, []);
+
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
   return (
     <div style={{ minHeight: '100vh', background: '#fff', fontFamily: "'Pretendard', -apple-system, sans-serif", color: '#111827' }}>
@@ -138,11 +149,22 @@ export default function LandingPage() {
         .review-card { background: #f9fafb; border: 1px solid #f3f4f6; border-radius: 12px; padding: 24px; }
         .stat-item { text-align: center; padding: 20px 12px; border-right: 1px solid #e5e7eb; }
         .stat-item:last-child { border-right: none; }
-        .cta-pro { background: #1d4ed8; color: #fff; border: none; border-radius: 8px; padding: 13px 20px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background 0.15s; width: 100%; }
+        .cta-pro { background: #1d4ed8; color: #fff; border: none; border-radius: 8px; padding: 0 20px; height: 46px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background 0.15s; width: 100%; }
         .cta-pro:hover { background: #1e40af; }
-        .cta-free { background: #fff; color: #374151; border: 1px solid #e5e7eb; border-radius: 8px; padding: 13px 20px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; width: 100%; }
+        .cta-free { background: #fff; color: #374151; border: 1px solid #e5e7eb; border-radius: 8px; padding: 0 20px; height: 46px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; width: 100%; }
         .cta-free:hover { border-color: #9ca3af; background: #f9fafb; }
+        .scroll-top-btn { position: fixed; bottom: 28px; right: 24px; width: 44px; height: 44px; background: #111827; color: #fff; border: none; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); transition: all 0.2s; z-index: 100; }
+        .scroll-top-btn:hover { background: #1d4ed8; transform: translateY(-2px); }
       `}</style>
+
+      {/* 위로가기 버튼 */}
+      {showTop && (
+        <button className="scroll-top-btn" onClick={scrollToTop} title="위로가기">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="18 15 12 9 6 15"/>
+          </svg>
+        </button>
+      )}
 
       {/* 네비게이션 */}
       <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(8px)', borderBottom: '1px solid #e5e7eb' }}>
@@ -181,13 +203,14 @@ export default function LandingPage() {
             AI 세무 상담부터 영수증 자동 인식, 예상 세액 계산까지.<br />
             프리랜서와 크리에이터를 위한 스마트 세금 비서입니다.
           </p>
+          {/* ✅ 버튼 높이 통일 (height: 46px) */}
           <div className="reveal d3" style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
             <button onClick={() => navigate('/login')}
-              style={{ background: '#111827', color: '#fff', border: 'none', borderRadius: 8, padding: '13px 28px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+              style={{ background: '#111827', color: '#fff', border: 'none', borderRadius: 8, height: 46, padding: '0 28px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
               무료로 시작하기 →
             </button>
             <button onClick={() => document.getElementById('features').scrollIntoView({ behavior: 'smooth' })}
-              style={{ background: '#fff', color: '#374151', border: '1px solid #e5e7eb', borderRadius: 8, padding: '13px 28px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+              style={{ background: '#fff', color: '#374151', border: '1px solid #e5e7eb', borderRadius: 8, height: 46, padding: '0 28px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
               기능 살펴보기
             </button>
           </div>
@@ -355,6 +378,7 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
+                {/* ✅ 버튼 높이 통일 (height: 46px via className) */}
                 <button className={plan.highlight ? 'cta-pro' : 'cta-free'} onClick={() => navigate('/login')}>
                   {plan.cta}
                 </button>
@@ -374,7 +398,7 @@ export default function LandingPage() {
             14일 무료체험 · 언제든 취소 가능 · 신용카드 불필요
           </p>
           <button onClick={() => navigate('/login')}
-            style={{ background: '#fff', color: '#111827', border: 'none', borderRadius: 8, padding: '14px 36px', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+            style={{ background: '#fff', color: '#111827', border: 'none', borderRadius: 8, height: 46, padding: '0 36px', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
             무료로 시작하기 →
           </button>
         </div>

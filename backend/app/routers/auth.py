@@ -90,7 +90,7 @@ async def kakao_callback(code: str, db: AsyncSession = Depends(get_db)):
     jwt_token = create_access_token({"sub": str(user.id), "email": user.email})
     # 카카오 콜백
     return RedirectResponse(
-    url=f"https://tax-assistant-production-ef21.up.railway.app/callback?token={jwt_token}",
+    url=f"https://tax-assistant-dsyc.onrender.com/callback?token={jwt_token}",
     status_code=302
 )
 
@@ -171,7 +171,7 @@ async def google_callback(code: str, db: AsyncSession = Depends(get_db)):
     jwt_token = create_access_token({"sub": str(user.id), "email": user.email})
     # 구글 콜백
     return RedirectResponse(
-    url=f"https://tax-assistant-production-ef21.up.railway.app/callback?token={jwt_token}",
+    url=f"https://tax-assistant-dsyc.onrender.com/callback?token={jwt_token}",
     status_code=302
 )
 
@@ -255,6 +255,6 @@ async def naver_callback(code: str, state: str, db: AsyncSession = Depends(get_d
     jwt_token = create_access_token({"sub": str(user.id), "email": user.email})
     # 네이버 콜백
     return RedirectResponse(
-    url=f"https://tax-assistant-production-ef21.up.railway.app/callback?token={jwt_token}",
+    url=f"https://tax-assistant-dsyc.onrender.com/callback?token={jwt_token}",
     status_code=302
 )

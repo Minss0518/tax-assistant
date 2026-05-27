@@ -354,7 +354,8 @@ export default function LandingPage() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             {plans.map((plan, i) => (
               <div key={i} className={`plan-card reveal d${i + 1}`}
-                style={{ border: plan.highlight ? '2px solid #1d4ed8' : '1px solid #e5e7eb', position: 'relative' }}>
+                style={{ border: plan.highlight ? '2px solid #1d4ed8' : '1px solid #e5e7eb', position: 'relative',
+                  display: 'flex', flexDirection: 'column' }}>
                 {plan.highlight && (
                   <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: '#1d4ed8', color: '#fff', fontSize: 11, fontWeight: 700, padding: '4px 14px', borderRadius: 100, whiteSpace: 'nowrap' }}>
                     인기
@@ -368,7 +369,7 @@ export default function LandingPage() {
                   </div>
                   <p style={{ fontSize: 12, color: '#9ca3af' }}>{plan.desc}</p>
                 </div>
-                <ul style={{ listStyle: 'none', marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <ul style={{ listStyle: 'none', marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
                   {plan.features.map((feat, j) => (
                     <li key={j} style={{ display: 'flex', alignItems: 'flex-start', fontSize: 13, color: '#374151' }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 10, marginTop: 1, flexShrink: 0 }}>

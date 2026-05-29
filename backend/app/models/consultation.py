@@ -44,6 +44,7 @@ class Consultation(Base):
     is_deleted_by_user = Column(Boolean, default=False)  # ← 추가
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    is_deleted_by_advisor = Column(Boolean, default=False)
 
     advisor = relationship("TaxAdvisor", back_populates="consultations")
     messages = relationship("Message", back_populates="consultation")

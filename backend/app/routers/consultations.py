@@ -91,7 +91,9 @@ async def get_all_consultations(
     db: AsyncSession = Depends(get_db)
 ):
     result = await db.execute(
-        select(Consultation).order_by(Consultation.updated_at.desc())
+        select(Consultation)
+        .where(Consultation.is_deleted_by_advisor == False)
+        .order_by(Consultation.updated_at.desc())
     )
     consultations = result.scalars().all()
     return [{"id": str(c.id), "title": c.title, "status": c.status, "user_id": str(c.user_id), "updated_at": c.updated_at} for c in consultations]
@@ -126,7 +128,7 @@ async def delete_consultation_by_advisor(
     consultation = result.scalar_one_or_none()
     if not consultation:
         raise HTTPException(status_code=404, detail="상담방을 찾을 수 없습니다")
-    consultation.is_deleted_by_user = True
+    consultation.is_deleted_by_advisor = True  # ← 수정
     await db.commit()
     return {"message": "삭제되었습니다"}
 

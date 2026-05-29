@@ -21,7 +21,6 @@ export default function Navbar() {
 
         {/* 우측 버튼들 */}
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          // 기존 파란 배경 → 원래 스타일로
           <button
             onClick={() => navigate("/pricing")}
             style={{

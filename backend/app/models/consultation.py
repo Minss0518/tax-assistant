@@ -41,6 +41,7 @@ class Consultation(Base):
     advisor_id = Column(UUID(as_uuid=True), ForeignKey("tax_advisors.id", ondelete="SET NULL"), nullable=True)
     title = Column(String, nullable=False)
     status = Column(SAEnum(ConsultationStatus, name="consultation_status"), default=ConsultationStatus.waiting)
+    is_deleted_by_user = Column(Boolean, default=False)  # ← 추가
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

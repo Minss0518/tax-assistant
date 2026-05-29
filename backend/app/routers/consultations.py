@@ -15,6 +15,7 @@ router = APIRouter(prefix="/consultations", tags=["consultations"])
 
 class ConsultationCreate(BaseModel):
     title: str
+    is_deleted_by_user = Column(Boolean, default=False)
 
 
 class MessageSend(BaseModel):
@@ -43,6 +44,7 @@ async def create_consultation(
     return {"id": str(consultation.id), "title": consultation.title, "status": consultation.status}
 
 
+# 내 상담 목록 조회 - is_deleted_by_user 필터 추가
 @router.get("/user/me")
 async def get_my_consultations(
     current_user: dict = Depends(get_current_user),
@@ -50,11 +52,36 @@ async def get_my_consultations(
 ):
     result = await db.execute(
         select(Consultation)
-        .where(Consultation.user_id == uuid.UUID(current_user["sub"]))
+        .where(
+            Consultation.user_id == uuid.UUID(current_user["sub"]),
+            Consultation.is_deleted_by_user == False  # ← 추가
+        )
         .order_by(Consultation.updated_at.desc())
     )
     consultations = result.scalars().all()
     return [{"id": str(c.id), "title": c.title, "status": c.status, "created_at": c.created_at} for c in consultations]
+
+
+# 유저 상담 삭제 (숨김처리) - 새로 추가
+@router.delete("/{consultation_id}")
+async def delete_consultation_by_user(
+    consultation_id: uuid.UUID,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(
+        select(Consultation).where(
+            Consultation.id == consultation_id,
+            Consultation.user_id == uuid.UUID(current_user["sub"])
+        )
+    )
+    consultation = result.scalar_one_or_none()
+    if not consultation:
+        raise HTTPException(status_code=404, detail="상담방을 찾을 수 없습니다")
+
+    consultation.is_deleted_by_user = True
+    await db.commit()
+    return {"message": "삭제되었습니다"}
 
 
 # ── 세무사용 ────────────────────────────────────

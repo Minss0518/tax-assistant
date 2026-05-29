@@ -57,6 +57,20 @@ const features = [
     accent: '#0e7490',
     bg: '#ecfeff',
   },
+  {
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+    ),
+    title: '세무사 직접 상담',
+    desc: '복잡한 세금 문제는 전문 세무사와 직접 채팅으로 상담하세요. 언제든 질문을 남기면 업무 시간에 답변을 받을 수 있습니다.',
+    accent: '#0891b2',
+    bg: '#ecfeff',
+  },
 ];
 
 const plans = [
@@ -119,7 +133,6 @@ export default function LandingPage() {
     );
     document.querySelectorAll('.reveal').forEach(el => observerRef.current.observe(el));
 
-    // 위로가기 버튼 표시 조건
     const handleScroll = () => setShowTop(window.scrollY > 400);
     window.addEventListener('scroll', handleScroll);
 
@@ -157,7 +170,6 @@ export default function LandingPage() {
         .scroll-top-btn:hover { background: #1d4ed8; transform: translateY(-2px); }
       `}</style>
 
-      {/* 위로가기 버튼 */}
       {showTop && (
         <button className="scroll-top-btn" onClick={scrollToTop} title="위로가기">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -203,7 +215,6 @@ export default function LandingPage() {
             AI 세무 상담부터 영수증 자동 인식, 예상 세액 계산까지.<br />
             프리랜서와 크리에이터를 위한 스마트 세금 비서입니다.
           </p>
-          {/* ✅ 버튼 높이 통일 (height: 46px) */}
           <div className="reveal d3" style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
             <button onClick={() => navigate('/login')}
               style={{ background: '#111827', color: '#fff', border: 'none', borderRadius: 8, height: 46, padding: '0 28px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -305,14 +316,16 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
-          <div className="reveal" style={{ display: 'flex', justifyContent: 'center' }}>
-            <div className="feature-card" style={{ width: '50%' }}>
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: features[4].bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: features[4].accent, marginBottom: 14 }}>
-                {features[4].icon}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+            {features.slice(4).map((f, i) => (
+              <div key={i} className={`feature-card reveal d${i + 1}`}>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: f.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: f.accent, marginBottom: 14 }}>
+                  {f.icon}
+                </div>
+                <h3 style={{ fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 8 }}>{f.title}</h3>
+                <p style={{ fontSize: 13, color: '#6b7280', lineHeight: 1.65 }}>{f.desc}</p>
               </div>
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 8 }}>{features[4].title}</h3>
-              <p style={{ fontSize: 13, color: '#6b7280', lineHeight: 1.65 }}>{features[4].desc}</p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -354,8 +367,7 @@ export default function LandingPage() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             {plans.map((plan, i) => (
               <div key={i} className={`plan-card reveal d${i + 1}`}
-                style={{ border: plan.highlight ? '2px solid #1d4ed8' : '1px solid #e5e7eb', position: 'relative',
-                  display: 'flex', flexDirection: 'column' }}>
+                style={{ border: plan.highlight ? '2px solid #1d4ed8' : '1px solid #e5e7eb', position: 'relative', display: 'flex', flexDirection: 'column' }}>
                 {plan.highlight && (
                   <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: '#1d4ed8', color: '#fff', fontSize: 11, fontWeight: 700, padding: '4px 14px', borderRadius: 100, whiteSpace: 'nowrap' }}>
                     인기
@@ -379,7 +391,6 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                {/* ✅ 버튼 높이 통일 (height: 46px via className) */}
                 <button className={plan.highlight ? 'cta-pro' : 'cta-free'} onClick={() => navigate('/login')}>
                   {plan.cta}
                 </button>

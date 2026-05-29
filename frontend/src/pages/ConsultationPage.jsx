@@ -84,6 +84,16 @@ export default function ConsultationPage() {
     setSelected(data);
   };
 
+  const deleteConsultation = async (id) => {
+    if (!confirm("상담을 삭제하시겠습니까?")) return;
+    await fetch(`${API}/consultations/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    });
+    setConsultations((prev) => prev.filter((c) => c.id !== id));
+    if (selected?.id === id) setSelected(null);
+  };
+
   const sendMessage = async () => {
     if (!input.trim() || !selected) return;
     const msg = {
@@ -92,9 +102,7 @@ export default function ConsultationPage() {
       sender_id: user.id,
       created_at: new Date().toISOString(),
     };
-    // WebSocket으로 전송
     wsRef.current?.send(JSON.stringify(msg));
-    // DB 저장
     await fetch(`${API}/consultations/${selected.id}/messages`, {
       method: "POST",
       headers: {
@@ -140,17 +148,25 @@ export default function ConsultationPage() {
         {consultations.map((c) => (
           <div
             key={c.id}
-            onClick={() => setSelected(c)}
             style={{
               padding: "14px 16px",
-              cursor: "pointer",
               background: selected?.id === c.id ? "#eff6ff" : "white",
               borderBottom: "1px solid #f3f4f6",
               borderLeft: selected?.id === c.id ? "3px solid #3b82f6" : "3px solid transparent",
             }}
           >
-            <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>{c.title}</div>
-            <div style={{ fontSize: 12, color: "#6b7280" }}>{statusLabel(c.status)}</div>
+            <div onClick={() => setSelected(c)} style={{ cursor: "pointer" }}>
+              <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>{c.title}</div>
+              <div style={{ fontSize: 12, color: "#6b7280", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span>{statusLabel(c.status)}</span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); deleteConsultation(c.id); }}
+                  style={{ fontSize: 11, color: "#ef4444", background: "none", border: "none", cursor: "pointer", padding: "2px 6px" }}
+                >
+                  삭제
+                </button>
+              </div>
+            </div>
           </div>
         ))}
       </div>
@@ -170,7 +186,8 @@ export default function ConsultationPage() {
                     <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#3b82f6", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, marginRight: 8, flexShrink: 0 }}>세</div>
                   )}
                   <div style={{
-                    maxWidth: "60%", padding: "10px 14px", borderRadius: m.sender_type === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+                    maxWidth: "60%", padding: "10px 14px",
+                    borderRadius: m.sender_type === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
                     background: m.sender_type === "user" ? "#3b82f6" : "#f3f4f6",
                     color: m.sender_type === "user" ? "white" : "#111827",
                     fontSize: 14,

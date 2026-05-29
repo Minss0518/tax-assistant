@@ -12,6 +12,8 @@ import MonthlyChart from "../components/dashboard/MonthlyChart";
 import MenuGrid from "../components/dashboard/MenuGrid";
 import TaxResultCard from "../components/dashboard/TaxResultCard";
 import AIInsightWidget from "../components/AIInsightWidget";
+import TabMenu from "../components/dashboard/TabMenu";
+
 
 const MONTH_NAMES = ["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
 
@@ -71,6 +73,8 @@ export default function DashboardPage() {
       <NetProfitHeader totalIncome={totalIncome} totalExpense={totalExpense} />
 
       <div style={{ maxWidth: 720, margin: "0 auto", padding: "20px 16px 40px" }}>
+        <TabMenu />
+        <DeadlineCard />
         <DeadlineCard />
         <SummaryCards totalIncome={totalIncome} totalExpense={totalExpense} />
         <MonthlyChart data={monthlyData} />

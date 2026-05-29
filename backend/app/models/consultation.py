@@ -40,7 +40,7 @@ class Consultation(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     advisor_id = Column(UUID(as_uuid=True), ForeignKey("tax_advisors.id", ondelete="SET NULL"), nullable=True)
     title = Column(String, nullable=False)
-    status = Column(SAEnum(ConsultationStatus), default=ConsultationStatus.waiting)
+    status = Column(SAEnum(ConsultationStatus, name="consultation_status"), default=ConsultationStatus.waiting)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -53,7 +53,7 @@ class Message(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     consultation_id = Column(UUID(as_uuid=True), ForeignKey("consultations.id", ondelete="CASCADE"), nullable=False)
-    sender_type = Column(SAEnum(SenderType), nullable=False)
+    sender_type = Column(SAEnum(SenderType, name="sender_type"), nullable=False)
     sender_id = Column(UUID(as_uuid=True), nullable=False)
     content = Column(Text, nullable=False)
     is_read = Column(Boolean, default=False)

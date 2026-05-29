@@ -115,6 +115,22 @@ async def assign_consultation(
     return {"message": "배정 완료"}
 
 
+# 세무사용 상담 삭제 (완전 숨김)
+@router.delete("/advisor/{consultation_id}")
+async def delete_consultation_by_advisor(
+    consultation_id: uuid.UUID,
+    advisor_id: str = Depends(get_current_advisor),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(Consultation).where(Consultation.id == consultation_id))
+    consultation = result.scalar_one_or_none()
+    if not consultation:
+        raise HTTPException(status_code=404, detail="상담방을 찾을 수 없습니다")
+    consultation.is_deleted_by_user = True
+    await db.commit()
+    return {"message": "삭제되었습니다"}
+
+
 @router.patch("/{consultation_id}/close")
 async def close_consultation(
     consultation_id: uuid.UUID,

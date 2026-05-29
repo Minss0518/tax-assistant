@@ -8,6 +8,7 @@ export default function AdvisorPage() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [advisorId, setAdvisorId] = useState(null);
+  const [selectedMonth, setSelectedMonth] = useState("전체");
   const wsRef = useRef(null);
   const bottomRef = useRef(null);
   const token = localStorage.getItem("advisor_token");
@@ -90,6 +91,16 @@ export default function AdvisorPage() {
     setSelected((prev) => prev ? { ...prev, status: "closed" } : prev);
   };
 
+  const deleteConsultation = async (id) => {
+  if (!confirm("이 상담을 삭제하시겠습니까?")) return;
+  await fetch(`${API}/consultations/advisor/${id}`, {  // ← advisor/ 추가
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  setConsultations((prev) => prev.filter((c) => c.id !== id));
+  if (selected?.id === id) setSelected(null);
+};
+
   const sendMessage = async () => {
     if (!input.trim() || !selected || !advisorId) return;
     const msg = {
@@ -113,33 +124,91 @@ export default function AdvisorPage() {
   const statusLabel = (s) =>
     s === "waiting" ? "⏳ 대기중" : s === "active" ? "💬 상담중" : "✅ 완료";
 
+  // 월 목록 추출
+  const months = ["전체", ...Array.from(new Set(
+    consultations.map((c) => {
+      const d = new Date(c.updated_at);
+      return `${d.getFullYear()}년 ${d.getMonth() + 1}월`;
+    })
+  ))];
+
+  // 월 필터링
+  const filteredConsultations = consultations.filter((c) => {
+    if (selectedMonth === "전체") return true;
+    const d = new Date(c.updated_at);
+    return `${d.getFullYear()}년 ${d.getMonth() + 1}월` === selectedMonth;
+  });
+
   return (
     <div style={{ display: "flex", height: "100vh", fontFamily: "sans-serif" }}>
       {/* 왼쪽 상담 목록 */}
-      <div style={{ width: 300, borderRight: "1px solid #e5e7eb", overflowY: "auto", background: "#f9fafb" }}>
-        <div style={{ padding: "16px", borderBottom: "1px solid #e5e7eb", fontWeight: "bold", fontSize: 16 }}>
+      <div style={{ width: 300, borderRight: "1px solid #e5e7eb", overflowY: "auto", background: "#f9fafb", display: "flex", flexDirection: "column" }}>
+        
+        {/* 헤더 */}
+        <div style={{ padding: "16px", borderBottom: "1px solid #e5e7eb", fontWeight: "bold", fontSize: 16, flexShrink: 0 }}>
           📋 상담 목록
           <button onClick={fetchConsultations} style={{ float: "right", background: "none", border: "none", cursor: "pointer", fontSize: 16 }}>🔄</button>
         </div>
-        {consultations.map((c) => (
-          <div
-            key={c.id}
-            onClick={() => setSelected(c)}
-            style={{
-              padding: "14px 16px",
-              cursor: "pointer",
-              background: selected?.id === c.id ? "#eff6ff" : "white",
-              borderBottom: "1px solid #f3f4f6",
-              borderLeft: selected?.id === c.id ? "3px solid #3b82f6" : "3px solid transparent",
-            }}
-          >
-            <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>{c.title}</div>
-            <div style={{ fontSize: 12, color: "#6b7280", display: "flex", justifyContent: "space-between" }}>
-              <span>{statusLabel(c.status)}</span>
-              <span>{new Date(c.updated_at).toLocaleDateString("ko-KR")}</span>
-            </div>
-          </div>
-        ))}
+
+        {/* 월 필터 */}
+        <div style={{ padding: "10px 12px", borderBottom: "1px solid #e5e7eb", flexShrink: 0, overflowX: "auto", display: "flex", gap: 6 }}>
+          {months.map((m) => (
+            <button
+              key={m}
+              onClick={() => setSelectedMonth(m)}
+              style={{
+                padding: "5px 10px",
+                fontSize: 11,
+                fontWeight: 600,
+                whiteSpace: "nowrap",
+                borderRadius: 20,
+                border: "1px solid",
+                cursor: "pointer",
+                fontFamily: "inherit",
+                background: selectedMonth === m ? "#1d4ed8" : "#fff",
+                color: selectedMonth === m ? "#fff" : "#6b7280",
+                borderColor: selectedMonth === m ? "#1d4ed8" : "#e5e7eb",
+              }}
+            >
+              {m}
+            </button>
+          ))}
+        </div>
+
+        {/* 상담 목록 */}
+        <div style={{ overflowY: "auto", flex: 1 }}>
+          {filteredConsultations.length === 0 ? (
+            <div style={{ padding: 24, textAlign: "center", color: "#9ca3af", fontSize: 13 }}>상담 없음</div>
+          ) : (
+            filteredConsultations.map((c) => (
+              <div
+                key={c.id}
+                style={{
+                  padding: "14px 16px",
+                  background: selected?.id === c.id ? "#eff6ff" : "white",
+                  borderBottom: "1px solid #f3f4f6",
+                  borderLeft: selected?.id === c.id ? "3px solid #3b82f6" : "3px solid transparent",
+                }}
+              >
+                <div onClick={() => setSelected(c)} style={{ cursor: "pointer" }}>
+                  <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>{c.title}</div>
+                  <div style={{ fontSize: 12, color: "#6b7280", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span>{statusLabel(c.status)}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span>{new Date(c.updated_at).toLocaleDateString("ko-KR")}</span>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); deleteConsultation(c.id); }}
+                        style={{ fontSize: 11, color: "#ef4444", background: "none", border: "none", cursor: "pointer", padding: "2px 4px" }}
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       {/* 오른쪽 채팅 */}

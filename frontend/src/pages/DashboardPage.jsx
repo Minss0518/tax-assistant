@@ -75,11 +75,9 @@ export default function DashboardPage() {
       <div style={{ maxWidth: 720, margin: "0 auto", padding: "20px 16px 40px" }}>
         <TabMenu />
         <DeadlineCard />
-        <DeadlineCard />
         <SummaryCards totalIncome={totalIncome} totalExpense={totalExpense} />
         <MonthlyChart data={monthlyData} />
         <AIInsightWidget />
-        <MenuGrid />
         <TaxResultCard lastTaxResult={lastTaxResult} />
       </div>
     </div>

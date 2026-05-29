@@ -15,7 +15,6 @@ router = APIRouter(prefix="/consultations", tags=["consultations"])
 
 class ConsultationCreate(BaseModel):
     title: str
-    is_deleted_by_user = Column(Boolean, default=False)
 
 
 class MessageSend(BaseModel):

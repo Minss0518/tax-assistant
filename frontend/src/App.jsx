@@ -12,6 +12,9 @@ import UploadPage from './pages/UploadPage';
 import PaymentSuccessPage from "./pages/PaymentSuccessPage";
 import PaymentFailPage from "./pages/PaymentFailPage";
 import NotificationsPage from "./pages/NotificationsPage";
+import ConsultationPage from "./pages/ConsultationPage";
+import AdvisorPage from "./pages/AdvisorPage";
+import AdvisorLoginPage from "./pages/AdvisorLoginPage";
 
 
 export default function App() {
@@ -31,6 +34,9 @@ export default function App() {
         <Route path="/payment/success" element={<PaymentSuccessPage />} />
         <Route path="/payment/fail" element={<PaymentFailPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
+        <Route path="/consultation" element={<ConsultationPage />} />
+        <Route path="/advisor" element={<AdvisorPage />} />
+        <Route path="/advisor/login" element={<AdvisorLoginPage />} />
       </Routes>
     </BrowserRouter>
   );

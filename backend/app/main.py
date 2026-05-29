@@ -1,4 +1,7 @@
 from contextlib import asynccontextmanager
+import os
+from dotenv import load_dotenv
+load_dotenv()
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import app.models.tax_calculation
@@ -7,11 +10,12 @@ import app.models.user
 import app.models.transaction
 import app.models.chat
 import app.models.subscription
+import app.models.consultation
 from app.routers.ai_insights import router as ai_insights_router
 from app.routers import auth, transactions, chat, ocr, users, upload, payments, tax_calculator
+from app.routers import advisor_auth, consultations, websocket
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-import os
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -26,6 +30,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",
         "https://tax-assistant-production-ef21.up.railway.app",
+        "https://tax-assistant-dsyc.onrender.com",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -41,6 +46,9 @@ app.include_router(upload.router)
 app.include_router(payments.router)
 app.include_router(tax_calculator.router)
 app.include_router(ai_insights_router)
+app.include_router(advisor_auth.router)
+app.include_router(consultations.router)
+app.include_router(websocket.router)
 
 frontend_dist = os.path.join(os.path.dirname(__file__), "../../frontend/dist")
 if os.path.exists(frontend_dist):

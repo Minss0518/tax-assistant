@@ -13,8 +13,8 @@ export default function TabMenu() {
   const location = useLocation();
 
   return (
-    <div style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", padding: "0 24px", marginBottom: 14 }}>
-      <div style={{ maxWidth: 720, margin: "0 auto", display: "flex", gap: 0, overflowX: "auto" }}>
+    <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "10px 12px", marginBottom: 14 }}>
+      <div style={{ display: "flex", gap: 6 }}>
         {TAB_MENUS.map((m) => {
           const isActive = location.pathname === m.path;
           return (
@@ -22,13 +22,14 @@ export default function TabMenu() {
               key={m.path}
               onClick={() => navigate(m.path)}
               style={{
-                padding: "12px 16px",
-                fontSize: 13,
-                fontWeight: isActive ? 600 : 400,
-                color: isActive ? "#1d4ed8" : "#6b7280",
-                background: "none",
+                flex: 1,
+                padding: "8px 4px",
+                fontSize: 12,
+                fontWeight: 600,
+                color: isActive ? "#fff" : "#6b7280",
+                background: isActive ? "#1d4ed8" : "#f3f4f6",
                 border: "none",
-                borderBottom: isActive ? "2px solid #1d4ed8" : "2px solid transparent",
+                borderRadius: 8,
                 cursor: "pointer",
                 fontFamily: "inherit",
                 whiteSpace: "nowrap",

@@ -12,7 +12,17 @@ export default function ConsultationPage() {
   const [showForm, setShowForm] = useState(false);
   const wsRef = useRef(null);
   const bottomRef = useRef(null);
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  // 교체 - JWT 토큰에서 user_id 추출
+  const getMyUserId = () => {
+    const token = localStorage.getItem("token");
+    if (!token) return null;
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      return payload.sub;
+    } catch {
+      return null;
+    }
+  };
 
   useEffect(() => {
     fetchConsultations();
@@ -99,7 +109,7 @@ export default function ConsultationPage() {
     const msg = {
       content: input,
       sender_type: "user",
-      sender_id: user.id,
+      sender_id: getMyUserId(),
       created_at: new Date().toISOString(),
     };
     wsRef.current?.send(JSON.stringify(msg));

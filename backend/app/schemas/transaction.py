@@ -10,6 +10,8 @@ class TransactionCreate(BaseModel):
     memo: Optional[str] = None
     transaction_date: date
     source: Optional[str] = "manual"
+    receipt_image_url: Optional[str] = None
+    receipt_image_url: Optional[str] = None 
 
 class TransactionResponse(BaseModel):
     id: UUID
@@ -23,6 +25,7 @@ class TransactionResponse(BaseModel):
     memo: Optional[str] = None
     transaction_date: date
     source: Optional[str] = None
+    receipt_image_url: Optional[str] = None
 
     class Config:
         from_attributes = True

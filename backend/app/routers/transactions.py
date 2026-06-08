@@ -43,6 +43,7 @@ async def create_transaction(
         memo=data.memo,
         transaction_date=data.transaction_date,
         source=data.source or "manual",
+        receipt_image_url=data.receipt_image_url,
     )
     db.add(transaction)
     await db.commit()

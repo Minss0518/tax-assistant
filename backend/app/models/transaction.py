@@ -29,6 +29,7 @@ class Transaction(Base):
     transaction_date = Column(Date, nullable=False)
     source = Column(String, nullable=True, default="manual")  # manual | ocr | upload
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    receipt_image_url = Column(String, nullable=True)
 
 
 class Receipt(Base):

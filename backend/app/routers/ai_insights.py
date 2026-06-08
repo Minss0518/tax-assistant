@@ -69,7 +69,7 @@ async def fetch_transactions_for_llm(current_user: dict, db: AsyncSession) -> di
         anomalies = [
             {"date": d, "amount": a, "ratio": round(a / avg_daily * 100)}
             for d, a in daily_expense.items()
-            if a > avg_daily * 3
+            if a > avg_daily * 5
         ]
     else:
         anomalies = []

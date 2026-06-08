@@ -16,24 +16,16 @@ const features = [
   {
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
       </svg>
     ),
-    title: '영수증 OCR',
-    desc: '영수증 사진 한 장으로 거래 내역이 자동 입력됩니다. 날짜, 금액, 항목을 자동으로 인식해 경비 관리가 간편해집니다.',
-    accent: '#6d28d9',
-    bg: '#f5f3ff',
-  },
-  {
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="14" y1="14" x2="16" y2="14"/>
-      </svg>
-    ),
-    title: '세금 계산기',
-    desc: '연 수입과 경비를 입력하면 예상 납부세액과 환급액을 즉시 확인할 수 있습니다. 국민연금·건강보험료도 자동 계산됩니다.',
-    accent: '#065f46',
-    bg: '#ecfdf5',
+    title: '세무사 직접 상담',
+    desc: '복잡한 세금 문제는 전문 세무사와 직접 채팅으로 상담하세요. 언제든 질문을 남기면 업무 시간에 답변을 받을 수 있습니다.',
+    accent: '#0891b2',
+    bg: '#ecfeff',
   },
   {
     icon: (
@@ -60,16 +52,24 @@ const features = [
   {
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-        <circle cx="9" cy="7" r="4"/>
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
       </svg>
     ),
-    title: '세무사 직접 상담',
-    desc: '복잡한 세금 문제는 전문 세무사와 직접 채팅으로 상담하세요. 언제든 질문을 남기면 업무 시간에 답변을 받을 수 있습니다.',
-    accent: '#0891b2',
-    bg: '#ecfeff',
+    title: '영수증 OCR',
+    desc: '영수증 사진 한 장으로 거래 내역이 자동 입력됩니다. 날짜, 금액, 항목을 자동으로 인식해 경비 관리가 간편해집니다.',
+    accent: '#6d28d9',
+    bg: '#f5f3ff',
+  },
+  {
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="14" y1="14" x2="16" y2="14"/>
+      </svg>
+    ),
+    title: '세금 계산기',
+    desc: '연 수입과 경비를 입력하면 예상 납부세액과 환급액을 즉시 확인할 수 있습니다. 국민연금·건강보험료도 자동 계산됩니다.',
+    accent: '#065f46',
+    bg: '#ecfdf5',
   },
 ];
 

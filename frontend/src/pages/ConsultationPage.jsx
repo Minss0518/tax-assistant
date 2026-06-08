@@ -12,7 +12,8 @@ export default function ConsultationPage() {
   const [showForm, setShowForm] = useState(false);
   const wsRef = useRef(null);
   const bottomRef = useRef(null);
-  // 교체 - JWT 토큰에서 user_id 추출
+  const navigate = useNavigate();
+
   const getMyUserId = () => {
     const token = localStorage.getItem("token");
     if (!token) return null;
@@ -128,111 +129,129 @@ export default function ConsultationPage() {
     s === "waiting" ? "⏳ 대기중" : s === "active" ? "💬 상담중" : "✅ 완료";
 
   return (
-    <div style={{ display: "flex", height: "calc(100vh - 64px)", fontFamily: "sans-serif" }}>
-      {/* 왼쪽 상담 목록 */}
-      <div style={{ width: 280, borderRight: "1px solid #e5e7eb", overflowY: "auto", background: "#f9fafb" }}>
-        <div style={{ padding: "16px", borderBottom: "1px solid #e5e7eb" }}>
-          <button
-            onClick={() => setShowForm(true)}
-            style={{ width: "100%", padding: "10px", background: "#3b82f6", color: "white", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: "bold" }}
-          >
-            + 상담 신청
-          </button>
-        </div>
-
-        {showForm && (
-          <div style={{ padding: 16, background: "white", borderBottom: "1px solid #e5e7eb" }}>
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="상담 제목 입력"
-              style={{ width: "100%", padding: 8, border: "1px solid #d1d5db", borderRadius: 6, marginBottom: 8, boxSizing: "border-box" }}
-            />
-            <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={createConsultation} style={{ flex: 1, padding: 8, background: "#3b82f6", color: "white", border: "none", borderRadius: 6, cursor: "pointer" }}>신청</button>
-              <button onClick={() => setShowForm(false)} style={{ flex: 1, padding: 8, background: "#e5e7eb", border: "none", borderRadius: 6, cursor: "pointer" }}>취소</button>
-            </div>
-          </div>
-        )}
-
-        {consultations.map((c) => (
-          <div
-            key={c.id}
-            style={{
-              padding: "14px 16px",
-              background: selected?.id === c.id ? "#eff6ff" : "white",
-              borderBottom: "1px solid #f3f4f6",
-              borderLeft: selected?.id === c.id ? "3px solid #3b82f6" : "3px solid transparent",
-            }}
-          >
-            <div onClick={() => setSelected(c)} style={{ cursor: "pointer" }}>
-              <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>{c.title}</div>
-              <div style={{ fontSize: 12, color: "#6b7280", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span>{statusLabel(c.status)}</span>
-                <button
-                  onClick={(e) => { e.stopPropagation(); deleteConsultation(c.id); }}
-                  style={{ fontSize: 11, color: "#ef4444", background: "none", border: "none", cursor: "pointer", padding: "2px 6px" }}
-                >
-                  삭제
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
+    <div style={{ padding: "0 24px", maxWidth: 1100, margin: "0 auto", fontFamily: "sans-serif" }}>
+      {/* 뒤로가기 + 페이지 제목 */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "20px 0 16px" }}>
+        <button
+          onClick={() => navigate(-1)}
+          style={{
+            display: "flex", alignItems: "center", gap: 6,
+            padding: "8px 14px", background: "#374151", color: "white",
+            border: "none", borderRadius: 8, cursor: "pointer", fontSize: 14, fontWeight: 500,
+          }}
+        >
+          ← 뒤로
+        </button>
+        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>세무사 상담</h2>
       </div>
 
-      {/* 오른쪽 채팅 */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-        {selected ? (
-          <>
-            <div style={{ padding: "16px 20px", borderBottom: "1px solid #e5e7eb", fontWeight: "bold", fontSize: 16 }}>
-              {selected.title} <span style={{ fontSize: 13, color: "#6b7280", fontWeight: "normal" }}>{statusLabel(selected.status)}</span>
-            </div>
+      {/* 상담 본문 영역 */}
+      <div style={{ display: "flex", height: "calc(100vh - 160px)", border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden" }}>
+        {/* 왼쪽 상담 목록 */}
+        <div style={{ width: 280, borderRight: "1px solid #e5e7eb", overflowY: "auto", background: "#f9fafb", flexShrink: 0 }}>
+          <div style={{ padding: "16px", borderBottom: "1px solid #e5e7eb" }}>
+            <button
+              onClick={() => setShowForm(true)}
+              style={{ width: "100%", padding: "10px", background: "#3b82f6", color: "white", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: "bold" }}
+            >
+              + 상담 신청
+            </button>
+          </div>
 
-            <div style={{ flex: 1, overflowY: "auto", padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
-              {messages.map((m, i) => (
-                <div key={i} style={{ display: "flex", justifyContent: m.sender_type === "user" ? "flex-end" : "flex-start" }}>
-                  {m.sender_type === "advisor" && (
-                    <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#3b82f6", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, marginRight: 8, flexShrink: 0 }}>세</div>
-                  )}
-                  <div style={{
-                    maxWidth: "60%", padding: "10px 14px",
-                    borderRadius: m.sender_type === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
-                    background: m.sender_type === "user" ? "#3b82f6" : "#f3f4f6",
-                    color: m.sender_type === "user" ? "white" : "#111827",
-                    fontSize: 14,
-                  }}>
-                    {m.content}
-                    <div style={{ fontSize: 11, marginTop: 4, opacity: 0.7, textAlign: "right" }}>
-                      {new Date(m.created_at).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}
+          {showForm && (
+            <div style={{ padding: 16, background: "white", borderBottom: "1px solid #e5e7eb" }}>
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="상담 제목 입력"
+                style={{ width: "100%", padding: 8, border: "1px solid #d1d5db", borderRadius: 6, marginBottom: 8, boxSizing: "border-box" }}
+              />
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={createConsultation} style={{ flex: 1, padding: 8, background: "#3b82f6", color: "white", border: "none", borderRadius: 6, cursor: "pointer" }}>신청</button>
+                <button onClick={() => setShowForm(false)} style={{ flex: 1, padding: 8, background: "#e5e7eb", border: "none", borderRadius: 6, cursor: "pointer" }}>취소</button>
+              </div>
+            </div>
+          )}
+
+          {consultations.map((c) => (
+            <div
+              key={c.id}
+              style={{
+                padding: "14px 16px",
+                background: selected?.id === c.id ? "#eff6ff" : "white",
+                borderBottom: "1px solid #f3f4f6",
+                borderLeft: selected?.id === c.id ? "3px solid #3b82f6" : "3px solid transparent",
+              }}
+            >
+              <div onClick={() => setSelected(c)} style={{ cursor: "pointer" }}>
+                <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>{c.title}</div>
+                <div style={{ fontSize: 12, color: "#6b7280", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span>{statusLabel(c.status)}</span>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); deleteConsultation(c.id); }}
+                    style={{ fontSize: 11, color: "#ef4444", background: "none", border: "none", cursor: "pointer", padding: "2px 6px" }}
+                  >
+                    삭제
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* 오른쪽 채팅 */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+          {selected ? (
+            <>
+              <div style={{ padding: "16px 20px", borderBottom: "1px solid #e5e7eb", fontWeight: "bold", fontSize: 16 }}>
+                {selected.title} <span style={{ fontSize: 13, color: "#6b7280", fontWeight: "normal" }}>{statusLabel(selected.status)}</span>
+              </div>
+
+              <div style={{ flex: 1, overflowY: "auto", padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
+                {messages.map((m, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: m.sender_type === "user" ? "flex-end" : "flex-start" }}>
+                    {m.sender_type === "advisor" && (
+                      <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#3b82f6", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, marginRight: 8, flexShrink: 0 }}>세</div>
+                    )}
+                    <div style={{
+                      maxWidth: "60%", padding: "10px 14px",
+                      borderRadius: m.sender_type === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+                      background: m.sender_type === "user" ? "#3b82f6" : "#f3f4f6",
+                      color: m.sender_type === "user" ? "white" : "#111827",
+                      fontSize: 14,
+                    }}>
+                      {m.content}
+                      <div style={{ fontSize: 11, marginTop: 4, opacity: 0.7, textAlign: "right" }}>
+                        {new Date(m.created_at).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-              <div ref={bottomRef} />
-            </div>
+                ))}
+                <div ref={bottomRef} />
+              </div>
 
-            <div style={{ padding: "12px 16px", borderTop: "1px solid #e5e7eb", display: "flex", gap: 8 }}>
-              <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                placeholder={selected.status === "closed" ? "종료된 상담입니다" : "메시지를 입력하세요..."}
-                disabled={selected.status === "closed"}
-                style={{ flex: 1, padding: "10px 14px", border: "1px solid #d1d5db", borderRadius: 24, outline: "none", fontSize: 14 }}
-              />
-              <button
-                onClick={sendMessage}
-                disabled={selected.status === "closed"}
-                style={{ padding: "10px 20px", background: "#3b82f6", color: "white", border: "none", borderRadius: 24, cursor: "pointer", fontWeight: "bold" }}
-              >전송</button>
+              <div style={{ padding: "12px 16px", borderTop: "1px solid #e5e7eb", display: "flex", gap: 8 }}>
+                <input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                  placeholder={selected.status === "closed" ? "종료된 상담입니다" : "메시지를 입력하세요..."}
+                  disabled={selected.status === "closed"}
+                  style={{ flex: 1, padding: "10px 14px", border: "1px solid #d1d5db", borderRadius: 24, outline: "none", fontSize: 14 }}
+                />
+                <button
+                  onClick={sendMessage}
+                  disabled={selected.status === "closed"}
+                  style={{ padding: "10px 20px", background: "#3b82f6", color: "white", border: "none", borderRadius: 24, cursor: "pointer", fontWeight: "bold" }}
+                >전송</button>
+              </div>
+            </>
+          ) : (
+            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#9ca3af", fontSize: 15 }}>
+              상담을 선택하거나 새 상담을 신청하세요
             </div>
-          </>
-        ) : (
-          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#9ca3af", fontSize: 15 }}>
-            상담을 선택하거나 새 상담을 신청하세요
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

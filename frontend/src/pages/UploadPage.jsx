@@ -75,12 +75,12 @@ export default function UploadPage() {
         {/* 헤더 */}
         <div className="flex items-center gap-3 mb-8">
           <BackButton onClick={() => navigate('/dashboard')} />
-          <h1 className="text-xl font-bold text-gray-800">📂 거래내역 일괄 업로드</h1>
+          <h1 className="text-xl font-bold text-gray-800">거래내역 일괄 업로드</h1>
         </div>
 
         {/* 안내 */}
         <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5 mb-6">
-          <h2 className="font-bold text-blue-700 mb-3">📋 업로드 형식 안내</h2>
+          <h2 className="font-bold text-blue-700 mb-3">업로드 형식 안내</h2>
           <p className="text-sm text-blue-600 mb-3">CSV 또는 Excel 파일에 아래 컬럼이 있어야 해요:</p>
           <div className="bg-white rounded-xl p-4 mb-3">
             <table className="w-full text-sm">

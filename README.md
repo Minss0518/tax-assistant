@@ -41,13 +41,17 @@
 ### 세무비서의 차별점
 기존 서비스들이 "신고 시즌에만 쓰는 앱"이라면,
 세무비서는 **365일 쓰는 AI 세무 비서**를 목표로 합니다.
+
+```
 평소 (365일)
 → 거래내역 관리 + OCR 영수증 등록
 → AI 챗봇으로 세무 궁금증 즉시 해결
 → 실시간 세액 확인
+
 신고 시즌 (5월)
 → 누적된 거래 데이터 기반 세금 계산
 → 복잡한 케이스는 세무사 실시간 채팅 연결
+```
 
 **핵심 차별화 3가지**
 1. **스크래핑 없는 구조** → 홈택스 의존 없음, 규제 리스크 없음
@@ -57,6 +61,13 @@
 ---
 
 ## ✨ 주요 기능
+
+### 📊 대시보드
+- 순이익 + 월별 수입/지출 차트 + 세금 계산 결과를 하나의 헤더에 통합
+- 차트 클릭 시 확대 모달 표시
+- Y축 억단위 자동 전환 (만 → 억)
+- 탭 메뉴 (거래내역 / AI세무상담 / 세무사상담 / 세금계산기 / 일괄업로드)
+- 세금 신고 D-day 카드
 
 ### 🤖 AI 세무 상담 (RAG 챗봇)
 - LlamaIndex + ChromaDB 기반 RAG 파이프라인
@@ -74,23 +85,26 @@
 - 관리자가 세무사 계정 직접 생성 (JWT 인증)
 
 ### 📊 AI 인사이트 위젯
-- 거래 데이터 자동 분석 (카테고리별 지출 비율 바차트)
-- 이상값 자동 탐지 (일평균 대비 300% 초과 지출 감지)
+- 거래 집계 데이터 + 최근 10건 샘플 기반 분석 (컨텍스트 최적화)
+- 카테고리별 지출 비율 바차트 자동 생성
+- 이상 지출 자동 탐지 (일평균 대비 500% 초과 지출 감지)
 - 자연어 질문 기반 실시간 스트리밍 답변
-- "지출이 가장 많은 카테고리가 뭐야?" → 즉시 분석
 
 ### 📷 영수증 OCR
 - GPT-4o-mini Vision으로 영수증 이미지 분석
 - 날짜, 금액, 항목 자동 추출 → 거래 내역 자동 입력
+- OCR 이미지 Supabase Storage 저장 → 거래내역에서 영수증 원본 확인 가능
 - 사용량 제한 (Free 월 3회 / Pro 무제한)
 
 ### 💸 거래 내역 관리
 - 수입 / 지출 CRUD
-- AI 카테고리 자동 분류 (메모 기반)
+- AI 카테고리 자동 분류 (로컬 키워드 분류, API 호출 없음)
 - CSV / Excel 일괄 업로드 (EUC-KR, 다양한 날짜 형식 지원)
+- 벌크 INSERT 적용 → 1,000건 기준 3~5초 처리
 - 수입/지출 탭 필터 + 날짜 범위 필터
 - 체크박스 다중 삭제 + 전체 삭제
-- 출처 뱃지 표시 (직접입력 / OCR / 업로드)
+- 출처 뱃지 표시 (직접입력 / OCR / 파일업로드)
+- 영수증 이미지 확인 버튼 + 모달 (OCR 등록 거래)
 
 ### 🧮 세금 계산기
 - 종합소득세 예상 세액 계산 (2024년 귀속 기준)
@@ -117,9 +131,11 @@
 | WebSocket | 실시간 채팅 |
 | SQLAlchemy (Async) | ORM |
 | PostgreSQL (Supabase) | 데이터베이스 |
+| Supabase Storage | 영수증 이미지 저장 |
 | LlamaIndex | RAG 파이프라인 |
 | ChromaDB | 벡터 데이터베이스 |
 | OpenAI GPT-4o-mini | LLM / Vision / Embedding |
+| httpx | Supabase Storage 직접 호출 |
 | JWT (python-jose) | 인증 |
 | bcrypt | 세무사 비밀번호 암호화 |
 | Uvicorn | ASGI 서버 |
@@ -138,17 +154,19 @@
 | 기술 | 용도 |
 |------|------|
 | Render | 서버 배포 (백엔드 + 프론트 통합) |
-| Supabase | PostgreSQL 호스팅 |
+| Supabase | PostgreSQL + Storage 호스팅 |
 | GitHub Actions | 자동 배포 (push → 자동 빌드) |
 
 ---
 
 ## 🏗 아키텍처
+
+```
 ┌─────────────────────────────────────────────────────────────┐
 │                      Client (React)                          │
 │  Landing / Dashboard / 거래내역 / 챗봇 / 세금계산기 / 상담   │
 └──────────────────────┬──────────────────────────────────────┘
-│ HTTP / Streaming / WebSocket
+                       │ HTTP / Streaming / WebSocket
 ┌──────────────────────▼──────────────────────────────────────┐
 │                   FastAPI (Render)                           │
 │                                                              │
@@ -161,7 +179,7 @@
 │  │  (RAG/OCR)  │  │  (JWT Auth) │                           │
 │  └──────┬──────┘  └─────────────┘                           │
 └─────────│───────────────────────────────────────────────────┘
-│
+          │
 ┌─────────▼──────────┐          ┌───────────────────┐
 │  PostgreSQL         │          │  OpenAI API        │
 │  (Supabase)         │          │  GPT-4o-mini       │
@@ -171,13 +189,19 @@
 │  - messages         │          └───────────────────┘
 │  - tax_advisors     │                    │
 └─────────────────────┘          ┌─────────▼──────────┐
-│  ChromaDB           │
-│  (세법 벡터 DB)      │
+                                 │  ChromaDB           │
+┌────────────────────┐           │  (세법 벡터 DB)      │
+│  Supabase Storage  │           └────────────────────┘
+│  - receipts 버킷   │
+│  (영수증 이미지)    │
 └────────────────────┘
+```
 
 ---
 
 ## 📁 프로젝트 구조
+
+```
 tax-assistant/
 ├── backend/
 │   └── app/
@@ -186,7 +210,7 @@ tax-assistant/
 │       ├── config.py            # 환경변수 설정
 │       ├── models/              # SQLAlchemy 모델
 │       │   ├── user.py
-│       │   ├── transaction.py
+│       │   ├── transaction.py   # receipt_image_url 컬럼 포함
 │       │   ├── consultation.py  # 상담/메시지/세무사 모델
 │       │   └── subscription.py
 │       ├── routers/             # API 라우터
@@ -194,11 +218,11 @@ tax-assistant/
 │       │   ├── advisor_auth.py  # 세무사 인증
 │       │   ├── consultations.py # 상담 CRUD
 │       │   ├── websocket.py     # 실시간 채팅
-│       │   ├── transactions.py  # 거래 CRUD
-│       │   ├── upload.py        # CSV/Excel 업로드
-│       │   ├── ocr.py           # 영수증 OCR
+│       │   ├── transactions.py  # 거래 CRUD (source, receipt_image_url 포함)
+│       │   ├── upload.py        # CSV/Excel 업로드 (로컬 분류 + 벌크 INSERT)
+│       │   ├── ocr.py           # 영수증 OCR + Supabase Storage 업로드
 │       │   ├── chat.py          # AI 챗봇 (RAG)
-│       │   ├── ai_insights.py   # AI 인사이트
+│       │   ├── ai_insights.py   # AI 인사이트 (집계 컨텍스트 최적화)
 │       │   ├── tax_calculator.py
 │       │   └── payments.py
 │       ├── services/
@@ -208,33 +232,31 @@ tax-assistant/
 │           ├── security.py
 │           └── dependencies.py
 └── frontend/
-└── src/
-├── pages/
-│   ├── LandingPage.jsx
-│   ├── DashboardPage.jsx
-│   ├── TransactionsPage.jsx
-│   ├── ChatPage.jsx
-│   ├── ConsultationPage.jsx  # 유저 상담 페이지
-│   ├── AdvisorPage.jsx       # 세무사 대시보드
-│   ├── AdvisorLoginPage.jsx  # 세무사 로그인
-│   ├── TaxCalculatorPage.jsx
-│   └── PricingPage.jsx
-├── components/
-│   ├── layout/
-│   │   └── Navbar.jsx        # 상단 네비게이션
-│   ├── dashboard/
-│   │   ├── NetProfitHeader.jsx
-│   │   ├── DeadlineCard.jsx
-│   │   ├── SummaryCards.jsx
-│   │   ├── MonthlyChart.jsx
-│   │   ├── TabMenu.jsx       # 하단 탭 메뉴
-│   │   └── TaxResultCard.jsx
-│   └── AIInsightWidget.jsx
-├── api/
-│   ├── axios.js
-│   └── transactions.js
-└── store/
-└── authStore.js
+    └── src/
+        ├── pages/
+        │   ├── LandingPage.jsx          # 대시보드 미리보기 포함
+        │   ├── DashboardPage.jsx
+        │   ├── TransactionsPage.jsx     # 영수증 확인 버튼 + 모달
+        │   ├── ChatPage.jsx
+        │   ├── ConsultationPage.jsx     # 유저 상담 페이지
+        │   ├── AdvisorPage.jsx          # 세무사 대시보드
+        │   ├── AdvisorLoginPage.jsx     # 세무사 로그인
+        │   ├── TaxCalculatorPage.jsx
+        │   └── PricingPage.jsx
+        ├── components/
+        │   ├── layout/
+        │   │   └── Navbar.jsx           # 상단 네비게이션
+        │   ├── dashboard/
+        │   │   ├── NetProfitHeader.jsx  # 순이익 + 차트 + 세금결과 통합
+        │   │   ├── DeadlineCard.jsx     # D-day 카드
+        │   │   └── TabMenu.jsx          # 하단 탭 메뉴 5개
+        │   └── AIInsightWidget.jsx
+        ├── api/
+        │   ├── axios.js
+        │   └── transactions.js
+        └── store/
+            └── authStore.js
+```
 
 ---
 
@@ -281,9 +303,12 @@ npm run dev
 # Database
 DATABASE_URL=postgresql+asyncpg://...
 
+# Supabase
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_KEY=your-service-role-key
+
 # OpenAI
 OPENAI_API_KEY=sk-...
-LANGCHAIN_API_KEY=...
 
 # JWT
 JWT_SECRET_KEY=...
@@ -321,15 +346,23 @@ NAVER_REDIRECT_URI=...
 - **문제**: 한국 은행 내역서의 EUC-KR 인코딩, 다양한 날짜 형식
 - **해결**: 멀티 인코딩 폴백 + 13가지 날짜 형식 파서 구현
 
-### 4. WebSocket 실시간 채팅 구현
+### 4. 파일 업로드 성능 최적화
+- **문제**: 거래 분류를 위해 건당 OpenAI API 호출 → 1,000건 업로드 시 수분 소요
+- **해결**: OpenAI API 제거 → 로컬 키워드 기반 분류 + 벌크 INSERT 적용 → 1,000건 기준 3~5초로 단축
+
+### 5. Supabase Storage 패키지 충돌
+- **문제**: `supabase` Python 패키지가 `httpx` 버전 충돌 발생
+- **해결**: supabase 패키지 제거 → `httpx`로 Supabase Storage REST API 직접 호출
+
+### 6. WebSocket 실시간 채팅 구현
 - **문제**: 세무사가 오프라인일 때 메시지 처리 방식
 - **해결**: 비동기 채팅 구조 설계 (유저는 언제든 메시지 전송, DB 저장 후 세무사 업무시간에 확인) + 양쪽 온라인 시 자동으로 실시간 채팅으로 전환
 
-### 5. PostgreSQL Enum 타입 충돌
+### 7. PostgreSQL Enum 타입 충돌
 - **문제**: SQLAlchemy Enum과 PostgreSQL Enum 타입명 불일치 (`consultationstatus` vs `consultation_status`)
 - **해결**: `SAEnum(ConsultationStatus, name="consultation_status")`로 명시적 타입명 지정
 
-### 6. 소셜 로그인 콜백 URL 관리
+### 8. 소셜 로그인 콜백 URL 관리
 - **문제**: 배포 환경 변경 시 OAuth 콜백 URL 불일치
 - **해결**: 환경변수로 REDIRECT_URI 관리, 콘솔별 URL 등록
 
@@ -344,9 +377,8 @@ NAVER_REDIRECT_URI=...
 - LLM / RAG 파이프라인 개발 집중
 - 관심 분야: LLM 서비스 개발, RAG 최적화, AI 애플리케이션
 
-**기술 블로그 / 포트폴리오**
-→ 이 프로젝트는 시장조사 → 기획 → 개발 → 배포 → 고도화까지
-   혼자 전 과정을 진행한 프로젝트입니다.
+> 이 프로젝트는 시장조사 → 기획 → 개발 → 배포 → 고도화까지 혼자 전 과정을 진행한 프로젝트입니다.
+
 ---
 
 ## 📄 라이선스

@@ -21,7 +21,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 const Chart = ({ data, height }) => (
   <ResponsiveContainer width="100%" height={height}>
-    <AreaChart data={data} margin={{ top: 5, right: 0, left: -24, bottom: 0 }}>
+    <AreaChart data={data} margin={{ top: 5, right: 0, left: 10, bottom: 0 }}>
       <defs>
         <linearGradient id="incomeGradDark" x1="0" y1="0" x2="0" y2="1">
           <stop offset="5%" stopColor="#34d399" stopOpacity={0.3} />

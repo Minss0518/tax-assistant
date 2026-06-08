@@ -129,7 +129,7 @@ export default function ConsultationPage() {
     s === "waiting" ? "⏳ 대기중" : s === "active" ? "💬 상담중" : "✅ 완료";
 
   return (
-    <div style={{ padding: "0 24px", maxWidth: 1100, margin: "0 auto", fontFamily: "sans-serif" }}>
+    <div style={{ padding: "0 80px", maxWidth: 1100, margin: "0 auto", fontFamily: "sans-serif" }}>
       {/* 뒤로가기 + 페이지 제목 */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "20px 0 16px" }}>
         <button
@@ -148,7 +148,7 @@ export default function ConsultationPage() {
       {/* 상담 본문 영역 */}
       <div style={{ display: "flex", height: "calc(100vh - 160px)", border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden" }}>
         {/* 왼쪽 상담 목록 */}
-        <div style={{ width: 280, borderRight: "1px solid #e5e7eb", overflowY: "auto", background: "#f9fafb", flexShrink: 0 }}>
+        <div style={{ width: 220, borderRight: "1px solid #e5e7eb", overflowY: "auto", background: "#f9fafb", flexShrink: 0 }}>
           <div style={{ padding: "16px", borderBottom: "1px solid #e5e7eb" }}>
             <button
               onClick={() => setShowForm(true)}

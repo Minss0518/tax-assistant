@@ -242,60 +242,120 @@ export default function LandingPage() {
       </div>
 
       {/* 미리보기 카드 */}
-      <section style={{ padding: '64px 24px', background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
-        <div style={{ maxWidth: 720, margin: '0 auto' }}>
-          <div className="reveal" style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, overflow: 'hidden' }}>
-            <div style={{ background: '#111827', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 22, height: 22, background: '#1d4ed8', borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                </div>
-                <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>세무비서</span>
-              </div>
-              <span style={{ fontSize: 11, color: '#6b7280' }}>2026년 5월 기준</span>
+<section style={{ padding: '64px 24px', background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+  <div style={{ maxWidth: 720, margin: '0 auto' }}>
+    <div className="reveal" style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, overflow: 'hidden' }}>
+      
+      {/* 상단 네비바 */}
+      <div style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', padding: '0 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: 48 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ width: 22, height: 22, background: '#1d4ed8', borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
+          <span style={{ fontSize: 12, fontWeight: 700, color: '#111827' }}>세무비서</span>
+        </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <div style={{ fontSize: 10, fontWeight: 600, color: '#1d4ed8', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 5, padding: '3px 8px' }}>Pro 업그레이드</div>
+          <div style={{ fontSize: 10, color: '#6b7280', padding: '3px 8px' }}>내 정보</div>
+          <div style={{ fontSize: 10, color: '#9ca3af', padding: '3px 8px' }}>로그아웃</div>
+        </div>
+      </div>
+
+      {/* 검정 헤더 - 순이익 + 차트 */}
+      <div style={{ background: '#111827', padding: '20px 20px 16px' }}>
+        <p style={{ fontSize: 10, color: '#6b7280', marginBottom: 3, textTransform: 'uppercase', letterSpacing: '0.8px' }}>2026년 6월 8일 기준</p>
+        <p style={{ fontSize: 11, color: '#6b7280', marginBottom: 3 }}>이번 달 순이익</p>
+        <p style={{ fontSize: 24, fontWeight: 700, color: '#fff', letterSpacing: '-1px', marginBottom: 6 }}>
+          +84,264,000<span style={{ fontSize: 13, fontWeight: 400, color: '#6b7280', marginLeft: 3 }}>원</span>
+        </p>
+        <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+          <span style={{ fontSize: 11, color: '#6b7280' }}>수입 <span style={{ color: '#34d399', fontWeight: 600 }}>+90,810,000원</span></span>
+          <span style={{ fontSize: 11, color: '#374151' }}>·</span>
+          <span style={{ fontSize: 11, color: '#6b7280' }}>지출 <span style={{ color: '#f87171', fontWeight: 600 }}>-6,546,000원</span></span>
+        </div>
+        {/* 차트 영역 (SVG로 간단히 표현) */}
+        <div style={{ position: 'relative', height: 60, marginBottom: 4 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <span style={{ fontSize: 10, color: '#6b7280' }}>월별 수입 · 지출 추이</span>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <span style={{ fontSize: 10, color: '#34d399', fontWeight: 600 }}>— 수입</span>
+              <span style={{ fontSize: 10, color: '#f87171', fontWeight: 600 }}>— 지출</span>
+              <span style={{ fontSize: 10, color: '#4b5563', background: '#1f2937', padding: '1px 6px', borderRadius: 3 }}>확대 ↗</span>
             </div>
-            <div style={{ background: '#111827', padding: '20px 20px 24px' }}>
-              <p style={{ fontSize: 11, color: '#6b7280', marginBottom: 4, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.8px' }}>이번 달 순이익</p>
-              <p style={{ fontSize: 28, fontWeight: 700, color: '#fff', letterSpacing: '-1px', marginBottom: 8 }}>
-                +3,600,000<span style={{ fontSize: 14, fontWeight: 400, color: '#6b7280', marginLeft: 4 }}>원</span>
-              </p>
-              <div style={{ display: 'flex', gap: 16 }}>
-                <span style={{ fontSize: 12, color: '#6b7280' }}>수입 <span style={{ color: '#34d399', fontWeight: 600 }}>+4,800,000원</span></span>
-                <span style={{ fontSize: 12, color: '#374151' }}>·</span>
-                <span style={{ fontSize: 12, color: '#6b7280' }}>지출 <span style={{ color: '#f87171', fontWeight: 600 }}>-1,200,000원</span></span>
-              </div>
+          </div>
+          <svg viewBox="0 0 300 40" style={{ width: '100%', height: 40 }}>
+            <polyline points="0,38 40,35 80,28 120,18 160,12 200,10 240,11 280,13 300,14" fill="none" stroke="#34d399" strokeWidth="1.5"/>
+            <polyline points="0,39 40,39 80,38 120,37 160,37 200,37 240,38 280,38 300,38" fill="none" stroke="#f87171" strokeWidth="1"/>
+          </svg>
+        </div>
+      </div>
+
+      {/* 탭 메뉴 */}
+      <div style={{ background: '#f8f9fa', padding: '10px 12px', borderBottom: '1px solid #e5e7eb' }}>
+        <div style={{ display: 'flex', gap: 5 }}>
+          {['거래 내역', 'AI 세무 상담', '세무사 상담', '세금 계산기', '일괄 업로드'].map((label, i) => (
+            <div key={i} style={{
+              flex: 1, padding: '6px 4px', fontSize: 10, fontWeight: 600, textAlign: 'center',
+              color: i === 0 ? '#fff' : '#1d4ed8',
+              background: i === 0 ? '#1d4ed8' : '#eff6ff',
+              border: '1px solid #bfdbfe', borderRadius: 5,
+            }}>{label}</div>
+          ))}
+        </div>
+      </div>
+
+      {/* D-day 카드 */}
+      <div style={{ background: '#f8f9fa', padding: '10px 12px', borderBottom: '1px solid #e5e7eb' }}>
+        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 7, background: '#f5f3ff', border: '1px solid #ddd6fe', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: 8, fontWeight: 700, color: '#6d28d9' }}>WIT</span>
             </div>
-            <div style={{ padding: '16px', background: '#f9fafb' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
-                <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '14px 16px' }}>
-                  <p style={{ fontSize: 10, fontWeight: 600, color: '#9ca3af', letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: 6 }}>총 수입</p>
-                  <p style={{ fontSize: 17, fontWeight: 700, color: '#059669' }}>+4,800,000<span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 400 }}>원</span></p>
-                </div>
-                <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '14px 16px' }}>
-                  <p style={{ fontSize: 10, fontWeight: 600, color: '#9ca3af', letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: 6 }}>총 지출</p>
-                  <p style={{ fontSize: 17, fontWeight: 700, color: '#dc2626' }}>-1,200,000<span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 400 }}>원</span></p>
-                </div>
-              </div>
-              <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '14px 16px' }}>
-                <p style={{ fontSize: 11, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 10 }}>AI 세무 상담</p>
-                <div style={{ display: 'flex', gap: 10, marginBottom: 8, justifyContent: 'flex-end' }}>
-                  <div style={{ background: '#f3f4f6', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#374151', maxWidth: '70%' }}>
-                    프리랜서 경비 처리 가능한 항목이 뭐가 있나요?
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: 10 }}>
-                  <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#1d4ed8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <span style={{ fontSize: 9, fontWeight: 700, color: '#fff' }}>AI</span>
-                  </div>
-                  <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#1e40af', maxWidth: '80%', lineHeight: 1.5 }}>
-                    노트북, 소프트웨어 구독, 업무용 교통비, 통신비 일부가 경비 처리 가능합니다. 📚 소득세법 제27조
-                  </div>
-                </div>
-              </div>
+            <div>
+              <p style={{ fontSize: 10, color: '#9ca3af', marginBottom: 2 }}>원천세 신고</p>
+              <p style={{ fontSize: 12, fontWeight: 600, color: '#111827' }}>6월 10일까지</p>
+            </div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <p style={{ fontSize: 10, color: '#9ca3af', marginBottom: 2 }}>남은 기간</p>
+            <p style={{ fontSize: 20, fontWeight: 700, color: '#dc2626' }}>D-2</p>
+          </div>
+        </div>
+      </div>
+
+      {/* AI 인사이트 */}
+      <div style={{ background: '#f8f9fa', padding: '10px 12px' }}>
+        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '12px 14px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 14 }}>✦</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: '#111827' }}>AI 인사이트</span>
+              <span style={{ fontSize: 10, color: '#9ca3af' }}>2025.06.08 ~ 2026.06.08</span>
+            </div>
+            <span style={{ fontSize: 10, color: '#6b7280' }}>↺ 새로고침</span>
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+            <div style={{ flex: 1, textAlign: 'center', borderBottom: '2px solid #1d4ed8', paddingBottom: 6, fontSize: 11, fontWeight: 600, color: '#1d4ed8' }}>📊 자동 분석</div>
+            <div style={{ flex: 1, textAlign: 'center', paddingBottom: 6, fontSize: 11, color: '#9ca3af' }}>💬 질문하기</div>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ flex: 1, background: '#f9fafb', borderRadius: 8, padding: '8px 10px' }}>
+              <p style={{ fontSize: 9, color: '#9ca3af', marginBottom: 3 }}>최다 지출</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: '#111827' }}>식비</p>
+              <p style={{ fontSize: 10, color: '#dc2626' }}>-2,100,000원</p>
+            </div>
+            <div style={{ flex: 1, background: '#f9fafb', borderRadius: 8, padding: '8px 10px' }}>
+              <p style={{ fontSize: 9, color: '#9ca3af', marginBottom: 3 }}>이번 달 수입</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: '#111827' }}>프리랜서</p>
+              <p style={{ fontSize: 10, color: '#059669' }}>+5,200,000원</p>
             </div>
           </div>
         </div>
-      </section>
+      </div>
+
+    </div>
+  </div>
+</section>
 
       {/* 기능 */}
       <section id="features" style={{ padding: '80px 24px', background: '#fff' }}>

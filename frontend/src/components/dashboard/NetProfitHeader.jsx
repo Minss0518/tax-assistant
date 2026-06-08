@@ -89,8 +89,8 @@ export default function NetProfitHeader({ totalIncome, totalExpense, monthlyData
                       <span style={{ width: 10, height: 2, background: "#f87171", display: "inline-block", borderRadius: 1 }} />지출
                     </span>
                   </div>
-                  <span style={{ fontSize: 11, color: "#4b5563", background: "#1f2937", padding: "2px 8px", borderRadius: 4 }}>
-                    확대 ↗
+                  <span style={{ fontSize: 11, color: "#fff", background: "#1f2937", padding: "2px 8px", borderRadius: 4 }}>
+                    확대 ↗ 
                   </span>
                 </div>
               </div>

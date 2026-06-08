@@ -6,12 +6,25 @@ from app.core.limits import check_ocr_limit
 from app.services.ocr_service import extract_receipt_info
 import uuid
 import os
-from supabase import create_client
+import httpx
 
 router = APIRouter(prefix="/ocr", tags=["ocr"])
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+
+async def upload_to_supabase(image_bytes: bytes, content_type: str, file_path: str) -> str:
+    url = f"{SUPABASE_URL}/storage/v1/object/receipts/{file_path}"
+    headers = {
+        "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+        "Content-Type": content_type,
+    }
+    async with httpx.AsyncClient() as client:
+        res = await client.post(url, content=image_bytes, headers=headers)
+        if res.status_code not in [200, 201]:
+            raise Exception(f"업로드 실패: {res.text}")
+    return f"{SUPABASE_URL}/storage/v1/object/public/receipts/{file_path}"
+
 
 @router.post("/receipt")
 async def upload_receipt(
@@ -30,16 +43,9 @@ async def upload_receipt(
     # Supabase Storage에 이미지 업로드
     receipt_image_url = None
     try:
-        supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
         file_ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
         file_path = f"{user_id}/{uuid.uuid4()}.{file_ext}"
-        
-        supabase.storage.from_("receipts").upload(
-            path=file_path,
-            file=image_bytes,
-            file_options={"content-type": file.content_type}
-        )
-        receipt_image_url = f"{SUPABASE_URL}/storage/v1/object/public/receipts/{file_path}"
+        receipt_image_url = await upload_to_supabase(image_bytes, file.content_type, file_path)
     except Exception as e:
         print(f"이미지 업로드 실패: {e}")
 

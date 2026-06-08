@@ -129,7 +129,7 @@ export default function ConsultationPage() {
     s === "waiting" ? "⏳ 대기중" : s === "active" ? "💬 상담중" : "✅ 완료";
 
   return (
-    <div style={{ padding: "0 170px", maxWidth: 1100, margin: "0 auto", fontFamily: "sans-serif" }}>
+    <div style={{ padding: "0 180px", maxWidth: 1100, margin: "0 auto", fontFamily: "sans-serif" }}>
       {/* 뒤로가기 + 페이지 제목 */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "20px 0 16px" }}>
         <button

@@ -35,7 +35,11 @@ const Chart = ({ data, height }) => (
       <CartesianGrid strokeDasharray="2 4" stroke="#374151" vertical={false} />
       <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#6b7280" }} axisLine={false} tickLine={false} />
       <YAxis tick={{ fontSize: 10, fill: "#6b7280" }} axisLine={false} tickLine={false}
-        tickFormatter={(v) => v >= 10000 ? `${(v / 10000).toFixed(0)}만` : v} />
+        tickFormatter={(v) => {
+          if (v >= 100000000) return `${(v / 100000000).toFixed(1)}억`;
+          if (v >= 10000) return `${(v / 10000).toFixed(0)}만`;
+          return v;
+        }} />
       <Tooltip content={<CustomTooltip />} />
       <Area type="monotone" dataKey="income" name="수입" stroke="#34d399" strokeWidth={1.5} fill="url(#incomeGradDark)" dot={false} activeDot={{ r: 4, fill: "#34d399" }} />
       <Area type="monotone" dataKey="expense" name="지출" stroke="#f87171" strokeWidth={1.5} fill="url(#expenseGradDark)" dot={false} activeDot={{ r: 4, fill: "#f87171" }} />
@@ -43,7 +47,7 @@ const Chart = ({ data, height }) => (
   </ResponsiveContainer>
 );
 
-export default function NetProfitHeader({ totalIncome, totalExpense, monthlyData = [] }) {
+export default function NetProfitHeader({ totalIncome, totalExpense, monthlyData = [], lastTaxResult }) {
   const [showModal, setShowModal] = useState(false);
   const netProfit = totalIncome - totalExpense;
   const fmt = (n) => n?.toLocaleString() ?? "0";
@@ -53,33 +57,66 @@ export default function NetProfitHeader({ totalIncome, totalExpense, monthlyData
     <>
       <div style={{ background: "#111827", padding: "28px 24px 20px" }}>
         <div style={{ maxWidth: 720, margin: "0 auto" }}>
-          {/* 순이익 */}
-          <p style={{ fontSize: 11, color: "#6b7280", marginBottom: 6, fontWeight: 500, letterSpacing: "0.8px", textTransform: "uppercase" }}>
-            {today.toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" })} 기준
-          </p>
-          <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 4 }}>이번 달 순이익</p>
-          <p style={{ fontSize: 36, fontWeight: 700, color: "#fff", letterSpacing: "-1px", marginBottom: 10 }}>
-            {netProfit >= 0 ? "+" : ""}{fmt(netProfit)}
-            <span style={{ fontSize: 18, fontWeight: 400, color: "#6b7280", marginLeft: 4 }}>원</span>
-          </p>
-          <div style={{ display: "flex", gap: 20, marginBottom: 16 }}>
-            <span style={{ fontSize: 13, color: "#6b7280" }}>
-              수입 <span style={{ color: "#34d399", fontWeight: 600 }}>+{fmt(totalIncome)}원</span>
-            </span>
-            <span style={{ fontSize: 13, color: "#374151" }}>·</span>
-            <span style={{ fontSize: 13, color: "#6b7280" }}>
-              지출 <span style={{ color: "#f87171", fontWeight: 600 }}>-{fmt(totalExpense)}원</span>
-            </span>
+
+          {/* 상단: 순이익 + 세금결과 나란히 */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+            
+            {/* 왼쪽: 순이익 */}
+            <div>
+              <p style={{ fontSize: 11, color: "#fff", marginBottom: 4, fontWeight: 500, letterSpacing: "0.8px", textTransform: "uppercase" }}>
+                {today.toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" })} 기준
+              </p>
+              <p style={{ fontSize: 13, color: "#fff", marginBottom: 4 }}>이번 달 순이익</p>
+              <p style={{ fontSize: 36, fontWeight: 700, color: "#fff", letterSpacing: "-1px", marginBottom: 8 }}>
+                {netProfit >= 0 ? "+" : ""}{fmt(netProfit)}
+                <span style={{ fontSize: 18, fontWeight: 400, color: "#6b7280", marginLeft: 4 }}>원</span>
+              </p>
+              <div style={{ display: "flex", gap: 20 }}>
+                <span style={{ fontSize: 13, color: "#6b7280" }}>
+                  수입 <span style={{ color: "#34d399", fontWeight: 600 }}>+{fmt(totalIncome)}원</span>
+                </span>
+                <span style={{ fontSize: 13, color: "#374151" }}>·</span>
+                <span style={{ fontSize: 13, color: "#6b7280" }}>
+                  지출 <span style={{ color: "#f87171", fontWeight: 600 }}>-{fmt(totalExpense)}원</span>
+                </span>
+              </div>
+            </div>
+
+            {/* 오른쪽: 세금 계산 결과 */}
+            {lastTaxResult && (
+              <div style={{
+                background: "#1f2937", border: "1px solid #374151", borderRadius: 12,
+                padding: "14px 16px", minWidth: 180, cursor: "pointer",
+                transition: "border-color 0.15s",
+              }}>
+                <p style={{ fontSize: 11, color: "#fff", marginBottom: 10, fontWeight: 600, letterSpacing: "0.5px" }}>세금 계산 결과</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                    <span style={{ fontSize: 11, color: "#fff" }}>연 수입</span>
+                    <span style={{ fontSize: 11, color: "#d1d5db", fontWeight: 600 }}>{fmt(lastTaxResult.grossIncome)}원</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                    <span style={{ fontSize: 11, color: "#fff" }}>납부세액</span>
+                    <span style={{ fontSize: 11, color: "#d1d5db", fontWeight: 600 }}>{fmt(lastTaxResult.totalTax)}원</span>
+                  </div>
+                </div>
+                <div style={{ borderTop: "1px solid #374151", paddingTop: 8 }}>
+                  <p style={{ fontSize: 10, color: "#fff", marginBottom: 3 }}>
+                    {lastTaxResult.isRefund ? "예상 환급" : "추가납부"}
+                  </p>
+                  <p style={{ fontSize: 18, fontWeight: 700, color: lastTaxResult.isRefund ? "#34d399" : "#f87171", letterSpacing: "-0.5px" }}>
+                    {lastTaxResult.isRefund ? fmt(lastTaxResult.refundAmount) : fmt(lastTaxResult.finalTax)}원
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* 축소 차트 */}
+          {/* 차트 */}
           {monthlyData.length > 0 ? (
-            <div
-              onClick={() => setShowModal(true)}
-              style={{ cursor: "pointer", position: "relative" }}
-            >
+            <div onClick={() => setShowModal(true)} style={{ cursor: "pointer" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <p style={{ fontSize: 12, color: "#6b7280" }}>월별 수입 · 지출 추이</p>
+                <p style={{ fontSize: 12, fff: "#6b7280" }}>월별 수입 · 지출 추이</p>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <div style={{ display: "flex", gap: 10 }}>
                     <span style={{ fontSize: 11, color: "#34d399", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
@@ -89,8 +126,8 @@ export default function NetProfitHeader({ totalIncome, totalExpense, monthlyData
                       <span style={{ width: 10, height: 2, background: "#f87171", display: "inline-block", borderRadius: 1 }} />지출
                     </span>
                   </div>
-                  <span style={{ fontSize: 11, color: "#fff", background: "#1f2937", padding: "2px 8px", borderRadius: 4 }}>
-                    확대 ↗ 
+                  <span style={{ fontSize: 11, color: "#4b5563", background: "#1f2937", padding: "2px 8px", borderRadius: 4 }}>
+                    확대 ↗
                   </span>
                 </div>
               </div>

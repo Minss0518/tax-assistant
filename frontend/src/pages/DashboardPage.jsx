@@ -7,7 +7,6 @@ import api from "../api/axios";
 import Navbar from "../components/layout/Navbar";
 import NetProfitHeader from "../components/dashboard/NetProfitHeader";
 import DeadlineCard from "../components/dashboard/DeadlineCard";
-import TaxResultCard from "../components/dashboard/TaxResultCard";
 import AIInsightWidget from "../components/AIInsightWidget";
 import TabMenu from "../components/dashboard/TabMenu";
 
@@ -67,13 +66,12 @@ export default function DashboardPage() {
       `}</style>
 
       <Navbar />
-      <NetProfitHeader totalIncome={totalIncome} totalExpense={totalExpense} monthlyData={monthlyData} />
+      <NetProfitHeader totalIncome={totalIncome} totalExpense={totalExpense} monthlyData={monthlyData} lastTaxResult={lastTaxResult} />
 
       <div style={{ maxWidth: 720, margin: "0 auto", padding: "20px 16px 40px" }}>
         <TabMenu />
         <DeadlineCard />
         <AIInsightWidget />
-        <TaxResultCard lastTaxResult={lastTaxResult} />
       </div>
     </div>
   );

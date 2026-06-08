@@ -139,3 +139,4 @@ zipp==3.23.1
 zstandard==0.25.0
 python-jose[cryptography]
 passlib[bcrypt]
+supabase

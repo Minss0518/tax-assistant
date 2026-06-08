@@ -56,7 +56,6 @@ const CATEGORIES = [
   { name: "기타수입", emoji: "💰", is_deductible: null },
 ];
 
-// 출처 뱃지
 const SOURCE_BADGE = {
   ocr:    { label: 'OCR', color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE' },
   upload: { label: '파일 업로드', color: '#1D4ED8', bg: '#EFF6FF', border: '#BFDBFE' },
@@ -82,15 +81,14 @@ export default function TransactionsPage() {
   const [ocrResult, setOcrResult] = useState(null);
   const [ocrError, setOcrError] = useState('');
   const [editCategoryId, setEditCategoryId] = useState(null);
+  const [receiptModal, setReceiptModal] = useState(null);
   const fileInputRef = useRef(null);
 
-  // ── 필터 상태 ──────────────────────────────────────────────
-  const [filterType, setFilterType] = useState('all');       // all | income | expense
+  const [filterType, setFilterType] = useState('all');
   const [filterDateFrom, setFilterDateFrom] = useState('');
   const [filterDateTo, setFilterDateTo] = useState('');
   const [showFilter, setShowFilter] = useState(false);
 
-  // ── 체크박스 삭제 상태 ────────────────────────────────────
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState(new Set());
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -106,7 +104,6 @@ export default function TransactionsPage() {
     setSelected(new Set());
   };
 
-  // ── 필터링된 거래 목록 ────────────────────────────────────
   const filtered = transactions.filter((t) => {
     if (filterType !== 'all' && t.type !== filterType) return false;
     if (filterDateFrom && t.transaction_date < filterDateFrom) return false;
@@ -126,7 +123,6 @@ export default function TransactionsPage() {
     setFilterDateTo('');
   };
 
-  // ── 체크박스 ──────────────────────────────────────────────
   const toggleSelect = (id) => {
     setSelected(prev => {
       const next = new Set(prev);
@@ -162,14 +158,12 @@ export default function TransactionsPage() {
     fetchTransactions();
   };
 
-  // ── 단건 삭제 ─────────────────────────────────────────────
   const handleDelete = async (id) => {
     if (!window.confirm('이 거래를 삭제할까요?')) return;
     await deleteTransaction(id);
     fetchTransactions();
   };
 
-  // ── 폼 제출 ───────────────────────────────────────────────
   const handleSubmit = async () => {
     if (!form.amount || !form.transaction_date) return;
     await createTransaction({ ...form, amount: parseInt(form.amount) });
@@ -180,7 +174,6 @@ export default function TransactionsPage() {
     fetchTransactions();
   };
 
-  // ── OCR ───────────────────────────────────────────────────
   const handleReceiptChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -192,7 +185,14 @@ export default function TransactionsPage() {
       const res = await uploadReceipt(file);
       const extracted = res.data.extracted;
       setOcrResult(extracted);
-      setForm({ type: extracted.type || 'expense', amount: String(extracted.amount || ''), memo: extracted.memo || '', transaction_date: extracted.date || '', source: 'ocr'});
+      setForm({
+        type: extracted.type || 'expense',
+        amount: String(extracted.amount || ''),
+        memo: extracted.memo || '',
+        transaction_date: extracted.date || '',
+        source: 'ocr',
+        receipt_image_url: extracted.receipt_image_url || null,
+      });
     } catch {
       setOcrError('영수증 인식에 실패했어요. 다시 시도해 주세요.');
     } finally {
@@ -205,7 +205,6 @@ export default function TransactionsPage() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  // ── 카테고리 수정 ─────────────────────────────────────────
   const handleCategoryUpdate = async (transactionId, cat) => {
     await api.patch(`/transactions/${transactionId}/category`, {
       category_name: cat.name, category_emoji: cat.emoji, is_deductible: cat.is_deductible ?? false,
@@ -214,13 +213,11 @@ export default function TransactionsPage() {
     fetchTransactions();
   };
 
-  // ── 출처 추론 (source 필드 없으면 memo로 추론) ────────────
   const getSource = (t) => {
     if (t.source) return t.source;
     return 'manual';
   };
 
-  // ── 스타일 상수 ───────────────────────────────────────────
   const card = { background:'#fff', border:'1px solid #E5E7EB', borderRadius:12 };
   const btnBase = { border:'none', cursor:'pointer', fontFamily:'inherit', transition:'all 0.15s' };
 
@@ -312,11 +309,9 @@ export default function TransactionsPage() {
 
         <ScrollTopButton />
 
-        {/* ── 필터 + 선택 모드 툴바 ── */}
+        {/* 필터 + 선택 모드 툴바 */}
         <div style={{ ...card, padding:'12px 16px', marginBottom:12, position:'sticky', top:0, zIndex:10, backdropFilter:'blur(8px)' }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-
-            {/* 수입/지출 탭 */}
             <div style={{ display:'flex', gap:6 }}>
               {[['all','전체'],['income','수입'],['expense','지출']].map(([val, label]) => (
                 <button key={val} onClick={() => setFilterType(val)}
@@ -330,9 +325,7 @@ export default function TransactionsPage() {
                 </button>
               ))}
             </div>
-
             <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-              {/* 날짜 필터 */}
               <button onClick={() => setShowFilter(!showFilter)}
                 style={{ ...btnBase, padding:'5px 10px', borderRadius:8, fontSize:12, fontWeight:500,
                   background: activeFilterCount > 0 ? '#EFF6FF' : '#F3F4F6',
@@ -340,7 +333,6 @@ export default function TransactionsPage() {
                   border: `1px solid ${activeFilterCount > 0 ? '#BFDBFE' : '#E5E7EB'}` }}>
                 📅 날짜{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
               </button>
-              {/* 선택 모드 */}
               <button onClick={() => { setSelectMode(!selectMode); setSelected(new Set()); }}
                 style={{ ...btnBase, padding:'5px 10px', borderRadius:8, fontSize:12, fontWeight:500,
                   background: selectMode ? '#FEF2F2' : '#F3F4F6',
@@ -351,7 +343,6 @@ export default function TransactionsPage() {
             </div>
           </div>
 
-          {/* 날짜 필터 펼침 */}
           {showFilter && (
             <div style={{ marginTop:12, paddingTop:12, borderTop:'1px solid #F3F4F6', display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
               <input type="date" value={filterDateFrom} onChange={e => setFilterDateFrom(e.target.value)}
@@ -366,7 +357,6 @@ export default function TransactionsPage() {
             </div>
           )}
 
-          {/* 선택 모드 액션바 */}
           {selectMode && (
             <div style={{ marginTop:12, paddingTop:12, borderTop:'1px solid #F3F4F6', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
               <label style={{ display:'flex', alignItems:'center', gap:6, fontSize:12, color:'#374151', cursor:'pointer', userSelect:'none' }}>
@@ -411,7 +401,6 @@ export default function TransactionsPage() {
                     background: isChecked ? '#EFF6FF' : undefined, transition:'background 0.1s' }}>
                   <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:12 }}>
 
-                    {/* 체크박스 */}
                     {selectMode && (
                       <input type="checkbox" checked={isChecked} onChange={() => toggleSelect(t.id)}
                         className="cb-check"
@@ -421,13 +410,11 @@ export default function TransactionsPage() {
                     {/* 왼쪽 정보 */}
                     <div style={{ flex:1, minWidth:0 }}>
                       <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap', marginBottom:3 }}>
-                        {/* 수입/지출 뱃지 */}
                         <span style={{ fontSize:11, fontWeight:600, padding:'2px 7px', borderRadius:10,
                           background: t.type === 'income' ? '#F0FDF4' : '#FEF2F2',
                           color: t.type === 'income' ? '#059669' : '#DC2626', flexShrink:0 }}>
                           {t.type === 'income' ? '수입' : '지출'}
                         </span>
-                        {/* 출처 뱃지 */}
                         <span style={{ fontSize:10, fontWeight:600, padding:'2px 6px', borderRadius:8,
                           background: srcBadge.bg, color: srcBadge.color, border:`1px solid ${srcBadge.border}`, flexShrink:0 }}>
                           {srcBadge.label}
@@ -435,10 +422,18 @@ export default function TransactionsPage() {
                         <span style={{ fontSize:13, color:'#111827', fontWeight:500, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
                           {t.memo || '-'}
                         </span>
+                        {/* 영수증 확인 버튼 */}
+                        {t.source === 'ocr' && t.receipt_image_url && (
+                          <button
+                            onClick={() => setReceiptModal(t.receipt_image_url)}
+                            style={{ fontSize:11, color:'#7C3AED', background:'#F5F3FF', border:'1px solid #DDD6FE', borderRadius:6, padding:'2px 8px', cursor:'pointer', fontFamily:'inherit', whiteSpace:'nowrap', flexShrink:0 }}
+                          >
+                            영수증 확인
+                          </button>
+                        )}
                       </div>
                       <p style={{ fontSize:11, color:'#9CA3AF', marginBottom:4 }}>{t.transaction_date}</p>
 
-                      {/* 카테고리 뱃지 */}
                       {t.category_name ? (
                         <button onClick={() => setEditCategoryId(editCategoryId === t.id ? null : t.id)}
                           style={{ ...btnBase, display:'inline-flex', alignItems:'center', gap:4, fontSize:11,
@@ -478,7 +473,6 @@ export default function TransactionsPage() {
                     </div>
                   </div>
 
-                  {/* 카테고리 선택 드롭다운 */}
                   {editCategoryId === t.id && (
                     <div style={{ marginTop:12, padding:12, background:'#F9FAFB', borderRadius:8 }}>
                       <p style={{ fontSize:11, fontWeight:600, color:'#6B7280', marginBottom:8 }}>카테고리 선택</p>
@@ -521,6 +515,34 @@ export default function TransactionsPage() {
           </div>
         )}
       </div>
+
+      {/* 영수증 이미지 모달 */}
+      {receiptModal && (
+        <div
+          onClick={() => setReceiptModal(null)}
+          style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.7)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000, padding:24 }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ background:'#fff', borderRadius:16, padding:20, maxWidth:480, width:'100%' }}
+          >
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
+              <p style={{ fontWeight:700, fontSize:15, color:'#111827' }}>영수증</p>
+              <button
+                onClick={() => setReceiptModal(null)}
+                style={{ background:'#F3F4F6', border:'none', borderRadius:6, padding:'4px 10px', cursor:'pointer', fontSize:13, color:'#6B7280' }}
+              >
+                ✕ 닫기
+              </button>
+            </div>
+            <img
+              src={receiptModal}
+              alt="영수증"
+              style={{ width:'100%', borderRadius:8, border:'1px solid #E5E7EB' }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

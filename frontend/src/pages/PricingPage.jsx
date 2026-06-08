@@ -72,11 +72,11 @@ export default function PricingPage() {
             <div className="max-w-2xl mx-auto px-4 py-8">
                 <div className="flex items-center gap-3 mb-8">
                     <BackButton onClick={() => navigate('/dashboard')} />
-                    <h1 className="text-xl font-bold text-gray-800">💳 요금제</h1>
+                    <h1 className="text-xl font-bold text-gray-800">요금제</h1>
                 </div>
 
                 <div className="bg-blue-50 border border-blue-100 rounded-2xl px-5 py-4 mb-6 flex items-center gap-3">
-                    <span className="text-2xl">📋</span>
+                    <span className="text-2xl"></span>
                     <div>
                         <p className="text-sm font-semibold text-blue-700">현재 Free 플랜 사용 중</p>
                         <p className="text-xs text-blue-400">Pro로 업그레이드하면 모든 기능을 무제한으로 사용할 수 있어요</p>

@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     LANGCHAIN_PROJECT: str = ""
     LANGCHAIN_TRACING_V2: str = "true"
 
+    SUPABASE_URL: str = ""
+    SUPABASE_SERVICE_KEY: str = ""
+
     class Config:
         env_file = ".env"
 

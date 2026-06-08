@@ -106,7 +106,6 @@ async def fetch_transactions_for_llm(current_user: dict, db: AsyncSession) -> di
 
 
 def build_context_text(data: dict) -> str:
-    """LLM 시스템 프롬프트용 데이터 컨텍스트 문자열 생성"""
     top_cats = list(data["category_ratios"].items())[:5]
     cats_text = "\n".join(
         f"  - {cat}: {v['amount']:,}원 ({v['ratio']}%)" for cat, v in top_cats
@@ -125,6 +124,13 @@ def build_context_text(data: dict) -> str:
         or "  없음"
     )
 
+    # 최근 10건만 샘플로 전달
+    recent_sample = data['transactions'][-10:]
+    sample_text = "\n".join(
+        f"  - {t['date']} {t['type']} {t['amount']:,}원 ({t['category']}) {t['memo']}"
+        for t in recent_sample
+    )
+
     return f"""
 [분석 기간] {data['period']}
 [총 수입] {data['total_income']:,}원
@@ -140,8 +146,8 @@ def build_context_text(data: dict) -> str:
 [이상 지출 감지 (일평균 300% 초과)]
 {anomaly_text}
 
-[전체 거래 내역 (최근 3개월)]
-{json.dumps(data['transactions'], ensure_ascii=False, indent=2)}
+[최근 거래 샘플 (10건)]
+{sample_text}
 """.strip()
 
 

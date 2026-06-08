@@ -21,6 +21,7 @@ class TransactionResponse(BaseModel):
     is_deductible: Optional[bool] = None
     memo: Optional[str] = None
     transaction_date: date
+    source: Optional[str] = None
 
     class Config:
         from_attributes = True

@@ -59,7 +59,7 @@ const CATEGORIES = [
 // 출처 뱃지
 const SOURCE_BADGE = {
   ocr:    { label: 'OCR', color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE' },
-  upload: { label: '업로드', color: '#1D4ED8', bg: '#EFF6FF', border: '#BFDBFE' },
+  upload: { label: '파일 업로드', color: '#1D4ED8', bg: '#EFF6FF', border: '#BFDBFE' },
   manual: { label: '직접입력', color: '#065F46', bg: '#ECFDF5', border: '#A7F3D0' },
 };
 

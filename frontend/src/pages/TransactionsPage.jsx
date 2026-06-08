@@ -192,7 +192,7 @@ export default function TransactionsPage() {
       const res = await uploadReceipt(file);
       const extracted = res.data.extracted;
       setOcrResult(extracted);
-      setForm({ type: extracted.type || 'expense', amount: String(extracted.amount || ''), memo: extracted.memo || '', transaction_date: extracted.date || '' });
+      setForm({ type: extracted.type || 'expense', amount: String(extracted.amount || ''), memo: extracted.memo || '', transaction_date: extracted.date || '', source: 'ocr'});
     } catch {
       setOcrError('영수증 인식에 실패했어요. 다시 시도해 주세요.');
     } finally {

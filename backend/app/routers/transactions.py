@@ -42,6 +42,7 @@ async def create_transaction(
         is_deductible=category_info.get("is_deductible"),
         memo=data.memo,
         transaction_date=data.transaction_date,
+        source=data.source or "manual",
     )
     db.add(transaction)
     await db.commit()

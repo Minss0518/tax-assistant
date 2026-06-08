@@ -9,6 +9,7 @@ class TransactionCreate(BaseModel):
     category_id: Optional[UUID] = None
     memo: Optional[str] = None
     transaction_date: date
+    source: Optional[str] = "manual"
 
 class TransactionResponse(BaseModel):
     id: UUID

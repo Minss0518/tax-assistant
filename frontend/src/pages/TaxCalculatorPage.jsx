@@ -180,12 +180,12 @@ export default function TaxCalculatorPage() {
             <div className="max-w-2xl mx-auto px-4 py-8">
                 <div className="flex items-center gap-3 mb-2">
                     <BackButton onClick={() => navigate('/dashboard')} />
-                    <h1 className="text-xl font-bold text-gray-800">🧮 종합소득세 계산기</h1>
+                    <h1 className="text-xl font-bold text-gray-800">종합소득세 계산기</h1>
                 </div>
                 <p className="text-xs text-gray-400 mb-6 ml-1">2024년 귀속 기준 · 참고용이며 실제 세액과 다를 수 있어요</p>
 
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-4">
-                    <h2 className="font-bold text-gray-700 mb-4">💰 수입 / 경비</h2>
+                    <h2 className="font-bold text-gray-700 mb-4">수입 / 경비</h2>
                     <div className="flex flex-col gap-3">
                         <div><label className={LABEL_CLASS}>총 수입금액 (연간)</label>
                             <input className={INPUT_CLASS} type="number" placeholder="예: 30000000" value={income} onChange={(e) => setIncome(e.target.value)} /></div>
@@ -195,7 +195,7 @@ export default function TaxCalculatorPage() {
                 </div>
 
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-4">
-                    <h2 className="font-bold text-gray-700 mb-4">🎁 소득공제</h2>
+                    <h2 className="font-bold text-gray-700 mb-4">소득공제</h2>
                     <div className="flex flex-col gap-3">
                         <div><label className={LABEL_CLASS}>기본공제 (본인 150만 + 부양가족 1인당 150만)</label>
                             <input className={INPUT_CLASS} type="number" value={basicDeduction} onChange={(e) => setBasicDeduction(e.target.value)} /></div>
@@ -226,7 +226,7 @@ export default function TaxCalculatorPage() {
                 </div>
 
                 <div className="bg-violet-50 rounded-2xl px-4 py-3 mb-4 text-xs text-violet-500">
-                    <p className="font-semibold mb-1">✨ 자동 적용 세액공제</p>
+                    <p className="font-semibold mb-1"> -- 자동 적용 세액공제</p>
                     <p>• 표준세액공제 70,000원 (사업소득자 기준) 자동 반영</p>
                 </div>
 

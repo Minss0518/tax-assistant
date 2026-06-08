@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import api from '../api/axios';
@@ -26,9 +26,21 @@ export default function MyInfoPage() {
   const [deleting, setDeleting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
 
+  // 닉네임 편집
+  const [editingNickname, setEditingNickname] = useState(false);
+  const [nicknameInput, setNicknameInput] = useState('');
+  const [savingNickname, setSavingNickname] = useState(false);
+
+  // 프로필 이미지 업로드
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef(null);
+
   useEffect(() => {
     api.get('/users/me')
-      .then((res) => setInfo(res.data))
+      .then((res) => {
+        setInfo(res.data);
+        setNicknameInput(res.data.nickname || '');
+      })
       .catch(() => navigate('/login'))
       .finally(() => setLoading(false));
   }, []);
@@ -52,13 +64,43 @@ export default function MyInfoPage() {
       const res = await api.post('/payments/cancel');
       alert(res.data.message);
       setShowCancelModal(false);
-      // 플랜 정보 새로고침
       const updated = await api.get('/users/me');
       setInfo(updated.data);
     } catch (e) {
       alert(e.response?.data?.detail || '구독 취소 중 오류가 발생했어요.');
     } finally {
       setCancelling(false);
+    }
+  };
+
+  const handleSaveNickname = async () => {
+    setSavingNickname(true);
+    try {
+      await api.patch('/users/me/profile', { nickname: nicknameInput });
+      setInfo((prev) => ({ ...prev, nickname: nicknameInput }));
+      setEditingNickname(false);
+    } catch (e) {
+      alert(e.response?.data?.detail || '닉네임 저장에 실패했어요.');
+    } finally {
+      setSavingNickname(false);
+    }
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await api.post('/users/me/profile-image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setInfo((prev) => ({ ...prev, profile_image: res.data.profile_image }));
+    } catch (e) {
+      alert(e.response?.data?.detail || '이미지 업로드에 실패했어요.');
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -71,26 +113,87 @@ export default function MyInfoPage() {
   }
 
   const plan = PLAN_LABEL[info?.plan] || PLAN_LABEL.free;
+  const displayName = info?.nickname || info?.name || '-';
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="flex items-center gap-3 mb-8">
           <BackButton onClick={() => navigate('/dashboard')} />
-          <h1 className="text-xl font-bold text-gray-800">👤 내 정보</h1>
+          <h1 className="text-xl font-bold text-gray-800">내 정보</h1>
         </div>
 
+        {/* 프로필 카드 */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-4">
           <div className="flex items-center gap-4 mb-6">
-            {info?.profile_image ? (
-              <img src={info.profile_image} alt="프로필" className="w-16 h-16 rounded-full object-cover border border-gray-200" />
-            ) : (
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-violet-500 flex items-center justify-center text-white text-2xl font-bold">
-                {info?.name?.[0] || '?'}
-              </div>
-            )}
-            <div>
-              <p className="font-bold text-gray-900 text-lg">{info?.name || '-'}</p>
+
+            {/* 프로필 이미지 + 업로드 버튼 */}
+            <div className="relative">
+              {info?.profile_image ? (
+                <img src={info.profile_image} alt="프로필"
+                  className="w-16 h-16 rounded-full object-cover border border-gray-200" />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-violet-500 flex items-center justify-center text-white text-2xl font-bold">
+                  {info?.name?.[0] || '?'}
+                </div>
+              )}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingImage}
+                className="absolute -bottom-1 -right-1 w-6 h-6 bg-gray-700 hover:bg-gray-900 text-white rounded-full flex items-center justify-center text-xs transition disabled:opacity-50"
+                title="프로필 사진 변경"
+              >
+                {uploadingImage ? '…' : '✏️'}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={handleImageUpload}
+              />
+            </div>
+
+            {/* 이름/닉네임 + 이메일 */}
+            <div className="flex-1">
+              {/* 닉네임 편집 */}
+              {editingNickname ? (
+                <div className="flex items-center gap-2 mb-1">
+                  <input
+                    value={nicknameInput}
+                    onChange={(e) => setNicknameInput(e.target.value)}
+                    maxLength={50}
+                    placeholder="닉네임 입력"
+                    className="border border-gray-300 rounded-lg px-2 py-1 text-sm font-bold text-gray-900 w-36 focus:outline-none focus:border-blue-400"
+                    onKeyDown={(e) => e.key === 'Enter' && handleSaveNickname()}
+                    autoFocus
+                  />
+                  <button
+                    onClick={handleSaveNickname}
+                    disabled={savingNickname}
+                    className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg transition disabled:opacity-50"
+                  >
+                    {savingNickname ? '저장 중...' : '저장'}
+                  </button>
+                  <button
+                    onClick={() => { setEditingNickname(false); setNicknameInput(info?.nickname || ''); }}
+                    className="text-xs text-gray-400 hover:text-gray-600"
+                  >
+                    취소
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="font-bold text-gray-900 text-lg">{displayName}</p>
+                  <button
+                    onClick={() => setEditingNickname(true)}
+                    className="text-xs text-gray-400 hover:text-gray-600 transition"
+                    title="닉네임 변경"
+                  >
+                    ✏️
+                  </button>
+                </div>
+              )}
               <p className="text-sm text-gray-500">{info?.email || '-'}</p>
               <div className="flex items-center gap-2 mt-1">
                 <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${plan.color}`}>{plan.label} 플랜</span>
@@ -106,8 +209,9 @@ export default function MyInfoPage() {
           </div>
         </div>
 
+        {/* 사용 현황 */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-4">
-          <h2 className="font-bold text-gray-700 mb-4">📊 사용 현황</h2>
+          <h2 className="font-bold text-gray-700 mb-4">사용 현황</h2>
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-emerald-50 rounded-xl p-4 text-center">
               <p className="text-3xl font-extrabold text-emerald-500">{info?.chat_count}</p>
@@ -120,8 +224,9 @@ export default function MyInfoPage() {
           </div>
         </div>
 
+        {/* 요금제 */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-4">
-          <h2 className="font-bold text-gray-700 mb-4">💳 요금제</h2>
+          <h2 className="font-bold text-gray-700 mb-4">요금제</h2>
           <div className="flex justify-between items-center">
             <div>
               <p className="font-semibold text-gray-800">{plan.label} 플랜</p>
@@ -143,6 +248,7 @@ export default function MyInfoPage() {
           </div>
         </div>
 
+        {/* 계정 관리 */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="font-bold text-gray-700 mb-2">계정 관리</h2>
           <p className="text-xs text-gray-400 mb-4">탈퇴 시 모든 데이터가 영구 삭제되며 복구할 수 없어요.</p>

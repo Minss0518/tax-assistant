@@ -10,6 +10,7 @@ class User(Base):
     name = Column(String, nullable=True)
     email = Column(String, unique=True, nullable=True)
     profile_image = Column(String, nullable=True)
+    nickname = Column(String(50), nullable=True)
     plan = Column(String, default="free")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

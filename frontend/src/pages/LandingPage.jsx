@@ -114,8 +114,9 @@ const reviews = [
 
 const stats = [
   { value: '3.3%', label: '원천징수 자동 계산' },
-  { value: '5종', label: '소셜 로그인 지원' },
+  { value: '3종', label: '소셜 로그인 지원' },
   { value: '즉시', label: 'AI 세무 답변' },
+  { value: '세무사 상담', label: '***'},
   { value: '무료', label: '14일 체험' },
 ];
 

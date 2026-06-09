@@ -14,10 +14,10 @@ const plans = [
     {
         name: 'Free', price: '0', desc: '가볍게 시작해보세요', color: 'border-gray-200', current: true,
         features: [
-            { text: 'AI 세무 상담 월 10회', included: true },
+            { text: 'AI 세무 상담 월 5회', included: true },
             { text: '거래 내역 관리', included: true },
             { text: '세금 계산기', included: true },
-            { text: '영수증 OCR 월 5회', included: true },
+            { text: '영수증 OCR 월 3회', included: true },
             { text: '신고 기간 알림', included: false },
             { text: '월별 세금 리포트', included: false },
         ],

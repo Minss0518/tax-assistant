@@ -29,12 +29,12 @@ const plans = [
     {
         name: 'Pro', price: '9,900', desc: '프리랜서를 위한 모든 기능', color: 'border-blue-400 ring-2 ring-blue-100', badge: '추천', current: false,
         features: [
-            { text: 'AI 세무 상담 무제한', included: true },
+            { text: 'AI 세무 상담 무제한', included: true, pro: true },
             { text: '거래 내역 관리', included: true },
             { text: '세금 계산기', included: true },
-            { text: '영수증 OCR 무제한', included: true },
-            { text: '신고 기간 알림', included: true },
-            { text: '월별 세금 리포트', included: true },
+            { text: '영수증 OCR 무제한', included: true, pro: true },
+            { text: '신고 기간 알림', included: true, pro: true },
+            { text: '월별 세금 리포트', included: true, pro: true },
             { text: '세무사 직접 상담', included: false },
         ],
         cta: 'Pro 시작하기', ctaStyle: 'bg-blue-600 hover:bg-blue-700 text-white',
@@ -44,7 +44,7 @@ const plans = [
     {
         name: 'Premium', price: '29,900', desc: '세무사와 직접 상담까지', color: 'border-violet-400 ring-2 ring-violet-100', badge: '세무사 상담', current: false,
         features: [
-            { text: '세무사 직접 상담 월 5회', included: true, highlight: true },
+            { text: '세무사 직접 상담 월 5회', included: true, premium: true },
             { text: 'AI 세무 상담 무제한', included: true },
             { text: '거래 내역 관리', included: true },
             { text: '세금 계산기', included: true },
@@ -100,7 +100,7 @@ export default function PricingPage() {
                 </div>
 
                 <div className="bg-blue-50 border border-blue-100 rounded-2xl px-5 py-4 mb-6 flex items-center gap-3">
-                    <span className="text-2xl">💡</span>
+                    <span className="text-2xl"></span>
                     <div>
                         <p className="text-sm font-semibold text-blue-700">현재 Free 플랜 사용 중</p>
                         <p className="text-xs text-blue-400">Pro 또는 Premium으로 업그레이드하면 더 많은 기능을 사용할 수 있어요</p>
@@ -128,14 +128,13 @@ export default function PricingPage() {
                             <ul className="flex flex-col gap-2 mb-5">
                                 {plan.features.map((f, j) => (
                                     <li key={j} className="flex items-center gap-2 text-sm">
-                                        <span className={f.included ? 'text-emerald-500' : 'text-gray-200'}>{f.included ? '✓' : '✗'}</span>
-                                        <span className={
-                                            f.highlight
-                                                ? 'font-bold text-violet-600 underline decoration-violet-400 decoration-2'
-                                                : f.included ? 'text-gray-600' : 'text-gray-300'
-                                        }>
-                                            {f.highlight}{f.text}
-                                        </span>
+                                        <span className={f.included ? (f.premium ? 'text-violet-500' : 'text-emerald-500') : 'text-gray-200'}>{f.included ? '✓' : '✗'}</span>
+                                        <span style={{
+                                            color: f.premium ? '#7c3aed' : f.pro ? '#1d4ed8' : f.included ? '#4b5563' : '#d1d5db',
+                                            fontWeight: f.pro || f.premium ? 700 : 400,
+                                            textDecoration: f.pro || f.premium ? 'underline' : 'none',
+                                            textDecorationColor: f.premium ? '#7c3aed' : '#1d4ed8',
+                                        }}>{f.text}</span>
                                     </li>
                                 ))}
                             </ul>
@@ -176,7 +175,7 @@ export default function PricingPage() {
                     <button onClick={scrollToTop}
                         className="flex items-center gap-2 text-xs text-gray-400 hover:text-gray-600 transition">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="18 15 12 9 6 15" />
+                            <polyline points="18 15 12 9 6 15"/>
                         </svg>
                         위로가기
                     </button>

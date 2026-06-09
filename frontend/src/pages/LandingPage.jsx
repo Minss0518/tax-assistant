@@ -82,11 +82,11 @@ const plans = [
     highlightPremium: false,
     badgeColor: null,
     features: [
-      'AI 세무 상담 월 5회',
-      '거래 내역 관리',
-      '세금 계산기',
-      '영수증 OCR 월 3회',
-      'CSV / Excel 일괄 업로드',
+      { text: 'AI 세무 상담 월 5회' },
+      { text: '거래 내역 관리' },
+      { text: '세금 계산기' },
+      { text: '영수증 OCR 월 3회' },
+      { text: 'CSV / Excel 일괄 업로드' },
     ],
     cta: '무료로 시작하기',
   },
@@ -98,13 +98,13 @@ const plans = [
     highlightPremium: false,
     badgeColor: '#1d4ed8',
     features: [
-      'AI 세무 상담 무제한',
-      '거래 내역 관리',
-      '세금 계산기',
-      '영수증 OCR 무제한',
-      'CSV / Excel 일괄 업로드',
-      '신고 기간 알림',
-      '월별 세금 리포트',
+      { text: 'AI 세무 상담 무제한', pro: true },
+      { text: '거래 내역 관리' },
+      { text: '세금 계산기' },
+      { text: '영수증 OCR 무제한', pro: true },
+      { text: 'CSV / Excel 일괄 업로드' },
+      { text: '신고 기간 알림', pro: true },
+      { text: '월별 세금 리포트', pro: true },
     ],
     cta: '14일 무료 체험',
   },
@@ -116,14 +116,14 @@ const plans = [
     highlightPremium: true,
     badgeColor: '#7c3aed',
     features: [
-      '세무사 직접 상담 무제한',
-      'AI 세무 상담 무제한',
-      '거래 내역 관리',
-      '세금 계산기',
-      '영수증 OCR 무제한',
-      'CSV / Excel 일괄 업로드',
-      '신고 기간 알림',
-      '월별 세금 리포트',
+      { text: '세무사 직접 상담 월 5회', premium: true },
+      { text: 'AI 세무 상담 무제한' },
+      { text: '거래 내역 관리' },
+      { text: '세금 계산기' },
+      { text: '영수증 OCR 무제한' },
+      { text: 'CSV / Excel 일괄 업로드' },
+      { text: '신고 기간 알림' },
+      { text: '월별 세금 리포트' },
     ],
     cta: 'Premium 시작하기',
   },
@@ -274,7 +274,7 @@ export default function LandingPage() {
                 <span style={{ fontSize: 12, fontWeight: 700, color: '#111827' }}>세무비서</span>
               </div>
               <div style={{ display: 'flex', gap: 6 }}>
-                <div style={{ fontSize: 10, fontWeight: 600, color: '#1d4ed8', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 5, padding: '3px 8px' }}>구독 업그레이드</div>
+                <div style={{ fontSize: 10, fontWeight: 600, color: '#1d4ed8', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 5, padding: '3px 8px' }}>Pro 업그레이드</div>
                 <div style={{ fontSize: 10, color: '#6b7280', padding: '3px 8px' }}>내 정보</div>
                 <div style={{ fontSize: 10, color: '#9ca3af', padding: '3px 8px' }}>로그아웃</div>
               </div>
@@ -463,13 +463,16 @@ export default function LandingPage() {
                 </div>
                 <ul style={{ listStyle: 'none', marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
                   {plan.features.map((feat, j) => {
-                    const isHighlight = feat.startsWith();
+                    const isPro = feat.pro;
+                    const isPremium = feat.premium;
+                    const color = isPremium ? '#7c3aed' : isPro ? '#1d4ed8' : '#374151';
+                    const checkColor = isPremium ? '#7c3aed' : '#059669';
                     return (
-                      <li key={j} style={{ display: 'flex', alignItems: 'flex-start', fontSize: 13, color: isHighlight ? '#7c3aed' : '#374151', fontWeight: isHighlight ? 700 : 400 }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isHighlight ? '#7c3aed' : '#059669'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 10, marginTop: 1, flexShrink: 0 }}>
+                      <li key={j} style={{ display: 'flex', alignItems: 'flex-start', fontSize: 13, color, fontWeight: isPro || isPremium ? 700 : 400, textDecoration: isPro || isPremium ? 'underline' : 'none', textDecorationColor: color }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={checkColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 10, marginTop: 1, flexShrink: 0 }}>
                           <polyline points="20 6 9 17 4 12" />
                         </svg>
-                        {feat}
+                        {feat.text}
                       </li>
                     );
                   })}

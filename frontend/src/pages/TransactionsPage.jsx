@@ -299,7 +299,7 @@ export default function TransactionsPage() {
                 style={{ width:'100%', border:'1px solid #E5E7EB', borderRadius:8, padding:'8px 12px',
                   marginBottom:10, fontSize:13, outline:'none', fontFamily:'inherit' }} />
             ))}
-            <p style={{ fontSize:11, color:'#9CA3AF', marginBottom:12 }}>💡 메모를 입력하면 AI가 카테고리를 자동 분류해요</p>
+            <p style={{ fontSize:11, color:'#9CA3AF', marginBottom:12 }}>메모를 입력하면 AI가 카테고리를 자동 분류해요</p>
             <button onClick={handleSubmit}
               style={{ ...btnBase, width:'100%', background:'#1D4ED8', color:'#fff', padding:'10px 0', borderRadius:8, fontSize:13, fontWeight:600 }}>
               저장

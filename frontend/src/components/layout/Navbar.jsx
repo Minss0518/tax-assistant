@@ -35,7 +35,7 @@ export default function Navbar() {
               fontFamily: "inherit",
             }}
           >
-            Pro 업그레이드
+            구독 업그레이드
           </button>
           <div style={{ width: 1, height: 16, background: "#e5e7eb" }} />
           <button

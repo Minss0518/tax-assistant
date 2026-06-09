@@ -76,7 +76,7 @@ export default function TabMenu() {
             style={{ background: "white", borderRadius: 24, padding: 32, maxWidth: 360, width: "100%", textAlign: "center", boxShadow: "0 25px 50px rgba(0,0,0,0.2)" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ fontSize: 48, marginBottom: 16 }}>👑</div>
+            <div style={{ fontSize: 48, marginBottom: 16 }}></div>
             <h3 style={{ fontWeight: 700, fontSize: 18, color: "#111827", marginBottom: 8 }}>Premium 전용 기능</h3>
             <p style={{ color: "#6b7280", fontSize: 14, lineHeight: 1.6, marginBottom: 24 }}>
               세무사 상담은 Premium 구독자만 사용할 수 있습니다.<br />요금제 구매 페이지로 이동하겠습니까?

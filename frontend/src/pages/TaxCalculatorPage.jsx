@@ -271,12 +271,12 @@ export default function TaxCalculatorPage() {
                             ))}
                         </div>
                         <div className={`rounded-xl p-4 text-center ${result.isRefund ? 'bg-green-50 border border-green-100' : 'bg-red-50 border border-red-100'}`}>
-                            <p className="text-sm text-gray-500 mb-1">{result.isRefund ? '🎉 예상 환급세액' : '⚠️ 예상 추가납부세액'}</p>
+                            <p className="text-sm text-gray-500 mb-1">{result.isRefund ? '예상 환급세액' : '예상 추가납부세액'}</p>
                             <p className={`text-2xl font-bold ${result.isRefund ? 'text-green-500' : 'text-red-500'}`}>{fmt(result.finalTax)}원</p>
                             <p className="text-xs text-gray-400 mt-2">{result.isRefund ? '5월 종합소득세 신고 시 환급받을 수 있어요' : '5월 종합소득세 신고 시 추가로 납부해야 해요'}</p>
                         </div>
                         <div className="mt-4 p-4 bg-blue-50 rounded-xl">
-                            <p className="text-xs font-semibold text-blue-600 mb-1">💡 절세 팁</p>
+                            <p className="text-xs font-semibold text-blue-600 mb-1">절세 팁</p>
                             <p className="text-xs text-blue-500">노트북, 소프트웨어 구독, 교육비, 통신비 일부, 업무용 카페 비용도 경비 처리 가능해요.</p>
                         </div>
                     </div>

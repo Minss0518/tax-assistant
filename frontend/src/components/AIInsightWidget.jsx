@@ -228,7 +228,7 @@ export default function AIInsightWidget() {
               transition: "all 0.15s",
             }}
           >
-            {tab === "summary" ? "📊 자동 분석" : "💬 질문하기"}
+            {tab === "summary" ? "자동 분석" : "질문하기"}
           </button>
         ))}
       </div>
@@ -269,7 +269,7 @@ export default function AIInsightWidget() {
                         paddingTop: "8px", borderTop: "1px solid #BAE6FD",
                       }}
                     >
-                      💡 {summary.insight}
+                      {summary.insight}
                     </p>
                   )}
                 </div>

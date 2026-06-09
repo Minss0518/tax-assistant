@@ -134,7 +134,7 @@ export default function PricingPage() {
                                                 ? 'font-bold text-violet-600 underline decoration-violet-400 decoration-2'
                                                 : f.included ? 'text-gray-600' : 'text-gray-300'
                                         }>
-                                            {f.highlight && '👑 '}{f.text}
+                                            {f.highlight}{f.text}
                                         </span>
                                     </li>
                                 ))}
@@ -187,7 +187,7 @@ export default function PricingPage() {
             {showModal && selectedPlan && (
                 <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4" onClick={() => setShowModal(false)}>
                     <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
-                        <div className="text-5xl mb-4">{selectedPlan.name === 'Premium' ? '👑' : '💳'}</div>
+                        <div className="text-5xl mb-4">{selectedPlan.name === 'Premium'}</div>
                         <h3 className="font-bold text-gray-900 text-xl mb-2">{selectedPlan.name} 플랜 시작하기</h3>
                         <p className="text-gray-500 text-sm mb-1 leading-relaxed">
                             {selectedPlan.name === 'Premium'

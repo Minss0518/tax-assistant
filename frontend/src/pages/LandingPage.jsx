@@ -116,7 +116,7 @@ const plans = [
     highlightPremium: true,
     badgeColor: '#7c3aed',
     features: [
-      '👑 세무사 직접 상담 무제한',
+      '세무사 직접 상담 무제한',
       'AI 세무 상담 무제한',
       '거래 내역 관리',
       '세금 계산기',
@@ -274,7 +274,7 @@ export default function LandingPage() {
                 <span style={{ fontSize: 12, fontWeight: 700, color: '#111827' }}>세무비서</span>
               </div>
               <div style={{ display: 'flex', gap: 6 }}>
-                <div style={{ fontSize: 10, fontWeight: 600, color: '#1d4ed8', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 5, padding: '3px 8px' }}>Pro 업그레이드</div>
+                <div style={{ fontSize: 10, fontWeight: 600, color: '#1d4ed8', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 5, padding: '3px 8px' }}>구독 업그레이드</div>
                 <div style={{ fontSize: 10, color: '#6b7280', padding: '3px 8px' }}>내 정보</div>
                 <div style={{ fontSize: 10, color: '#9ca3af', padding: '3px 8px' }}>로그아웃</div>
               </div>
@@ -463,7 +463,7 @@ export default function LandingPage() {
                 </div>
                 <ul style={{ listStyle: 'none', marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
                   {plan.features.map((feat, j) => {
-                    const isHighlight = feat.startsWith('👑');
+                    const isHighlight = feat.startsWith();
                     return (
                       <li key={j} style={{ display: 'flex', alignItems: 'flex-start', fontSize: 13, color: isHighlight ? '#7c3aed' : '#374151', fontWeight: isHighlight ? 700 : 400 }}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isHighlight ? '#7c3aed' : '#059669'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 10, marginTop: 1, flexShrink: 0 }}>

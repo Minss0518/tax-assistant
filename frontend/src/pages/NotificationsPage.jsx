@@ -142,7 +142,7 @@ export default function NotificationsPage() {
               </div>
               <div className={`mt-4 ${d.bg} rounded-xl px-4 py-3`}>
                 <p className="text-xs text-gray-600 mb-1">{d.desc}</p>
-                <p className="text-xs text-gray-400">💡 {d.tip}</p>
+                <p className="text-xs text-gray-400">{d.tip}</p>
               </div>
             </div>
           ))}

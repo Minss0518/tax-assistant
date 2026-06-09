@@ -10,6 +10,7 @@ export default function ConsultationPage() {
   const [input, setInput] = useState("");
   const [title, setTitle] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [userPlan, setUserPlan] = useState(null);
   const wsRef = useRef(null);
   const bottomRef = useRef(null);
   const navigate = useNavigate();
@@ -26,6 +27,14 @@ export default function ConsultationPage() {
   };
 
   useEffect(() => {
+    // 유저 플랜 조회
+    fetch(`${API}/users/me`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    })
+      .then((r) => r.json())
+      .then((d) => setUserPlan(d.plan))
+      .catch(() => {});
+
     fetchConsultations();
   }, []);
 
@@ -129,7 +138,7 @@ export default function ConsultationPage() {
     s === "waiting" ? "⏳ 대기중" : s === "active" ? "💬 상담중" : "✅ 완료";
 
   return (
-    <div style={{ padding: "0 180px", maxWidth: 1100, margin: "0 auto", fontFamily: "sans-serif" }}>
+    <div style={{ padding: "0 80px", maxWidth: 1100, margin: "0 auto", fontFamily: "sans-serif" }}>
       {/* 뒤로가기 + 페이지 제목 */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "20px 0 16px" }}>
         <button
@@ -145,10 +154,34 @@ export default function ConsultationPage() {
         <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>세무사 상담</h2>
       </div>
 
+      {/* Premium 아닐 때 업그레이드 유도 배너 */}
+      {userPlan !== null && userPlan !== "premium" && (
+        <div style={{
+          background: "linear-gradient(135deg, #7c3aed, #a855f7)",
+          borderRadius: 12, padding: "16px 20px", marginBottom: 16,
+          display: "flex", justifyContent: "space-between", alignItems: "center",
+        }}>
+          <div>
+            <p style={{ color: "white", fontWeight: 700, fontSize: 15, margin: 0 }}>👑 세무사 상담은 Premium 전용 기능이에요</p>
+            <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 13, margin: "4px 0 0" }}>월 29,900원으로 세무사와 직접 상담할 수 있어요 (월 5회)</p>
+          </div>
+          <button
+            onClick={() => navigate("/pricing")}
+            style={{
+              background: "white", color: "#7c3aed", fontWeight: 700,
+              fontSize: 13, padding: "8px 16px", borderRadius: 8, border: "none",
+              cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0,
+            }}
+          >
+            업그레이드 →
+          </button>
+        </div>
+      )}
+
       {/* 상담 본문 영역 */}
       <div style={{ display: "flex", height: "calc(100vh - 160px)", border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden" }}>
         {/* 왼쪽 상담 목록 */}
-        <div style={{ width: 190, borderRight: "1px solid #e5e7eb", overflowY: "auto", background: "#f9fafb", flexShrink: 0 }}>
+        <div style={{ width: 220, borderRight: "1px solid #e5e7eb", overflowY: "auto", background: "#f9fafb", flexShrink: 0 }}>
           <div style={{ padding: "16px", borderBottom: "1px solid #e5e7eb" }}>
             <button
               onClick={() => setShowForm(true)}

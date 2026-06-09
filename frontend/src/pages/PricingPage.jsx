@@ -44,13 +44,13 @@ const plans = [
     {
         name: 'Premium', price: '29,900', desc: '세무사와 직접 상담까지', color: 'border-violet-400 ring-2 ring-violet-100', badge: '세무사 상담', current: false,
         features: [
+            { text: '세무사 직접 상담 월 5회', included: true, highlight: true },
             { text: 'AI 세무 상담 무제한', included: true },
             { text: '거래 내역 관리', included: true },
             { text: '세금 계산기', included: true },
             { text: '영수증 OCR 무제한', included: true },
             { text: '신고 기간 알림', included: true },
             { text: '월별 세금 리포트', included: true },
-            { text: '세무사 직접 상담 월 5회', included: true },
         ],
         cta: 'Premium 시작하기', ctaStyle: 'bg-violet-600 hover:bg-violet-700 text-white',
         amount: 29900,
@@ -129,7 +129,13 @@ export default function PricingPage() {
                                 {plan.features.map((f, j) => (
                                     <li key={j} className="flex items-center gap-2 text-sm">
                                         <span className={f.included ? 'text-emerald-500' : 'text-gray-200'}>{f.included ? '✓' : '✗'}</span>
-                                        <span className={f.included ? 'text-gray-600' : 'text-gray-300'}>{f.text}</span>
+                                        <span className={
+                                            f.highlight
+                                                ? 'font-bold text-violet-600 underline decoration-violet-400 decoration-2'
+                                                : f.included ? 'text-gray-600' : 'text-gray-300'
+                                        }>
+                                            {f.highlight && '👑 '}{f.text}
+                                        </span>
                                     </li>
                                 ))}
                             </ul>
@@ -170,7 +176,7 @@ export default function PricingPage() {
                     <button onClick={scrollToTop}
                         className="flex items-center gap-2 text-xs text-gray-400 hover:text-gray-600 transition">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="18 15 12 9 6 15"/>
+                            <polyline points="18 15 12 9 6 15" />
                         </svg>
                         위로가기
                     </button>

@@ -5,7 +5,7 @@ const features = [
   {
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
       </svg>
     ),
     title: 'AI 세무 상담',
@@ -16,10 +16,10 @@ const features = [
   {
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-        <circle cx="9" cy="7" r="4"/>
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
       </svg>
     ),
     title: '세무사 직접 상담',
@@ -30,7 +30,7 @@ const features = [
   {
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+        <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
       </svg>
     ),
     title: '수입 · 지출 관리',
@@ -41,7 +41,7 @@ const features = [
   {
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
       </svg>
     ),
     title: '일괄 업로드',
@@ -52,7 +52,7 @@ const features = [
   {
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+        <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
       </svg>
     ),
     title: '영수증 OCR',
@@ -63,7 +63,7 @@ const features = [
   {
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="14" y1="14" x2="16" y2="14"/>
+        <rect x="4" y="2" width="16" height="20" rx="2" /><line x1="8" y1="6" x2="16" y2="6" /><line x1="8" y1="10" x2="10" y2="10" /><line x1="14" y1="10" x2="16" y2="10" /><line x1="8" y1="14" x2="10" y2="14" /><line x1="14" y1="14" x2="16" y2="14" />
       </svg>
     ),
     title: '세금 계산기',
@@ -79,6 +79,8 @@ const plans = [
     price: '0',
     desc: '가볍게 시작해보세요',
     highlight: false,
+    highlightPremium: false,
+    badgeColor: null,
     features: [
       'AI 세무 상담 월 5회',
       '거래 내역 관리',
@@ -93,6 +95,8 @@ const plans = [
     price: '9,900',
     desc: '프리랜서를 위한 모든 기능',
     highlight: true,
+    highlightPremium: false,
+    badgeColor: '#1d4ed8',
     features: [
       'AI 세무 상담 무제한',
       '거래 내역 관리',
@@ -103,6 +107,25 @@ const plans = [
       '월별 세금 리포트',
     ],
     cta: '14일 무료 체험',
+  },
+  {
+    name: 'Premium',
+    price: '29,900',
+    desc: '세무사와 직접 상담까지',
+    highlight: false,
+    highlightPremium: true,
+    badgeColor: '#7c3aed',
+    features: [
+      '👑 세무사 직접 상담 무제한',
+      'AI 세무 상담 무제한',
+      '거래 내역 관리',
+      '세금 계산기',
+      '영수증 OCR 무제한',
+      'CSV / Excel 일괄 업로드',
+      '신고 기간 알림',
+      '월별 세금 리포트',
+    ],
+    cta: 'Premium 시작하기',
   },
 ];
 
@@ -116,7 +139,7 @@ const stats = [
   { value: '3.3%', label: '원천징수 자동 계산' },
   { value: '3종', label: '소셜 로그인 지원' },
   { value: '즉시', label: 'AI 세무 답변' },
-  { value: '세무사 상담', label: '***'},
+  { value: '세무사 상담', label: 'Premium 전용' },
   { value: '무료', label: '14일 체험' },
 ];
 
@@ -159,14 +182,10 @@ export default function LandingPage() {
         .nav-link:hover { color: #111827; }
         .feature-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; transition: border-color 0.2s, box-shadow 0.2s; }
         .feature-card:hover { border-color: #9ca3af; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
-        .plan-card { background: #fff; border-radius: 14px; padding: 32px; }
+        .plan-card { background: #fff; border-radius: 14px; padding: 28px; }
         .review-card { background: #f9fafb; border: 1px solid #f3f4f6; border-radius: 12px; padding: 24px; }
         .stat-item { text-align: center; padding: 20px 12px; border-right: 1px solid #e5e7eb; }
         .stat-item:last-child { border-right: none; }
-        .cta-pro { background: #1d4ed8; color: #fff; border: none; border-radius: 8px; padding: 0 20px; height: 46px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background 0.15s; width: 100%; }
-        .cta-pro:hover { background: #1e40af; }
-        .cta-free { background: #fff; color: #374151; border: 1px solid #e5e7eb; border-radius: 8px; padding: 0 20px; height: 46px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; width: 100%; }
-        .cta-free:hover { border-color: #9ca3af; background: #f9fafb; }
         .scroll-top-btn { position: fixed; bottom: 28px; right: 24px; width: 44px; height: 44px; background: #111827; color: #fff; border: none; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); transition: all 0.2s; z-index: 100; }
         .scroll-top-btn:hover { background: #1d4ed8; transform: translateY(-2px); }
       `}</style>
@@ -174,7 +193,7 @@ export default function LandingPage() {
       {showTop && (
         <button className="scroll-top-btn" onClick={scrollToTop} title="위로가기">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="18 15 12 9 6 15"/>
+            <polyline points="18 15 12 9 6 15" />
           </svg>
         </button>
       )}
@@ -185,7 +204,7 @@ export default function LandingPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 28, height: 28, background: '#1d4ed8', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+                <rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" />
               </svg>
             </div>
             <span style={{ fontWeight: 700, fontSize: 15, color: '#111827', letterSpacing: '-0.3px' }}>세무비서</span>
@@ -243,120 +262,113 @@ export default function LandingPage() {
       </div>
 
       {/* 미리보기 카드 */}
-<section style={{ padding: '64px 24px', background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
-  <div style={{ maxWidth: 720, margin: '0 auto' }}>
-    <div className="reveal" style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, overflow: 'hidden' }}>
-      
-      {/* 상단 네비바 */}
-      <div style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', padding: '0 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: 48 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 22, height: 22, background: '#1d4ed8', borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-          </div>
-          <span style={{ fontSize: 12, fontWeight: 700, color: '#111827' }}>세무비서</span>
-        </div>
-        <div style={{ display: 'flex', gap: 6 }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: '#1d4ed8', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 5, padding: '3px 8px' }}>Pro 업그레이드</div>
-          <div style={{ fontSize: 10, color: '#6b7280', padding: '3px 8px' }}>내 정보</div>
-          <div style={{ fontSize: 10, color: '#9ca3af', padding: '3px 8px' }}>로그아웃</div>
-        </div>
-      </div>
-
-      {/* 검정 헤더 - 순이익 + 차트 */}
-      <div style={{ background: '#111827', padding: '20px 20px 16px' }}>
-        <p style={{ fontSize: 10, color: '#6b7280', marginBottom: 3, textTransform: 'uppercase', letterSpacing: '0.8px' }}>2026년 6월 8일 기준</p>
-        <p style={{ fontSize: 11, color: '#6b7280', marginBottom: 3 }}>이번 달 순이익</p>
-        <p style={{ fontSize: 24, fontWeight: 700, color: '#fff', letterSpacing: '-1px', marginBottom: 6 }}>
-          +84,264,000<span style={{ fontSize: 13, fontWeight: 400, color: '#6b7280', marginLeft: 3 }}>원</span>
-        </p>
-        <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
-          <span style={{ fontSize: 11, color: '#6b7280' }}>수입 <span style={{ color: '#34d399', fontWeight: 600 }}>+90,810,000원</span></span>
-          <span style={{ fontSize: 11, color: '#374151' }}>·</span>
-          <span style={{ fontSize: 11, color: '#6b7280' }}>지출 <span style={{ color: '#f87171', fontWeight: 600 }}>-6,546,000원</span></span>
-        </div>
-        {/* 차트 영역 (SVG로 간단히 표현) */}
-        <div style={{ position: 'relative', height: 60, marginBottom: 4 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-            <span style={{ fontSize: 10, color: '#6b7280' }}>월별 수입 · 지출 추이</span>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <span style={{ fontSize: 10, color: '#34d399', fontWeight: 600 }}>— 수입</span>
-              <span style={{ fontSize: 10, color: '#f87171', fontWeight: 600 }}>— 지출</span>
-              <span style={{ fontSize: 10, color: '#4b5563', background: '#1f2937', padding: '1px 6px', borderRadius: 3 }}>확대 ↗</span>
+      <section style={{ padding: '64px 24px', background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+        <div style={{ maxWidth: 720, margin: '0 auto' }}>
+          <div className="reveal" style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, overflow: 'hidden' }}>
+            {/* 상단 네비바 */}
+            <div style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', padding: '0 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: 48 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ width: 22, height: 22, background: '#1d4ed8', borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
+                </div>
+                <span style={{ fontSize: 12, fontWeight: 700, color: '#111827' }}>세무비서</span>
+              </div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <div style={{ fontSize: 10, fontWeight: 600, color: '#1d4ed8', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 5, padding: '3px 8px' }}>Pro 업그레이드</div>
+                <div style={{ fontSize: 10, color: '#6b7280', padding: '3px 8px' }}>내 정보</div>
+                <div style={{ fontSize: 10, color: '#9ca3af', padding: '3px 8px' }}>로그아웃</div>
+              </div>
             </div>
-          </div>
-          <svg viewBox="0 0 300 40" style={{ width: '100%', height: 40 }}>
-            <polyline points="0,38 40,35 80,28 120,18 160,12 200,10 240,11 280,13 300,14" fill="none" stroke="#34d399" strokeWidth="1.5"/>
-            <polyline points="0,39 40,39 80,38 120,37 160,37 200,37 240,38 280,38 300,38" fill="none" stroke="#f87171" strokeWidth="1"/>
-          </svg>
-        </div>
-      </div>
-
-      {/* 탭 메뉴 */}
-      <div style={{ background: '#f8f9fa', padding: '10px 12px', borderBottom: '1px solid #e5e7eb' }}>
-        <div style={{ display: 'flex', gap: 5 }}>
-          {['거래 내역', 'AI 세무 상담', '세무사 상담', '세금 계산기', '일괄 업로드'].map((label, i) => (
-            <div key={i} style={{
-              flex: 1, padding: '6px 4px', fontSize: 10, fontWeight: 600, textAlign: 'center',
-              color: i === 0 ? '#fff' : '#1d4ed8',
-              background: i === 0 ? '#1d4ed8' : '#eff6ff',
-              border: '1px solid #bfdbfe', borderRadius: 5,
-            }}>{label}</div>
-          ))}
-        </div>
-      </div>
-
-      {/* D-day 카드 */}
-      <div style={{ background: '#f8f9fa', padding: '10px 12px', borderBottom: '1px solid #e5e7eb' }}>
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 32, height: 32, borderRadius: 7, background: '#f5f3ff', border: '1px solid #ddd6fe', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: 8, fontWeight: 700, color: '#6d28d9' }}>WIT</span>
+            {/* 검정 헤더 */}
+            <div style={{ background: '#111827', padding: '20px 20px 16px' }}>
+              <p style={{ fontSize: 10, color: '#6b7280', marginBottom: 3, textTransform: 'uppercase', letterSpacing: '0.8px' }}>2026년 6월 8일 기준</p>
+              <p style={{ fontSize: 11, color: '#6b7280', marginBottom: 3 }}>이번 달 순이익</p>
+              <p style={{ fontSize: 24, fontWeight: 700, color: '#fff', letterSpacing: '-1px', marginBottom: 6 }}>
+                +84,264,000<span style={{ fontSize: 13, fontWeight: 400, color: '#6b7280', marginLeft: 3 }}>원</span>
+              </p>
+              <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+                <span style={{ fontSize: 11, color: '#6b7280' }}>수입 <span style={{ color: '#34d399', fontWeight: 600 }}>+90,810,000원</span></span>
+                <span style={{ fontSize: 11, color: '#374151' }}>·</span>
+                <span style={{ fontSize: 11, color: '#6b7280' }}>지출 <span style={{ color: '#f87171', fontWeight: 600 }}>-6,546,000원</span></span>
+              </div>
+              <div style={{ position: 'relative', height: 60, marginBottom: 4 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <span style={{ fontSize: 10, color: '#6b7280' }}>월별 수입 · 지출 추이</span>
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <span style={{ fontSize: 10, color: '#34d399', fontWeight: 600 }}>— 수입</span>
+                    <span style={{ fontSize: 10, color: '#f87171', fontWeight: 600 }}>— 지출</span>
+                    <span style={{ fontSize: 10, color: '#4b5563', background: '#1f2937', padding: '1px 6px', borderRadius: 3 }}>확대 ↗</span>
+                  </div>
+                </div>
+                <svg viewBox="0 0 300 40" style={{ width: '100%', height: 40 }}>
+                  <polyline points="0,38 40,35 80,28 120,18 160,12 200,10 240,11 280,13 300,14" fill="none" stroke="#34d399" strokeWidth="1.5" />
+                  <polyline points="0,39 40,39 80,38 120,37 160,37 200,37 240,38 280,38 300,38" fill="none" stroke="#f87171" strokeWidth="1" />
+                </svg>
+              </div>
             </div>
-            <div>
-              <p style={{ fontSize: 10, color: '#9ca3af', marginBottom: 2 }}>원천세 신고</p>
-              <p style={{ fontSize: 12, fontWeight: 600, color: '#111827' }}>6월 10일까지</p>
+            {/* 탭 메뉴 */}
+            <div style={{ background: '#f8f9fa', padding: '10px 12px', borderBottom: '1px solid #e5e7eb' }}>
+              <div style={{ display: 'flex', gap: 5 }}>
+                {['거래 내역', 'AI 세무 상담', '세무사 상담', '세금 계산기', '일괄 업로드'].map((label, i) => (
+                  <div key={i} style={{
+                    flex: 1, padding: '6px 4px', fontSize: 10, fontWeight: 600, textAlign: 'center',
+                    color: i === 0 ? '#fff' : '#1d4ed8',
+                    background: i === 0 ? '#1d4ed8' : '#eff6ff',
+                    border: '1px solid #bfdbfe', borderRadius: 5,
+                  }}>{label}</div>
+                ))}
+              </div>
             </div>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <p style={{ fontSize: 10, color: '#9ca3af', marginBottom: 2 }}>남은 기간</p>
-            <p style={{ fontSize: 20, fontWeight: 700, color: '#dc2626' }}>D-2</p>
-          </div>
-        </div>
-      </div>
-
-      {/* AI 인사이트 */}
-      <div style={{ background: '#f8f9fa', padding: '10px 12px' }}>
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '12px 14px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 14 }}>✦</span>
-              <span style={{ fontSize: 11, fontWeight: 600, color: '#111827' }}>AI 인사이트</span>
-              <span style={{ fontSize: 10, color: '#9ca3af' }}>2025.06.08 ~ 2026.06.08</span>
+            {/* D-day 카드 */}
+            <div style={{ background: '#f8f9fa', padding: '10px 12px', borderBottom: '1px solid #e5e7eb' }}>
+              <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 7, background: '#f5f3ff', border: '1px solid #ddd6fe', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ fontSize: 8, fontWeight: 700, color: '#6d28d9' }}>WIT</span>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 10, color: '#9ca3af', marginBottom: 2 }}>원천세 신고</p>
+                    <p style={{ fontSize: 12, fontWeight: 600, color: '#111827' }}>6월 10일까지</p>
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <p style={{ fontSize: 10, color: '#9ca3af', marginBottom: 2 }}>남은 기간</p>
+                  <p style={{ fontSize: 20, fontWeight: 700, color: '#dc2626' }}>D-2</p>
+                </div>
+              </div>
             </div>
-            <span style={{ fontSize: 10, color: '#6b7280' }}>↺ 새로고침</span>
-          </div>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-            <div style={{ flex: 1, textAlign: 'center', borderBottom: '2px solid #1d4ed8', paddingBottom: 6, fontSize: 11, fontWeight: 600, color: '#1d4ed8' }}>📊 자동 분석</div>
-            <div style={{ flex: 1, textAlign: 'center', paddingBottom: 6, fontSize: 11, color: '#9ca3af' }}>💬 질문하기</div>
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <div style={{ flex: 1, background: '#f9fafb', borderRadius: 8, padding: '8px 10px' }}>
-              <p style={{ fontSize: 9, color: '#9ca3af', marginBottom: 3 }}>최다 지출</p>
-              <p style={{ fontSize: 11, fontWeight: 600, color: '#111827' }}>식비</p>
-              <p style={{ fontSize: 10, color: '#dc2626' }}>-2,100,000원</p>
-            </div>
-            <div style={{ flex: 1, background: '#f9fafb', borderRadius: 8, padding: '8px 10px' }}>
-              <p style={{ fontSize: 9, color: '#9ca3af', marginBottom: 3 }}>이번 달 수입</p>
-              <p style={{ fontSize: 11, fontWeight: 600, color: '#111827' }}>프리랜서</p>
-              <p style={{ fontSize: 10, color: '#059669' }}>+5,200,000원</p>
+            {/* AI 인사이트 */}
+            <div style={{ background: '#f8f9fa', padding: '10px 12px' }}>
+              <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '12px 14px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 14 }}>✦</span>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: '#111827' }}>AI 인사이트</span>
+                    <span style={{ fontSize: 10, color: '#9ca3af' }}>2025.06.08 ~ 2026.06.08</span>
+                  </div>
+                  <span style={{ fontSize: 10, color: '#6b7280' }}>↺ 새로고침</span>
+                </div>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                  <div style={{ flex: 1, textAlign: 'center', borderBottom: '2px solid #1d4ed8', paddingBottom: 6, fontSize: 11, fontWeight: 600, color: '#1d4ed8' }}>📊 자동 분석</div>
+                  <div style={{ flex: 1, textAlign: 'center', paddingBottom: 6, fontSize: 11, color: '#9ca3af' }}>💬 질문하기</div>
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <div style={{ flex: 1, background: '#f9fafb', borderRadius: 8, padding: '8px 10px' }}>
+                    <p style={{ fontSize: 9, color: '#9ca3af', marginBottom: 3 }}>최다 지출</p>
+                    <p style={{ fontSize: 11, fontWeight: 600, color: '#111827' }}>식비</p>
+                    <p style={{ fontSize: 10, color: '#dc2626' }}>-2,100,000원</p>
+                  </div>
+                  <div style={{ flex: 1, background: '#f9fafb', borderRadius: 8, padding: '8px 10px' }}>
+                    <p style={{ fontSize: 9, color: '#9ca3af', marginBottom: 3 }}>이번 달 수입</p>
+                    <p style={{ fontSize: 11, fontWeight: 600, color: '#111827' }}>프리랜서</p>
+                    <p style={{ fontSize: 10, color: '#059669' }}>+5,200,000원</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-
-    </div>
-  </div>
-</section>
+      </section>
 
       {/* 기능 */}
       <section id="features" style={{ padding: '80px 24px', background: '#fff' }}>
@@ -419,19 +431,26 @@ export default function LandingPage() {
 
       {/* 요금제 */}
       <section id="pricing" style={{ padding: '80px 24px', background: '#fff' }}>
-        <div style={{ maxWidth: 640, margin: '0 auto' }}>
+        <div style={{ maxWidth: 960, margin: '0 auto' }}>
           <div className="reveal" style={{ marginBottom: 48 }}>
             <p style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 12 }}>요금제</p>
             <h2 style={{ fontSize: 'clamp(22px, 4vw, 32px)', fontWeight: 800, color: '#111827', letterSpacing: '-0.5px', marginBottom: 10 }}>심플한 요금제</h2>
             <p style={{ fontSize: 15, color: '#6b7280' }}>필요한 만큼만, 부담 없이 시작하세요</p>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
             {plans.map((plan, i) => (
               <div key={i} className={`plan-card reveal d${i + 1}`}
-                style={{ border: plan.highlight ? '2px solid #1d4ed8' : '1px solid #e5e7eb', position: 'relative', display: 'flex', flexDirection: 'column' }}>
-                {plan.highlight && (
-                  <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: '#1d4ed8', color: '#fff', fontSize: 11, fontWeight: 700, padding: '4px 14px', borderRadius: 100, whiteSpace: 'nowrap' }}>
-                    인기
+                style={{
+                  border: plan.highlightPremium ? '2px solid #7c3aed' : plan.highlight ? '2px solid #1d4ed8' : '1px solid #e5e7eb',
+                  position: 'relative', display: 'flex', flexDirection: 'column'
+                }}>
+                {(plan.highlight || plan.highlightPremium) && (
+                  <div style={{
+                    position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',
+                    background: plan.badgeColor, color: '#fff',
+                    fontSize: 11, fontWeight: 700, padding: '4px 14px', borderRadius: 100, whiteSpace: 'nowrap'
+                  }}>
+                    {plan.highlightPremium ? '세무사 상담' : '인기'}
                   </div>
                 )}
                 <div style={{ marginBottom: 24 }}>
@@ -443,16 +462,28 @@ export default function LandingPage() {
                   <p style={{ fontSize: 12, color: '#9ca3af' }}>{plan.desc}</p>
                 </div>
                 <ul style={{ listStyle: 'none', marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
-                  {plan.features.map((feat, j) => (
-                    <li key={j} style={{ display: 'flex', alignItems: 'flex-start', fontSize: 13, color: '#374151' }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 10, marginTop: 1, flexShrink: 0 }}>
-                        <polyline points="20 6 9 17 4 12"/>
-                      </svg>
-                      {feat}
-                    </li>
-                  ))}
+                  {plan.features.map((feat, j) => {
+                    const isHighlight = feat.startsWith('👑');
+                    return (
+                      <li key={j} style={{ display: 'flex', alignItems: 'flex-start', fontSize: 13, color: isHighlight ? '#7c3aed' : '#374151', fontWeight: isHighlight ? 700 : 400 }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isHighlight ? '#7c3aed' : '#059669'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 10, marginTop: 1, flexShrink: 0 }}>
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        {feat}
+                      </li>
+                    );
+                  })}
                 </ul>
-                <button className={plan.highlight ? 'cta-pro' : 'cta-free'} onClick={() => navigate('/login')}>
+                <button
+                  onClick={() => navigate('/login')}
+                  style={{
+                    background: plan.highlightPremium ? '#7c3aed' : plan.highlight ? '#1d4ed8' : '#fff',
+                    color: plan.highlight || plan.highlightPremium ? '#fff' : '#374151',
+                    border: plan.highlight || plan.highlightPremium ? 'none' : '1px solid #e5e7eb',
+                    borderRadius: 8, height: 46, fontSize: 14, fontWeight: 600,
+                    cursor: 'pointer', fontFamily: 'inherit', width: '100%',
+                  }}
+                >
                   {plan.cta}
                 </button>
               </div>
@@ -481,7 +512,7 @@ export default function LandingPage() {
       <footer style={{ padding: '24px', background: '#111827', borderTop: '1px solid #1f2937', textAlign: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8 }}>
           <div style={{ width: 22, height: 22, background: '#1d4ed8', borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
           </div>
           <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>세무비서</span>
         </div>

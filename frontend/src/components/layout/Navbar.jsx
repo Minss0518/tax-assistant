@@ -40,13 +40,33 @@ export default function Navbar() {
           <div style={{ width: 1, height: 16, background: "#e5e7eb" }} />
           <button
             onClick={() => navigate("/my-info")}
-            style={{ fontSize: 13, color: "#6b7280", padding: "6px 10px", borderRadius: 6, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: "#1d4ed8",
+              border: "1px solid #bfdbfe",
+              borderRadius: 6,
+              padding: "5px 12px",
+              background: "#eff6ff",
+              cursor: "pointer",
+              fontFamily: "inherit",
+            }}
           >
             내 정보
           </button>
           <button
             onClick={() => { logout(); navigate("/login"); }}
-            style={{ fontSize: 13, color: "#9ca3af", padding: "6px 10px", borderRadius: 6, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: "#1d4ed8",
+              border: "1px solid #bfdbfe",
+              borderRadius: 6,
+              padding: "5px 12px",
+              background: "#eff6ff",
+              cursor: "pointer",
+              fontFamily: "inherit",
+            }}
           >
             로그아웃
           </button>

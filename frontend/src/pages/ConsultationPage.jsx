@@ -143,12 +143,15 @@ export default function ConsultationPage() {
       <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "20px 0 16px" }}>
         <button
           onClick={() => navigate(-1)}
-          style={{
-            display: "flex", alignItems: "center", gap: 6,
-            padding: "8px 14px", background: "#374151", color: "white",
-            border: "none", borderRadius: 8, cursor: "pointer", fontSize: 14, fontWeight: 500,
-          }}
-        >
+          style={{ 
+            fontSize: 12, 
+            fontWeight: 600, 
+            color: "#1d4ed8", 
+            border: "1px solid #bfdbfe", 
+            borderRadius: 6, 
+            padding: "5px 12px", 
+            background: "#eff6ff", 
+           cursor: "pointer" }}>
           ← 뒤로
         </button>
         <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>세무사 상담</h2>

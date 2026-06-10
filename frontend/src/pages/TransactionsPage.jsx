@@ -63,11 +63,11 @@ const SOURCE_BADGE = {
 };
 
 const BackButton = ({ onClick }) => (
-  <button onClick={onClick}
-    style={{ display:'flex', alignItems:'center', gap:6, background:'#4B5563', color:'#fff',
-      fontSize:13, fontWeight:600, padding:'6px 14px', borderRadius:20, border:'none', cursor:'pointer' }}>
-    ← 뒤로
-  </button>
+    <button onClick={onClick}
+        className="flex items-center gap-1.5 active:scale-95 text-sm font-semibold px-4 py-2 rounded-lg transition"
+        style={{ fontSize: 12, fontWeight: 600, color: "#1d4ed8", border: "1px solid #bfdbfe", borderRadius: 6, padding: "5px 12px", background: "#eff6ff", cursor: "pointer" }}>
+        ← 뒤로
+    </button>
 );
 
 export default function TransactionsPage() {

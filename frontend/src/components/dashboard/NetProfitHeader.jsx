@@ -33,8 +33,8 @@ const Chart = ({ data, height }) => (
         </linearGradient>
       </defs>
       <CartesianGrid strokeDasharray="2 4" stroke="#374151" vertical={false} />
-      <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#6b7280" }} axisLine={false} tickLine={false} />
-      <YAxis tick={{ fontSize: 10, fill: "#6b7280" }} axisLine={false} tickLine={false}
+      <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#fff" }} axisLine={false} tickLine={false} />
+      <YAxis tick={{ fontSize: 10, fill: "#fff" }} axisLine={false} tickLine={false}
         tickFormatter={(v) => {
           if (v >= 100000000) return `${(v / 100000000).toFixed(1)}억`;
           if (v >= 10000) return `${(v / 10000).toFixed(0)}만`;
@@ -69,14 +69,14 @@ export default function NetProfitHeader({ totalIncome, totalExpense, monthlyData
               <p style={{ fontSize: 13, color: "#fff", marginBottom: 4 }}>이번 달 순이익</p>
               <p style={{ fontSize: 36, fontWeight: 700, color: "#fff", letterSpacing: "-1px", marginBottom: 8 }}>
                 {netProfit >= 0 ? "+" : ""}{fmt(netProfit)}
-                <span style={{ fontSize: 18, fontWeight: 400, color: "#6b7280", marginLeft: 4 }}>원</span>
+                <span style={{ fontSize: 18, fontWeight: 400, color: "#fff", marginLeft: 4 }}>원</span>
               </p>
               <div style={{ display: "flex", gap: 20 }}>
-                <span style={{ fontSize: 13, color: "#6b7280" }}>
+                <span style={{ fontSize: 13, color: "#fff" }}>
                   수입 <span style={{ color: "#34d399", fontWeight: 600 }}>+{fmt(totalIncome)}원</span>
                 </span>
                 <span style={{ fontSize: 13, color: "#374151" }}>·</span>
-                <span style={{ fontSize: 13, color: "#6b7280" }}>
+                <span style={{ fontSize: 13, color: "#fff" }}>
                   지출 <span style={{ color: "#f87171", fontWeight: 600 }}>-{fmt(totalExpense)}원</span>
                 </span>
               </div>
@@ -116,7 +116,7 @@ export default function NetProfitHeader({ totalIncome, totalExpense, monthlyData
           {monthlyData.length > 0 ? (
             <div onClick={() => setShowModal(true)} style={{ cursor: "pointer" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <p style={{ fontSize: 12, fff: "#6b7280" }}>월별 수입 · 지출 추이</p>
+                <p style={{ fontSize: 12, fff: "#fff" }}>월별 수입 · 지출 추이</p>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <div style={{ display: "flex", gap: 10 }}>
                     <span style={{ fontSize: 11, color: "#34d399", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>

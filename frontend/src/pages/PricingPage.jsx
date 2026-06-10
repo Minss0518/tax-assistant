@@ -86,7 +86,7 @@ export default function PricingPage() {
                 </div>
 
                 <div className="bg-blue-50 border border-blue-100 rounded-2xl px-5 py-4 mb-6 flex items-center gap-3">
-                    <span className="text-2xl">💡</span>
+                    <span className="text-2xl"></span>
                     <div>
                         <p className="text-sm font-semibold text-blue-700">현재 Free 플랜 사용 중</p>
                         <p className="text-xs text-blue-400">Pro 또는 Premium으로 업그레이드하면 더 많은 기능을 사용할 수 있어요</p>
@@ -150,14 +150,14 @@ export default function PricingPage() {
             {showModal && selectedPlan && (
                 <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4" onClick={() => setShowModal(false)}>
                     <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
-                        <div className="text-5xl mb-4">{selectedPlan.name === 'Premium' ? '👑' : '💳'}</div>
+                        <div className="text-5xl mb-4">{selectedPlan.name === 'Premium'}</div>
                         <h3 className="font-bold text-gray-900 text-xl mb-2">{selectedPlan.name} 플랜 시작하기</h3>
                         <p className="text-gray-500 text-sm mb-1 leading-relaxed">
                             {selectedPlan.name === 'Premium' ? 'AI 세무 상담 무제한 + 세무사 직접 상담 월 5회' : 'AI 세무 상담, OCR, 리포트를 무제한으로 사용할 수 있어요.'}
                         </p>
                         <p className="text-gray-400 text-xs mb-6">월 {selectedPlan.price}원</p>
                         <button onClick={handlePayment} className={`w-full text-white py-3 rounded-xl font-bold text-sm transition mb-2 ${selectedPlan.name === 'Premium' ? 'bg-violet-600 hover:bg-violet-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
-                            💳 카드로 결제하기 (월 {selectedPlan.price}원)
+                            카드로 결제하기 (월 {selectedPlan.price}원)
                         </button>
                         <button onClick={() => setShowModal(false)} className="w-full bg-gray-100 hover:bg-gray-200 text-gray-500 py-3 rounded-xl font-bold text-sm transition">취소</button>
                     </div>

@@ -110,7 +110,7 @@ export default function AdvisorPage() {
         {/* 왼쪽 목록 */}
         <div className="advisor-sidebar" style={{ width: 220, borderRight: "1px solid #e5e7eb", overflowY: "auto", background: "#f9fafb", display: "flex", flexDirection: "column", flexShrink: 0 }}>
           <div style={{ padding: "16px", borderBottom: "1px solid #e5e7eb", fontWeight: "bold", fontSize: 15, flexShrink: 0 }}>
-            📋 상담 목록
+            상담 목록
             <button onClick={fetchConsultations} style={{ float: "right", background: "none", border: "none", cursor: "pointer", fontSize: 15 }}>🔄</button>
           </div>
           <div style={{ padding: "10px 12px", borderBottom: "1px solid #e5e7eb", flexShrink: 0, overflowX: "auto", display: "flex", gap: 6 }}>

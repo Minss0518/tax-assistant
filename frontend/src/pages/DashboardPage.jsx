@@ -10,7 +10,6 @@ import DeadlineCard from "../components/dashboard/DeadlineCard";
 import AIInsightWidget from "../components/AIInsightWidget";
 import TabMenu from "../components/dashboard/TabMenu";
 
-
 const MONTH_NAMES = ["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
 
 function getMonthlyData(transactions) {
@@ -22,10 +21,7 @@ function getMonthlyData(transactions) {
     if (t.type === "income") map[key].income += t.amount;
     else map[key].expense += t.amount;
   });
-  return Object.entries(map)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .slice(-6)
-    .map(([, v]) => v);
+  return Object.entries(map).sort(([a], [b]) => a.localeCompare(b)).slice(-6).map(([, v]) => v);
 }
 
 export default function DashboardPage() {
@@ -41,14 +37,7 @@ export default function DashboardPage() {
       .then((res) => {
         if (res.data?.length > 0) {
           const latest = res.data[0];
-          setLastTaxResult({
-            grossIncome: latest.grossIncome,
-            totalTax: latest.totalTax,
-            finalTax: latest.finalTax,
-            isRefund: latest.isRefund,
-            refundAmount: latest.refundAmount,
-            calculatedAt: latest.createdAt,
-          });
+          setLastTaxResult({ grossIncome: latest.grossIncome, totalTax: latest.totalTax, finalTax: latest.finalTax, isRefund: latest.isRefund, refundAmount: latest.refundAmount, calculatedAt: latest.createdAt });
         }
       })
       .catch((e) => console.error("세금 계산 결과 불러오기 실패:", e));
@@ -63,12 +52,13 @@ export default function DashboardPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        @media (max-width: 480px) {
+          .dashboard-content { padding: 14px 10px 40px !important; }
+        }
       `}</style>
-
       <Navbar />
       <NetProfitHeader totalIncome={totalIncome} totalExpense={totalExpense} monthlyData={monthlyData} lastTaxResult={lastTaxResult} />
-
-      <div style={{ maxWidth: 720, margin: "0 auto", padding: "20px 16px 40px" }}>
+      <div className="dashboard-content" style={{ maxWidth: 720, margin: "0 auto", padding: "20px 16px 40px" }}>
         <TabMenu />
         <DeadlineCard />
         <AIInsightWidget />

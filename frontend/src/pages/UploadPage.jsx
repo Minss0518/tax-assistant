@@ -3,11 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 
 const BackButton = ({ onClick }) => (
-    <button onClick={onClick}
-        className="flex items-center gap-1.5 active:scale-95 text-sm font-semibold px-4 py-2 rounded-lg transition"
-        style={{ fontSize: 12, fontWeight: 600, color: "#1d4ed8", border: "1px solid #bfdbfe", borderRadius: 6, padding: "5px 12px", background: "#eff6ff", cursor: "pointer" }}>
-        ← 뒤로
-    </button>
+  <button onClick={onClick} style={{ fontSize: 12, fontWeight: 600, color: "#1d4ed8", border: "1px solid #bfdbfe", borderRadius: 6, padding: "5px 12px", background: "#eff6ff", cursor: "pointer", whiteSpace: "nowrap" }}>
+    ← 뒤로
+  </button>
 );
 
 export default function UploadPage() {
@@ -42,14 +40,10 @@ export default function UploadPage() {
     setUploading(true);
     setError('');
     setResult(null);
-
     const formData = new FormData();
     formData.append('file', file);
-
     try {
-      const res = await api.post('/upload/transactions', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const res = await api.post('/upload/transactions', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       setResult(res.data);
       setFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -71,20 +65,23 @@ export default function UploadPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-2xl mx-auto px-4 py-8">
-
-        {/* 헤더 */}
-        <div className="flex items-center gap-3 mb-8">
+      <style>{`
+        @media (max-width: 480px) {
+          .upload-table th, .upload-table td { font-size: 11px !important; padding: 4px 4px !important; }
+          .upload-drop { padding: 32px 12px !important; }
+        }
+      `}</style>
+      <div className="max-w-2xl mx-auto px-4 py-8" style={{ padding: '20px 12px 48px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 32 }}>
           <BackButton onClick={() => navigate('/dashboard')} />
           <h1 className="text-xl font-bold text-gray-800">거래내역 일괄 업로드</h1>
         </div>
 
-        {/* 안내 */}
         <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5 mb-6">
           <h2 className="font-bold text-blue-700 mb-3">업로드 형식 안내</h2>
           <p className="text-sm text-blue-600 mb-3">CSV 또는 Excel 파일에 아래 컬럼이 있어야 해요:</p>
-          <div className="bg-white rounded-xl p-4 mb-3">
-            <table className="w-full text-sm">
+          <div className="bg-white rounded-xl p-4 mb-3 overflow-x-auto">
+            <table className="upload-table w-full text-sm" style={{ minWidth: 280 }}>
               <thead>
                 <tr className="border-b border-gray-100">
                   <th className="text-left py-1.5 text-gray-500 font-semibold">컬럼명</th>
@@ -93,58 +90,39 @@ export default function UploadPage() {
                 </tr>
               </thead>
               <tbody className="text-gray-600">
-                <tr className="border-b border-gray-50">
-                  <td className="py-1.5 font-medium">날짜 <span className="text-red-400">*</span></td>
-                  <td className="py-1.5">거래 날짜</td>
-                  <td className="py-1.5 text-gray-400">2024-01-15</td>
-                </tr>
-                <tr className="border-b border-gray-50">
-                  <td className="py-1.5 font-medium">금액 <span className="text-red-400">*</span></td>
-                  <td className="py-1.5">거래 금액</td>
-                  <td className="py-1.5 text-gray-400">50000</td>
-                </tr>
-                <tr className="border-b border-gray-50">
-                  <td className="py-1.5 font-medium">유형</td>
-                  <td className="py-1.5">수입/지출</td>
-                  <td className="py-1.5 text-gray-400">지출 (기본값)</td>
-                </tr>
-                <tr>
-                  <td className="py-1.5 font-medium">메모</td>
-                  <td className="py-1.5">거래 내용</td>
-                  <td className="py-1.5 text-gray-400">스타벅스 커피</td>
-                </tr>
+                {[
+                  ['날짜 *', '거래 날짜', '2024-01-15'],
+                  ['금액 *', '거래 금액', '50000'],
+                  ['유형', '수입/지출', '지출 (기본값)'],
+                  ['메모', '거래 내용', '스타벅스 커피'],
+                ].map(([col, desc, ex], i) => (
+                  <tr key={i} className="border-b border-gray-50 last:border-0">
+                    <td className="py-1.5 font-medium">{col}</td>
+                    <td className="py-1.5">{desc}</td>
+                    <td className="py-1.5 text-gray-400">{ex}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
-          <button onClick={handleTemplateDownload}
-            className="text-sm text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1">
+          <button onClick={handleTemplateDownload} className="text-sm text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1">
             📥 CSV 템플릿 다운로드
           </button>
         </div>
 
-        {/* 업로드 영역 */}
         <div
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
-          className={`border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition mb-6 ${
-            dragOver
-              ? 'border-blue-400 bg-blue-50'
-              : file
-              ? 'border-emerald-400 bg-emerald-50'
-              : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50'
-          }`}>
-          <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" className="hidden"
-            onChange={(e) => handleFileSelect(e.target.files[0])} />
-
+          className={`upload-drop border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition mb-6 ${dragOver ? 'border-blue-400 bg-blue-50' : file ? 'border-emerald-400 bg-emerald-50' : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50'}`}>
+          <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" className="hidden" onChange={(e) => handleFileSelect(e.target.files[0])} />
           {file ? (
             <div>
               <div className="text-4xl mb-3">📄</div>
-              <p className="font-bold text-emerald-600 mb-1">{file.name}</p>
+              <p className="font-bold text-emerald-600 mb-1" style={{ wordBreak: 'break-all' }}>{file.name}</p>
               <p className="text-sm text-gray-400">{(file.size / 1024).toFixed(1)} KB</p>
-              <button onClick={(e) => { e.stopPropagation(); setFile(null); }}
-                className="mt-3 text-xs text-gray-400 hover:text-red-500">✕ 파일 제거</button>
+              <button onClick={(e) => { e.stopPropagation(); setFile(null); }} className="mt-3 text-xs text-gray-400 hover:text-red-500">✕ 파일 제거</button>
             </div>
           ) : (
             <div>
@@ -155,14 +133,12 @@ export default function UploadPage() {
           )}
         </div>
 
-        {/* 에러 메시지 */}
         {error && (
           <div className="bg-red-50 border border-red-100 rounded-2xl p-4 mb-6">
             <p className="text-sm text-red-500">⚠️ {error}</p>
           </div>
         )}
 
-        {/* 결과 */}
         {result && (
           <div className={`rounded-2xl p-5 mb-6 border ${result.failed === 0 ? 'bg-emerald-50 border-emerald-100' : 'bg-amber-50 border-amber-100'}`}>
             <p className="font-bold text-gray-800 mb-3">📊 업로드 결과</p>
@@ -179,19 +155,15 @@ export default function UploadPage() {
             {result.errors?.length > 0 && (
               <div className="bg-white rounded-xl p-3">
                 <p className="text-xs font-semibold text-gray-500 mb-2">오류 내용:</p>
-                {result.errors.map((e, i) => (
-                  <p key={i} className="text-xs text-red-400">{e}</p>
-                ))}
+                {result.errors.map((e, i) => <p key={i} className="text-xs text-red-400">{e}</p>)}
               </div>
             )}
-            <button onClick={() => navigate('/transactions')}
-              className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-sm font-semibold transition">
+            <button onClick={() => navigate('/transactions')} className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-sm font-semibold transition">
               거래 내역 확인하기 →
             </button>
           </div>
         )}
 
-        {/* 업로드 버튼 */}
         {file && !result && (
           <button onClick={handleUpload} disabled={uploading}
             className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white py-4 rounded-2xl font-bold text-sm transition flex items-center justify-center gap-2">
@@ -201,12 +173,11 @@ export default function UploadPage() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
                 </svg>
-                AI 카테고리 분류 중... 잠시만 기다려주세요
+                AI 카테고리 분류 중...
               </>
             ) : '📂 업로드 시작'}
           </button>
         )}
-
       </div>
     </div>
   );

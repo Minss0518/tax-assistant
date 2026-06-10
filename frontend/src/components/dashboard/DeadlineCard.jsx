@@ -26,47 +26,55 @@ export default function DeadlineCard() {
   const current = upcomingDeadlines[deadlineIdx];
 
   return (
-    <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "16px 20px", marginBottom: 14 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <span style={{ fontSize: 11, fontWeight: 600, color: "#9ca3af", letterSpacing: "0.8px", textTransform: "uppercase" }}>
-          다가오는 신고 기간
-        </span>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ display: "flex", gap: 5 }}>
-            {upcomingDeadlines.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setDeadlineIdx(i)}
-                style={{ width: 6, height: 6, borderRadius: "50%", background: i === deadlineIdx ? "#1d4ed8" : "#e5e7eb", border: "none", padding: 0, cursor: "pointer" }}
-              />
-            ))}
+    <>
+      <style>{`
+        @media (max-width: 480px) {
+          .deadline-dday { font-size: 22px !important; }
+          .deadline-date { font-size: 13px !important; }
+        }
+      `}</style>
+      <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "16px", marginBottom: 14 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <span style={{ fontSize: 11, fontWeight: 600, color: "#9ca3af", letterSpacing: "0.8px", textTransform: "uppercase" }}>
+            다가오는 신고 기간
+          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ display: "flex", gap: 5 }}>
+              {upcomingDeadlines.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setDeadlineIdx(i)}
+                  style={{ width: 6, height: 6, borderRadius: "50%", background: i === deadlineIdx ? "#1d4ed8" : "#e5e7eb", border: "none", padding: 0, cursor: "pointer" }}
+                />
+              ))}
+            </div>
+            <button
+              onClick={() => navigate("/notifications")}
+              style={{ fontSize: 12, color: "#1d4ed8", fontWeight: 600, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}
+            >
+              전체보기 →
+            </button>
           </div>
-          <button
-            onClick={() => navigate("/notifications")}
-            style={{ fontSize: 12, color: "#1d4ed8", fontWeight: 600, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}
-          >
-            전체보기 →
-          </button>
         </div>
-      </div>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ width: 40, height: 40, borderRadius: 8, background: current.bg, border: `1px solid ${current.border}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ fontSize: 10, fontWeight: 700, color: current.color }}>{current.icon}</span>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 8, background: current.bg, border: `1px solid ${current.border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: current.color }}>{current.icon}</span>
+            </div>
+            <div>
+              <p style={{ fontSize: 12, color: "#9ca3af", marginBottom: 3 }}>{current.name}</p>
+              <p className="deadline-date" style={{ fontSize: 15, fontWeight: 600, color: "#111827" }}>{current.date}까지</p>
+            </div>
           </div>
-          <div>
-            <p style={{ fontSize: 12, color: "#9ca3af", marginBottom: 3 }}>{current.name}</p>
-            <p style={{ fontSize: 15, fontWeight: 600, color: "#111827" }}>{current.date}까지</p>
+          <div style={{ textAlign: "right", flexShrink: 0 }}>
+            <p style={{ fontSize: 11, color: "#9ca3af", marginBottom: 3 }}>남은 기간</p>
+            <p className="deadline-dday" style={{ fontSize: 26, fontWeight: 700, letterSpacing: "-0.5px", color: current.dday <= 30 ? "#dc2626" : "#111827" }}>
+              D-{current.dday}
+            </p>
           </div>
-        </div>
-        <div style={{ textAlign: "right" }}>
-          <p style={{ fontSize: 11, color: "#9ca3af", marginBottom: 3 }}>남은 기간</p>
-          <p style={{ fontSize: 26, fontWeight: 700, letterSpacing: "-0.5px", color: current.dday <= 30 ? "#dc2626" : "#111827" }}>
-            D-{current.dday}
-          </p>
         </div>
       </div>
-    </div>
+    </>
   );
 }

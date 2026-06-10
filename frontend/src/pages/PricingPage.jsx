@@ -3,14 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { loadTossPayments } from "@tosspayments/tosspayments-sdk";
 import { v4 as uuidv4 } from "uuid";
 
-const BackButton = ({ onClick }) => (
-    <button onClick={onClick}
-        className="flex items-center gap-1.5 active:scale-95 text-sm font-semibold px-4 py-2 rounded-lg transition"
-        style={{ fontSize: 12, fontWeight: 600, color: "#1d4ed8", border: "1px solid #bfdbfe", borderRadius: 6, padding: "5px 12px", background: "#eff6ff", cursor: "pointer" }}>
-        ← 뒤로
-    </button>
-);
-
 const plans = [
     {
         name: 'Free', price: '0', desc: '가볍게 시작해보세요', color: 'border-gray-200', current: true,
@@ -24,8 +16,7 @@ const plans = [
             { text: '세무사 직접 상담', included: false },
         ],
         cta: '현재 플랜', ctaStyle: 'bg-gray-100 text-gray-400 cursor-not-allowed',
-        amount: null,
-        orderName: null,
+        amount: null, orderName: null,
     },
     {
         name: 'Pro', price: '9,900', desc: '프리랜서를 위한 모든 기능', color: 'border-blue-400 ring-2 ring-blue-100', badge: '추천', current: false,
@@ -39,13 +30,12 @@ const plans = [
             { text: '세무사 직접 상담', included: false },
         ],
         cta: 'Pro 시작하기', ctaStyle: 'bg-blue-600 hover:bg-blue-700 text-white',
-        amount: 9900,
-        orderName: 'AI 세무 비서 Pro',
+        amount: 9900, orderName: 'AI 세무 비서 Pro',
     },
     {
         name: 'Premium', price: '29,900', desc: '세무사와 직접 상담까지', color: 'border-violet-400 ring-2 ring-violet-100', badge: '세무사 상담', current: false,
         features: [
-            { text: '세무사 직접 상담 무제한', included: true, premium: true },
+            { text: '세무사 직접 상담 월 5회', included: true, premium: true },
             { text: 'AI 세무 상담 무제한', included: true },
             { text: '거래 내역 관리', included: true },
             { text: '세금 계산기', included: true },
@@ -54,8 +44,7 @@ const plans = [
             { text: '월별 세금 리포트', included: true },
         ],
         cta: 'Premium 시작하기', ctaStyle: 'bg-violet-600 hover:bg-violet-700 text-white',
-        amount: 29900,
-        orderName: 'AI 세무 비서 Premium',
+        amount: 29900, orderName: 'AI 세무 비서 Premium',
     },
 ];
 
@@ -63,7 +52,7 @@ const faqs = [
     { q: '언제든지 취소할 수 있나요?', a: '네, 언제든지 취소 가능해요. 취소해도 결제 기간이 끝날 때까지 기능을 사용할 수 있어요.' },
     { q: '결제 수단은 무엇을 지원하나요?', a: '신용카드, 체크카드, 카카오페이, 네이버페이를 지원할 예정이에요.' },
     { q: '업그레이드하면 바로 적용되나요?', a: '네, 결제 완료 즉시 모든 기능이 활성화돼요.' },
-    { q: 'Premium 세무사 상담은 어떻게 진행되나요?', a: '대시보드의 세무사 상담 탭에서 언제든 메시지를 남기면 세무사가 업무 시간 내에 답변해드려요. 양쪽 모두 온라인이면 실시간 채팅도 가능해요.' },
+    { q: 'Premium 세무사 상담은 어떻게 진행되나요?', a: '대시보드의 세무사 상담 탭에서 언제든 메시지를 남기면 세무사가 업무 시간 내에 답변해드려요.' },
 ];
 
 export default function PricingPage() {
@@ -77,46 +66,40 @@ export default function PricingPage() {
         try {
             const tossPayments = await loadTossPayments("test_ck_ex6BJGQOVDOkO6Z4NPPn3W4w2zNb");
             const payment = tossPayments.payment({ customerKey: "customer-" + Date.now() });
-            await payment.requestPayment({
-                method: "CARD",
-                amount: { currency: "KRW", value: selectedPlan.amount },
-                orderId: uuidv4(),
-                orderName: selectedPlan.orderName,
-                successUrl: `${window.location.origin}/payment/success`,
-                failUrl: `${window.location.origin}/payment/fail`,
-            });
-        } catch (e) {
-            console.error("결제 오류:", e);
-        }
+            await payment.requestPayment({ method: "CARD", amount: { currency: "KRW", value: selectedPlan.amount }, orderId: uuidv4(), orderName: selectedPlan.orderName, successUrl: `${window.location.origin}/payment/success`, failUrl: `${window.location.origin}/payment/fail` });
+        } catch (e) { console.error("결제 오류:", e); }
     };
-
-    const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <div className="max-w-2xl mx-auto px-4 py-8">
-                <div className="flex items-center gap-3 mb-8">
-                    <BackButton onClick={() => navigate('/dashboard')} />
+            <style>{`
+                @media (max-width: 640px) {
+                    .pricing-cards { flex-direction: column !important; }
+                    .pricing-card { width: 100% !important; }
+                    .pricing-wrap { padding: 16px 12px 48px !important; }
+                }
+            `}</style>
+            <div className="pricing-wrap max-w-2xl mx-auto px-4 py-8">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 32 }}>
+                    <button onClick={() => navigate('/dashboard')} style={{ fontSize: 12, fontWeight: 600, color: "#1d4ed8", border: "1px solid #bfdbfe", borderRadius: 6, padding: "5px 12px", background: "#eff6ff", cursor: "pointer" }}>← 뒤로</button>
                     <h1 className="text-xl font-bold text-gray-800">요금제</h1>
                 </div>
 
                 <div className="bg-blue-50 border border-blue-100 rounded-2xl px-5 py-4 mb-6 flex items-center gap-3">
-                    <span className="text-2xl"></span>
+                    <span className="text-2xl">💡</span>
                     <div>
                         <p className="text-sm font-semibold text-blue-700">현재 Free 플랜 사용 중</p>
                         <p className="text-xs text-blue-400">Pro 또는 Premium으로 업그레이드하면 더 많은 기능을 사용할 수 있어요</p>
                     </div>
                 </div>
 
-                <div className="flex flex-col gap-4 mb-8">
+                <div className="pricing-cards flex flex-col gap-4 mb-8">
                     {plans.map((plan, i) => (
-                        <div key={i} className={`bg-white rounded-2xl border-2 ${plan.color} p-6 relative`}>
+                        <div key={i} className={`pricing-card bg-white rounded-2xl border-2 ${plan.color} p-6 relative`}>
                             {plan.badge && (
-                                <span className={`absolute -top-3 left-6 text-white text-xs font-bold px-3 py-1 rounded-full ${plan.name === 'Premium' ? 'bg-violet-600' : 'bg-blue-600'}`}>
-                                    {plan.badge}
-                                </span>
+                                <span className={`absolute -top-3 left-6 text-white text-xs font-bold px-3 py-1 rounded-full ${plan.name === 'Premium' ? 'bg-violet-600' : 'bg-blue-600'}`}>{plan.badge}</span>
                             )}
-                            <div className="flex justify-between items-start mb-4">
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
                                 <div>
                                     <h3 className="font-bold text-gray-900 text-lg">{plan.name}</h3>
                                     <p className="text-gray-400 text-xs mt-0.5">{plan.desc}</p>
@@ -130,20 +113,14 @@ export default function PricingPage() {
                                 {plan.features.map((f, j) => (
                                     <li key={j} className="flex items-center gap-2 text-sm">
                                         <span className={f.included ? (f.premium ? 'text-violet-500' : 'text-emerald-500') : 'text-gray-200'}>{f.included ? '✓' : '✗'}</span>
-                                        <span style={{
-                                            color: f.premium ? '#7c3aed' : f.pro ? '#1d4ed8' : f.included ? '#4b5563' : '#d1d5db',
-                                            fontWeight: f.pro || f.premium ? 700 : 400,
-                                            textDecoration: f.pro || f.premium ? 'underline' : 'none',
-                                            textDecorationColor: f.premium ? '#7c3aed' : '#1d4ed8',
-                                        }}>{f.text}</span>
+                                        <span style={{ color: f.premium ? '#7c3aed' : f.pro ? '#1d4ed8' : f.included ? '#4b5563' : '#d1d5db', fontWeight: f.pro || f.premium ? 700 : 400, textDecoration: f.pro || f.premium ? 'underline' : 'none', textDecorationColor: f.premium ? '#7c3aed' : '#1d4ed8' }}>
+                                            {f.text}
+                                        </span>
                                     </li>
                                 ))}
                             </ul>
-                            <button
-                                disabled={plan.current}
-                                onClick={() => { if (!plan.current) { setSelectedPlan(plan); setShowModal(true); } }}
-                                className={`w-full py-3 rounded-xl font-bold text-sm transition ${plan.ctaStyle}`}
-                            >
+                            <button disabled={plan.current} onClick={() => { if (!plan.current) { setSelectedPlan(plan); setShowModal(true); } }}
+                                className={`w-full py-3 rounded-xl font-bold text-sm transition ${plan.ctaStyle}`}>
                                 {plan.cta}
                             </button>
                         </div>
@@ -155,14 +132,11 @@ export default function PricingPage() {
                     <div className="flex flex-col gap-2">
                         {faqs.map((faq, i) => (
                             <div key={i} className="border border-gray-100 rounded-xl overflow-hidden">
-                                <button onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                                    className="w-full flex justify-between items-center px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition text-left">
+                                <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full flex justify-between items-center px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition text-left">
                                     {faq.q}
                                     <span className={`text-gray-400 transition-transform ${openFaq === i ? 'rotate-180' : ''}`}>▼</span>
                                 </button>
-                                {openFaq === i && (
-                                    <div className="px-4 pb-3 text-sm text-gray-500 leading-relaxed border-t border-gray-50">{faq.a}</div>
-                                )}
+                                {openFaq === i && <div className="px-4 pb-3 text-sm text-gray-500 leading-relaxed border-t border-gray-50">{faq.a}</div>}
                             </div>
                         ))}
                     </div>
@@ -171,42 +145,21 @@ export default function PricingPage() {
                 <p className="text-xs text-gray-400 text-center mb-6">
                     결제 관련 문의는 <a href="mailto:kmj24545@naver.com" className="underline hover:text-gray-600">kmj24545@naver.com</a>으로 연락해주세요
                 </p>
-
-                <div className="flex justify-center">
-                    <button onClick={scrollToTop}
-                        className="flex items-center gap-2 text-xs text-gray-400 hover:text-gray-600 transition">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="18 15 12 9 6 15"/>
-                        </svg>
-                        위로가기
-                    </button>
-                </div>
             </div>
 
-            {/* 결제 모달 */}
             {showModal && selectedPlan && (
                 <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4" onClick={() => setShowModal(false)}>
                     <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
-                        <div className="text-5xl mb-4">{selectedPlan.name === 'Premium'}</div>
+                        <div className="text-5xl mb-4">{selectedPlan.name === 'Premium' ? '👑' : '💳'}</div>
                         <h3 className="font-bold text-gray-900 text-xl mb-2">{selectedPlan.name} 플랜 시작하기</h3>
                         <p className="text-gray-500 text-sm mb-1 leading-relaxed">
-                            {selectedPlan.name === 'Premium'
-                                ? 'AI 세무 상담 무제한 + 세무사 직접 상담 월 5회'
-                                : 'AI 세무 상담, OCR, 리포트를 무제한으로 사용할 수 있어요.'}
+                            {selectedPlan.name === 'Premium' ? 'AI 세무 상담 무제한 + 세무사 직접 상담 월 5회' : 'AI 세무 상담, OCR, 리포트를 무제한으로 사용할 수 있어요.'}
                         </p>
                         <p className="text-gray-400 text-xs mb-6">월 {selectedPlan.price}원</p>
-                        <button
-                            onClick={handlePayment}
-                            className={`w-full text-white py-3 rounded-xl font-bold text-sm transition mb-2 ${selectedPlan.name === 'Premium' ? 'bg-violet-600 hover:bg-violet-700' : 'bg-blue-600 hover:bg-blue-700'}`}
-                        >
-                            카드로 결제하기 (월 {selectedPlan.price}원)
+                        <button onClick={handlePayment} className={`w-full text-white py-3 rounded-xl font-bold text-sm transition mb-2 ${selectedPlan.name === 'Premium' ? 'bg-violet-600 hover:bg-violet-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
+                            💳 카드로 결제하기 (월 {selectedPlan.price}원)
                         </button>
-                        <button
-                            onClick={() => setShowModal(false)}
-                            className="w-full bg-gray-100 hover:bg-gray-200 text-gray-500 py-3 rounded-xl font-bold text-sm transition"
-                        >
-                            취소
-                        </button>
+                        <button onClick={() => setShowModal(false)} className="w-full bg-gray-100 hover:bg-gray-200 text-gray-500 py-3 rounded-xl font-bold text-sm transition">취소</button>
                     </div>
                 </div>
             )}

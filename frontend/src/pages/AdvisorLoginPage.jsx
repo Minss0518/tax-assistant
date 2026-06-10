@@ -32,8 +32,8 @@ export default function AdvisorLoginPage() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f9fafb" }}>
-      <div style={{ background: "white", padding: 40, borderRadius: 16, boxShadow: "0 4px 24px rgba(0,0,0,0.08)", width: 360 }}>
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f9fafb", padding: "16px" }}>
+      <div style={{ background: "white", padding: "clamp(24px, 5vw, 40px)", borderRadius: 16, boxShadow: "0 4px 24px rgba(0,0,0,0.08)", width: "100%", maxWidth: 360 }}>
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <div style={{ fontSize: 32, marginBottom: 8 }}>🧾</div>
           <h2 style={{ margin: 0, fontSize: 22, fontWeight: "bold" }}>세무사 로그인</h2>
@@ -46,7 +46,7 @@ export default function AdvisorLoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="이메일"
-            style={{ padding: "12px 16px", border: "1px solid #d1d5db", borderRadius: 8, fontSize: 15, outline: "none" }}
+            style={{ padding: "12px 16px", border: "1px solid #d1d5db", borderRadius: 8, fontSize: 15, outline: "none", width: "100%", boxSizing: "border-box" }}
           />
           <input
             type="password"
@@ -54,12 +54,12 @@ export default function AdvisorLoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && login()}
             placeholder="비밀번호"
-            style={{ padding: "12px 16px", border: "1px solid #d1d5db", borderRadius: 8, fontSize: 15, outline: "none" }}
+            style={{ padding: "12px 16px", border: "1px solid #d1d5db", borderRadius: 8, fontSize: 15, outline: "none", width: "100%", boxSizing: "border-box" }}
           />
           {error && <p style={{ color: "#ef4444", fontSize: 14, margin: 0 }}>{error}</p>}
           <button
             onClick={login}
-            style={{ padding: "13px", background: "#3b82f6", color: "white", border: "none", borderRadius: 8, fontSize: 15, fontWeight: "bold", cursor: "pointer" }}
+            style={{ padding: "13px", background: "#3b82f6", color: "white", border: "none", borderRadius: 8, fontSize: 15, fontWeight: "bold", cursor: "pointer", width: "100%" }}
           >
             로그인
           </button>

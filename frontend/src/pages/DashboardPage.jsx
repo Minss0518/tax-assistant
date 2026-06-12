@@ -10,22 +10,26 @@ import DeadlineCard from "../components/dashboard/DeadlineCard";
 import AIInsightWidget from "../components/AIInsightWidget";
 import TabMenu from "../components/dashboard/TabMenu";
 
-const MONTH_NAMES = ["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
-
-function getMonthlyData(transactions, selectedYear) {
+// 과세기간: 매년 6월 1일 ~ 다음해 5월 31일
+// taxYear = 시작 년도 (예: 2026 → 2026.06.01 ~ 2027.05.31)
+// 현재 진행 중인 과세기간의 taxYear:
+//   오늘이 6월 이후면 → 올해
+//   오늘이 5월 이전이면 → 작년
+function getCurrentTaxYear() {
   const today = new Date();
-  const currentYear = today.getFullYear();
+  return today.getMonth() >= 5 ? today.getFullYear() : today.getFullYear() - 1;
+}
 
-  let startDate, endDate;
-  if (selectedYear === currentYear) {
-    // 현재 년도: 1년 전 ~ 오늘
-    startDate = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
-    endDate = today;
-  } else {
-    // 과거 년도: 해당 년도 1월 1일 ~ 12월 31일
-    startDate = new Date(selectedYear, 0, 1);
-    endDate = new Date(selectedYear, 11, 31);
-  }
+function getTaxPeriod(taxYear) {
+  const today = new Date();
+  const startDate = new Date(taxYear, 5, 1); // 해당년도 6월 1일
+  const naturalEnd = new Date(taxYear + 1, 4, 31); // 다음해 5월 31일
+  const endDate = naturalEnd > today ? today : naturalEnd; // 현재 진행중이면 오늘까지
+  return { startDate, endDate };
+}
+
+function getMonthlyData(transactions, taxYear) {
+  const { startDate, endDate } = getTaxPeriod(taxYear);
 
   const map = {};
   transactions
@@ -37,7 +41,7 @@ function getMonthlyData(transactions, selectedYear) {
       const d = new Date(t.transaction_date);
       const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2, "0")}`;
       if (!map[key]) map[key] = {
-        month: `${String(d.getMonth() + 1).padStart(2, "0")}월`,
+        month: `${d.getMonth() + 1}월`,
         income: 0,
         expense: 0,
       };
@@ -53,7 +57,7 @@ export default function DashboardPage() {
   const { token } = useAuthStore();
   const [transactions, setTransactions] = useState([]);
   const [lastTaxResult, setLastTaxResult] = useState(null);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedTaxYear, setSelectedTaxYear] = useState(getCurrentTaxYear());
 
   useEffect(() => {
     if (!token) { navigate("/login"); return; }
@@ -68,24 +72,31 @@ export default function DashboardPage() {
       .catch((e) => console.error("세금 계산 결과 불러오기 실패:", e));
   }, [token]);
 
-  // 거래 데이터에서 존재하는 년도 목록 추출
-  const availableYears = [...new Set(
-    transactions.map((t) => new Date(t.transaction_date).getFullYear())
+  const currentTaxYear = getCurrentTaxYear();
+
+  // 거래 데이터에서 과세기간 목록 추출
+  // 각 거래의 날짜가 속하는 taxYear 계산 (6월 이후면 해당년도, 이전이면 전년도)
+  const availableTaxYears = [...new Set(
+    transactions.map((t) => {
+      const d = new Date(t.transaction_date);
+      return d.getMonth() >= 5 ? d.getFullYear() : d.getFullYear() - 1;
+    })
   )].sort((a, b) => b - a);
 
-  const currentYear = new Date().getFullYear();
-
-  // 이번 달 수입/지출 (selectedYear 관계없이 항상 이번 달)
-  const thisMonth = new Date().getMonth();
-  const thisYear = new Date().getFullYear();
+  // 이번 달 수입/지출 (항상 이번 달 기준)
+  const today = new Date();
   const thisMonthTx = transactions.filter((t) => {
     const d = new Date(t.transaction_date);
-    return d.getFullYear() === thisYear && d.getMonth() === thisMonth;
+    return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth();
   });
   const totalIncome = thisMonthTx.filter((t) => t.type === "income").reduce((s, t) => s + t.amount, 0);
   const totalExpense = thisMonthTx.filter((t) => t.type === "expense").reduce((s, t) => s + t.amount, 0);
 
-  const monthlyData = getMonthlyData(transactions, selectedYear);
+  const monthlyData = getMonthlyData(transactions, selectedTaxYear);
+
+  // 선택된 과세기간 레이블
+  const { startDate, endDate } = getTaxPeriod(selectedTaxYear);
+  const periodLabel = `${startDate.getFullYear()}.06 ~ ${endDate.getFullYear()}.${String(endDate.getMonth() + 1).padStart(2, "0")}`;
 
   return (
     <div style={{ minHeight: "100vh", background: "#f8f9fa", fontFamily: "'Pretendard', -apple-system, sans-serif" }}>
@@ -102,10 +113,11 @@ export default function DashboardPage() {
         totalExpense={totalExpense}
         monthlyData={monthlyData}
         lastTaxResult={lastTaxResult}
-        selectedYear={selectedYear}
-        availableYears={availableYears}
-        currentYear={currentYear}
-        onYearChange={setSelectedYear}
+        selectedTaxYear={selectedTaxYear}
+        availableTaxYears={availableTaxYears}
+        currentTaxYear={currentTaxYear}
+        periodLabel={periodLabel}
+        onTaxYearChange={setSelectedTaxYear}
       />
       <div className="dashboard-content" style={{ maxWidth: 720, margin: "0 auto", padding: "20px 16px 40px" }}>
         <TabMenu />

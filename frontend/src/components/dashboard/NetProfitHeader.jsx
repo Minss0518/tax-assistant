@@ -49,7 +49,7 @@ const Chart = ({ data, height }) => (
 
 export default function NetProfitHeader({
   totalIncome, totalExpense, monthlyData = [], lastTaxResult,
-  selectedYear, availableYears = [], currentYear, onYearChange,
+  selectedTaxYear, availableTaxYears = [], currentTaxYear, periodLabel, onTaxYearChange,
 }) {
   const [showModal, setShowModal] = useState(false);
   const netProfit = totalIncome - totalExpense;
@@ -127,22 +127,22 @@ export default function NetProfitHeader({
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, flexWrap: "wrap", gap: 8 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <p style={{ fontSize: 12, color: "#fff" }}>월별 수입 · 지출 추이</p>
-                  {/* 년도 선택 버튼 */}
-                  <div className="year-selector" style={{ display: "flex", gap: 4 }}>
-                    {availableYears.map((y) => (
+                  {/* 과세기간 선택 버튼 */}
+                  <div className="year-selector" style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                    {availableTaxYears.map((y) => (
                       <button
                         key={y}
-                        onClick={() => onYearChange(y)}
+                        onClick={() => onTaxYearChange(y)}
                         style={{
                           fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 12,
                           border: "1px solid",
-                          background: selectedYear === y ? "#fff" : "transparent",
-                          color: selectedYear === y ? "#111827" : "#9ca3af",
-                          borderColor: selectedYear === y ? "#fff" : "#374151",
+                          background: selectedTaxYear === y ? "#fff" : "transparent",
+                          color: selectedTaxYear === y ? "#111827" : "#9ca3af",
+                          borderColor: selectedTaxYear === y ? "#fff" : "#374151",
                           cursor: "pointer", fontFamily: "inherit",
                         }}
                       >
-                        {y === currentYear ? `${y}(최근1년)` : `${y}년`}
+                        {y === currentTaxYear ? `${y}년~` : `${y}년`}
                       </button>
                     ))}
                   </div>
@@ -176,9 +176,7 @@ export default function NetProfitHeader({
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 8 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <p style={{ fontSize: 15, fontWeight: 600, color: "#fff" }}>월별 수입 · 지출 추이</p>
-                <span style={{ fontSize: 12, color: "#9ca3af" }}>
-                  {selectedYear === currentYear ? `최근 1년` : `${selectedYear}년`}
-                </span>
+                <span style={{ fontSize: 12, color: "#9ca3af" }}>{periodLabel}</span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                 <div style={{ display: "flex", gap: 14 }}>

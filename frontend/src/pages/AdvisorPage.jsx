@@ -8,6 +8,7 @@ export default function AdvisorPage() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [advisorId, setAdvisorId] = useState(null);
+  const [selectedYear, setSelectedYear] = useState("전체");
   const [selectedMonth, setSelectedMonth] = useState("전체");
   const wsRef = useRef(null);
   const bottomRef = useRef(null);
@@ -79,23 +80,50 @@ export default function AdvisorPage() {
 
   const statusLabel = (s) => s === "waiting" ? "⏳ 대기중" : s === "active" ? "💬 상담중" : "✅ 완료";
 
-  const months = ["전체", ...Array.from(new Set(consultations.map((c) => {
-    const d = new Date(c.updated_at);
-    return `${d.getFullYear()}년 ${d.getMonth() + 1}월`;
-  })))];
+  // 년도 목록
+  const years = ["전체", ...Array.from(new Set(
+    consultations.map((c) => String(new Date(c.updated_at).getFullYear()))
+  )).sort((a, b) => b - a)];
 
+  // 선택된 년도의 월 목록
+  const months = selectedYear === "전체" ? [] : [
+    "전체",
+    ...Array.from(new Set(
+      consultations
+        .filter((c) => String(new Date(c.updated_at).getFullYear()) === selectedYear)
+        .map((c) => String(new Date(c.updated_at).getMonth() + 1))
+    )).sort((a, b) => a - b).map((m) => `${m}월`)
+  ];
+
+  // 필터링
   const filteredConsultations = consultations.filter((c) => {
-    if (selectedMonth === "전체") return true;
     const d = new Date(c.updated_at);
-    return `${d.getFullYear()}년 ${d.getMonth() + 1}월` === selectedMonth;
+    if (selectedYear !== "전체" && String(d.getFullYear()) !== selectedYear) return false;
+    if (selectedYear !== "전체" && selectedMonth !== "전체") {
+      if (`${d.getMonth() + 1}월` !== selectedMonth) return false;
+    }
+    return true;
+  });
+
+  const handleYearSelect = (year) => {
+    setSelectedYear(year);
+    setSelectedMonth("전체");
+  };
+
+  const btnStyle = (active) => ({
+    padding: "5px 10px", fontSize: 11, fontWeight: 600, whiteSpace: "nowrap",
+    borderRadius: 20, border: "1px solid", cursor: "pointer", fontFamily: "inherit",
+    background: active ? "#1d4ed8" : "#fff",
+    color: active ? "#fff" : "#6b7280",
+    borderColor: active ? "#1d4ed8" : "#e5e7eb",
   });
 
   return (
-    <div style={{ padding: "0 clamp(12px, 5vw, 80px)", maxWidth: 1100, margin: "0 auto", fontFamily: "sans-serif" }}>
+    <div style={{ padding: "0 clamp(12px, 3vw, 50px)", maxWidth: 1100, margin: "0 auto", fontFamily: "sans-serif" }}>
       <style>{`
         @media (max-width: 640px) {
           .advisor-body { flex-direction: column !important; height: auto !important; }
-          .advisor-sidebar { width: 100% !important; height: 240px !important; border-right: none !important; border-bottom: 1px solid #e5e7eb !important; }
+          .advisor-sidebar { width: 100% !important; height: 300px !important; border-right: none !important; border-bottom: 1px solid #e5e7eb !important; }
           .advisor-chat { height: 400px !important; }
           .advisor-title { font-size: 18px !important; }
         }
@@ -113,13 +141,30 @@ export default function AdvisorPage() {
             상담 목록
             <button onClick={fetchConsultations} style={{ float: "right", background: "none", border: "none", cursor: "pointer", fontSize: 15 }}>🔄</button>
           </div>
-          <div style={{ padding: "10px 12px", borderBottom: "1px solid #e5e7eb", flexShrink: 0, overflowX: "auto", display: "flex", gap: 6 }}>
-            {months.map((m) => (
-              <button key={m} onClick={() => setSelectedMonth(m)} style={{ padding: "5px 10px", fontSize: 11, fontWeight: 600, whiteSpace: "nowrap", borderRadius: 20, border: "1px solid", cursor: "pointer", fontFamily: "inherit", background: selectedMonth === m ? "#1d4ed8" : "#fff", color: selectedMonth === m ? "#fff" : "#6b7280", borderColor: selectedMonth === m ? "#1d4ed8" : "#e5e7eb" }}>
-                {m}
-              </button>
-            ))}
+
+          {/* 년도 필터 */}
+          <div style={{ padding: "8px 12px", borderBottom: "1px solid #e5e7eb", flexShrink: 0 }}>
+            <p style={{ fontSize: 10, color: "#9ca3af", fontWeight: 600, marginBottom: 6, letterSpacing: "0.5px" }}>년도</p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+              {years.map((y) => (
+                <button key={y} onClick={() => handleYearSelect(y)} style={btnStyle(selectedYear === y)}>{y}</button>
+              ))}
+            </div>
           </div>
+
+          {/* 월 필터 (년도 선택 시에만 표시) */}
+          {selectedYear !== "전체" && (
+            <div style={{ padding: "8px 12px", borderBottom: "1px solid #e5e7eb", flexShrink: 0 }}>
+              <p style={{ fontSize: 10, color: "#9ca3af", fontWeight: 600, marginBottom: 6, letterSpacing: "0.5px" }}>월</p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                {months.map((m) => (
+                  <button key={m} onClick={() => setSelectedMonth(m)} style={btnStyle(selectedMonth === m)}>{m}</button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 상담 목록 */}
           <div style={{ overflowY: "auto", flex: 1 }}>
             {filteredConsultations.length === 0 ? (
               <div style={{ padding: 24, textAlign: "center", color: "#9ca3af", fontSize: 13 }}>상담 없음</div>

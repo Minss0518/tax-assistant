@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from app.database import get_db
 from app.models.transaction import Transaction
 from app.schemas.transaction import TransactionCreate, TransactionResponse
@@ -142,6 +142,18 @@ async def update_category(
     await db.refresh(transaction)
     return transaction
 
+
+@router.delete("/all")
+async def delete_all_transactions(
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    user_id = uuid.UUID(current_user["sub"])
+    await db.execute(delete(Transaction).where(Transaction.user_id == user_id))
+    await db.commit()
+    return {"message": "전체 삭제 완료"}
+
+
 @router.delete("/{transaction_id}")
 async def delete_transaction(
     transaction_id: uuid.UUID,
@@ -161,13 +173,3 @@ async def delete_transaction(
     await db.delete(transaction)
     await db.commit()
     return {"message": "삭제되었습니다."}
-
-@router.delete("/all")
-async def delete_all_transactions(
-    current_user: dict = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    user_id = uuid.UUID(current_user["sub"])
-    await db.execute(delete(Transaction).where(Transaction.user_id == user_id))
-    await db.commit()
-    return {"message": "전체 삭제 완료"}

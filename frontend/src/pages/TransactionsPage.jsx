@@ -78,6 +78,9 @@ export default function TransactionsPage() {
   const [filterDateFrom, setFilterDateFrom] = useState('');
   const [filterDateTo, setFilterDateTo] = useState('');
   const [showFilter, setShowFilter] = useState(false);
+  const [searchMemo, setSearchMemo] = useState('');
+  const [searchCategory, setSearchCategory] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
 
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState(new Set());
@@ -98,10 +101,13 @@ export default function TransactionsPage() {
     if (filterType !== 'all' && t.type !== filterType) return false;
     if (filterDateFrom && t.transaction_date < filterDateFrom) return false;
     if (filterDateTo && t.transaction_date > filterDateTo) return false;
+    if (searchMemo && !t.memo?.toLowerCase().includes(searchMemo.toLowerCase())) return false;
+    if (searchCategory && !t.category_name?.toLowerCase().includes(searchCategory.toLowerCase())) return false;
     return true;
   });
 
   const activeFilterCount = [filterType !== 'all', !!filterDateFrom, !!filterDateTo].filter(Boolean).length;
+  const activeSearchCount = [!!searchMemo, !!searchCategory].filter(Boolean).length;
 
   const toggleSelect = (id) => {
     setSelected(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
@@ -123,13 +129,13 @@ export default function TransactionsPage() {
   };
 
   const handleDeleteAll = async () => {
-  if (!window.confirm(`전체 ${filtered.length}개를 삭제할까요?`)) return;
-  setDeleteLoading(true);
-  await api.delete('/transactions/all');
-  setDeleteLoading(false);
-  setSelectMode(false);
-  fetchTransactions();
-};
+    if (!window.confirm(`전체 ${filtered.length}개를 삭제할까요?`)) return;
+    setDeleteLoading(true);
+    await Promise.all(filtered.map(t => deleteTransaction(t.id)));
+    setDeleteLoading(false);
+    setSelectMode(false);
+    fetchTransactions();
+  };
 
   const handleDelete = async (id) => {
     if (!window.confirm('이 거래를 삭제할까요?')) return;
@@ -275,6 +281,10 @@ export default function TransactionsPage() {
               ))}
             </div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <button onClick={() => setShowSearch(!showSearch)}
+                style={{ ...btnBase, padding: '5px 10px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: activeSearchCount > 0 ? '#FFF7ED' : '#F3F4F6', color: activeSearchCount > 0 ? '#C2410C' : '#6B7280', border: `1px solid ${activeSearchCount > 0 ? '#FED7AA' : '#E5E7EB'}` }}>
+                🔍 검색{activeSearchCount > 0 ? ` (${activeSearchCount})` : ''}
+              </button>
               <button onClick={() => setShowFilter(!showFilter)}
                 style={{ ...btnBase, padding: '5px 10px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: activeFilterCount > 0 ? '#EFF6FF' : '#F3F4F6', color: activeFilterCount > 0 ? '#1D4ED8' : '#6B7280', border: `1px solid ${activeFilterCount > 0 ? '#BFDBFE' : '#E5E7EB'}` }}>
                 📅 날짜{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
@@ -285,6 +295,46 @@ export default function TransactionsPage() {
               </button>
             </div>
           </div>
+
+          {/* 검색창 */}
+          {showSearch && (
+            <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #F3F4F6', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ position: 'relative', flex: 1 }}>
+                  <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#9CA3AF' }}>🔍</span>
+                  <input
+                    value={searchMemo}
+                    onChange={e => setSearchMemo(e.target.value)}
+                    placeholder="메모 검색 (예: 스타벅스)"
+                    style={{ width: '100%', border: '1px solid #E5E7EB', borderRadius: 8, padding: '7px 10px 7px 32px', fontSize: 12, fontFamily: 'inherit', outline: 'none', color: '#374151' }}
+                  />
+                  {searchMemo && (
+                    <button onClick={() => setSearchMemo('')} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', fontSize: 14 }}>✕</button>
+                  )}
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ position: 'relative', flex: 1 }}>
+                  <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#9CA3AF' }}>🏷️</span>
+                  <input
+                    value={searchCategory}
+                    onChange={e => setSearchCategory(e.target.value)}
+                    placeholder="카테고리 검색 (예: 식비)"
+                    style={{ width: '100%', border: '1px solid #E5E7EB', borderRadius: 8, padding: '7px 10px 7px 32px', fontSize: 12, fontFamily: 'inherit', outline: 'none', color: '#374151' }}
+                  />
+                  {searchCategory && (
+                    <button onClick={() => setSearchCategory('')} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', fontSize: 14 }}>✕</button>
+                  )}
+                </div>
+                {(searchMemo || searchCategory) && (
+                  <button onClick={() => { setSearchMemo(''); setSearchCategory(''); }}
+                    style={{ ...btnBase, padding: '7px 12px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA', whiteSpace: 'nowrap' }}>
+                    초기화
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
 
           {showFilter && (
             <div className="date-filter-wrap" style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #F3F4F6', display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>

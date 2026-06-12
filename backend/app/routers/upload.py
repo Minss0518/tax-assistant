@@ -259,17 +259,22 @@ async def upload_transactions(
             failed += 1
             errors.append(f"{i+2}행: {str(e)}")
 
-    # 벌크 INSERT (한 번에 전체 저장)
+    # 벌크 INSERT(한번에 저장) — income/expense 분리 + 청크 단위 처리
     if bulk_data:
-        await db.execute(insert(Transaction), bulk_data)
-        await db.commit()
+        income_data = [d for d in bulk_data if d["type"] == "income"]
+        expense_data = [d for d in bulk_data if d["type"] == "expense"]
 
-    return {
-        "message": f"{success}건 업로드 성공, {failed}건 실패",
-        "success": success,
-        "failed": failed,
-        "errors": errors[:5],
-    }
+        # income: is_deductible 제거 (항상 None이라 타입 불일치 발생)
+        for d in income_data:
+            d.pop("is_deductible", None)
+
+        CHUNK = 500
+        for data in [income_data, expense_data]:
+            for i in range(0, len(data), CHUNK):
+                chunk = data[i:i+CHUNK]
+                if chunk:
+                    await db.execute(insert(Transaction), chunk)
+        await db.commit()
 
 
 @router.get("/template/csv")

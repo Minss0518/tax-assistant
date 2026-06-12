@@ -53,13 +53,33 @@ async def create_transaction(
 @router.get("/", response_model=List[TransactionResponse])
 async def get_transactions(
     current_user: dict = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    page: int = 1,
+    limit: int = 50,
+    type: Optional[str] = None,
+    memo: Optional[str] = None,
+    category: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
 ):
-    result = await db.execute(
-        select(Transaction).where(
-            Transaction.user_id == uuid.UUID(current_user["sub"])
-        ).order_by(Transaction.transaction_date.desc())
-    )
+    user_id = uuid.UUID(current_user["sub"])
+    query = select(Transaction).where(Transaction.user_id == user_id)
+
+    if type and type != "all":
+        query = query.where(Transaction.type == type)
+    if memo:
+        query = query.where(Transaction.memo.ilike(f"%{memo}%"))
+    if category:
+        query = query.where(Transaction.category_name.ilike(f"%{category}%"))
+    if date_from:
+        query = query.where(Transaction.transaction_date >= date_from)
+    if date_to:
+        query = query.where(Transaction.transaction_date <= date_to)
+
+    query = query.order_by(Transaction.transaction_date.desc())
+    query = query.offset((page - 1) * limit).limit(limit)
+
+    result = await db.execute(query)
     return result.scalars().all()
 
 @router.get("/{transaction_id}", response_model=TransactionResponse)

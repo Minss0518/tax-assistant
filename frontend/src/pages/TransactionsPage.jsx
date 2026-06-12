@@ -1,9 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getTransactions, createTransaction, deleteTransaction } from '../api/transactions';
+import { createTransaction, deleteTransaction } from '../api/transactions';
 import { uploadReceipt } from '../api/ocr';
 import useAuthStore from '../store/authStore';
 import api from '../api/axios';
+
+const LIMIT = 50;
 
 const ScrollTopButton = () => {
   const [show, setShow] = useState(false);
@@ -14,10 +16,8 @@ const ScrollTopButton = () => {
   }, []);
   if (!show) return null;
   return (
-    <button
-      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-      style={{ position: 'fixed', bottom: 28, right: 16, width: 44, height: 44, background: '#111827', color: '#fff', border: 'none', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.2)', zIndex: 100 }}
-    >
+    <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      style={{ position: 'fixed', bottom: 28, right: 16, width: 44, height: 44, background: '#111827', color: '#fff', border: 'none', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.2)', zIndex: 100 }}>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="18 15 12 9 6 15"/>
       </svg>
@@ -63,7 +63,16 @@ const BackButton = ({ onClick }) => (
 export default function TransactionsPage() {
   const navigate = useNavigate();
   const { token } = useAuthStore();
+
+  // 데이터
   const [transactions, setTransactions] = useState([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const observerRef = useRef(null);
+  const bottomRef = useRef(null);
+
+  // 폼
   const [form, setForm] = useState({ type: 'income', amount: '', memo: '', transaction_date: '', source: 'manual' });
   const [showForm, setShowForm] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
@@ -74,6 +83,7 @@ export default function TransactionsPage() {
   const [receiptModal, setReceiptModal] = useState(null);
   const fileInputRef = useRef(null);
 
+  // 필터/검색
   const [filterType, setFilterType] = useState('all');
   const [filterDateFrom, setFilterDateFrom] = useState('');
   const [filterDateTo, setFilterDateTo] = useState('');
@@ -82,29 +92,75 @@ export default function TransactionsPage() {
   const [searchCategory, setSearchCategory] = useState('');
   const [showSearch, setShowSearch] = useState(false);
 
+  // 선택 삭제
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState(new Set());
   const [deleteLoading, setDeleteLoading] = useState(false);
 
+  // API 파라미터 빌드
+  const buildParams = useCallback((pageNum) => {
+    const params = new URLSearchParams();
+    params.append('page', pageNum);
+    params.append('limit', LIMIT);
+    if (filterType && filterType !== 'all') params.append('type', filterType);
+    if (searchMemo) params.append('memo', searchMemo);
+    if (searchCategory) params.append('category', searchCategory);
+    if (filterDateFrom) params.append('date_from', filterDateFrom);
+    if (filterDateTo) params.append('date_to', filterDateTo);
+    return params.toString();
+  }, [filterType, searchMemo, searchCategory, filterDateFrom, filterDateTo]);
+
+  // 첫 페이지 로딩 (필터 변경 시 초기화)
+  const resetAndFetch = useCallback(async () => {
+    setLoading(true);
+    setTransactions([]);
+    setPage(1);
+    setHasMore(true);
+    setSelected(new Set());
+    try {
+      const res = await api.get(`/transactions/?${buildParams(1)}`);
+      setTransactions(res.data);
+      setHasMore(res.data.length === LIMIT);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }, [buildParams]);
+
+  // 다음 페이지 로딩
+  const loadMore = useCallback(async (nextPage) => {
+    if (loading || !hasMore) return;
+    setLoading(true);
+    try {
+      const res = await api.get(`/transactions/?${buildParams(nextPage)}`);
+      setTransactions(prev => [...prev, ...res.data]);
+      setHasMore(res.data.length === LIMIT);
+      setPage(nextPage);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }, [loading, hasMore, buildParams]);
+
+  // 필터/검색 변경 시 초기화
   useEffect(() => {
     if (!token) { navigate('/login'); return; }
-    fetchTransactions();
-  }, [token]);
+    resetAndFetch();
+  }, [token, filterType, searchMemo, searchCategory, filterDateFrom, filterDateTo]);
 
-  const fetchTransactions = async () => {
-    const res = await getTransactions();
-    setTransactions(res.data);
-    setSelected(new Set());
-  };
-
-  const filtered = transactions.filter((t) => {
-    if (filterType !== 'all' && t.type !== filterType) return false;
-    if (filterDateFrom && t.transaction_date < filterDateFrom) return false;
-    if (filterDateTo && t.transaction_date > filterDateTo) return false;
-    if (searchMemo && !t.memo?.toLowerCase().includes(searchMemo.toLowerCase())) return false;
-    if (searchCategory && !t.category_name?.toLowerCase().includes(searchCategory.toLowerCase())) return false;
-    return true;
-  });
+  // IntersectionObserver로 무한스크롤
+  useEffect(() => {
+    if (observerRef.current) observerRef.current.disconnect();
+    observerRef.current = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && hasMore && !loading) {
+        loadMore(page + 1);
+      }
+    }, { threshold: 0.1 });
+    if (bottomRef.current) observerRef.current.observe(bottomRef.current);
+    return () => observerRef.current?.disconnect();
+  }, [hasMore, loading, page, loadMore]);
 
   const activeFilterCount = [filterType !== 'all', !!filterDateFrom, !!filterDateTo].filter(Boolean).length;
   const activeSearchCount = [!!searchMemo, !!searchCategory].filter(Boolean).length;
@@ -114,8 +170,8 @@ export default function TransactionsPage() {
   };
 
   const toggleAll = () => {
-    if (selected.size === filtered.length) setSelected(new Set());
-    else setSelected(new Set(filtered.map(t => t.id)));
+    if (selected.size === transactions.length) setSelected(new Set());
+    else setSelected(new Set(transactions.map(t => t.id)));
   };
 
   const handleBulkDelete = async () => {
@@ -125,22 +181,22 @@ export default function TransactionsPage() {
     await Promise.all([...selected].map(id => deleteTransaction(id)));
     setDeleteLoading(false);
     setSelectMode(false);
-    fetchTransactions();
+    resetAndFetch();
   };
 
   const handleDeleteAll = async () => {
-    if (!window.confirm(`전체 ${filtered.length}개를 삭제할까요?`)) return;
+    if (!window.confirm('전체 데이터를 삭제할까요?')) return;
     setDeleteLoading(true);
-    await Promise.all(filtered.map(t => deleteTransaction(t.id)));
+    await api.delete('/transactions/all');
     setDeleteLoading(false);
     setSelectMode(false);
-    fetchTransactions();
+    resetAndFetch();
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm('이 거래를 삭제할까요?')) return;
     await deleteTransaction(id);
-    fetchTransactions();
+    setTransactions(prev => prev.filter(t => t.id !== id));
   };
 
   const handleSubmit = async () => {
@@ -150,16 +206,14 @@ export default function TransactionsPage() {
     setShowForm(false);
     setOcrPreview(null);
     setOcrResult(null);
-    fetchTransactions();
+    resetAndFetch();
   };
 
   const handleReceiptChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     setOcrPreview(URL.createObjectURL(file));
-    setOcrError('');
-    setOcrResult(null);
-    setOcrLoading(true);
+    setOcrError(''); setOcrResult(null); setOcrLoading(true);
     try {
       const res = await uploadReceipt(file);
       const extracted = res.data.extracted;
@@ -180,7 +234,7 @@ export default function TransactionsPage() {
   const handleCategoryUpdate = async (transactionId, cat) => {
     await api.patch(`/transactions/${transactionId}/category`, { category_name: cat.name, category_emoji: cat.emoji, is_deductible: cat.is_deductible ?? false });
     setEditCategoryId(null);
-    fetchTransactions();
+    setTransactions(prev => prev.map(t => t.id === transactionId ? { ...t, category_name: cat.name, category_emoji: cat.emoji, is_deductible: cat.is_deductible } : t));
   };
 
   const getSource = (t) => t.source || 'manual';
@@ -299,32 +353,18 @@ export default function TransactionsPage() {
           {/* 검색창 */}
           {showSearch && (
             <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #F3F4F6', display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ position: 'relative', flex: 1 }}>
-                  <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#9CA3AF' }}>🔍</span>
-                  <input
-                    value={searchMemo}
-                    onChange={e => setSearchMemo(e.target.value)}
-                    placeholder="메모 검색 (예: 스타벅스)"
-                    style={{ width: '100%', border: '1px solid #E5E7EB', borderRadius: 8, padding: '7px 10px 7px 32px', fontSize: 12, fontFamily: 'inherit', outline: 'none', color: '#374151' }}
-                  />
-                  {searchMemo && (
-                    <button onClick={() => setSearchMemo('')} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', fontSize: 14 }}>✕</button>
-                  )}
-                </div>
+              <div style={{ position: 'relative' }}>
+                <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#9CA3AF' }}>🔍</span>
+                <input value={searchMemo} onChange={e => setSearchMemo(e.target.value)} placeholder="메모 검색 (예: 스타벅스)"
+                  style={{ width: '100%', border: '1px solid #E5E7EB', borderRadius: 8, padding: '7px 32px', fontSize: 12, fontFamily: 'inherit', outline: 'none', color: '#374151' }} />
+                {searchMemo && <button onClick={() => setSearchMemo('')} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', fontSize: 14 }}>✕</button>}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 8 }}>
                 <div style={{ position: 'relative', flex: 1 }}>
                   <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#9CA3AF' }}>🏷️</span>
-                  <input
-                    value={searchCategory}
-                    onChange={e => setSearchCategory(e.target.value)}
-                    placeholder="카테고리 검색 (예: 식비)"
-                    style={{ width: '100%', border: '1px solid #E5E7EB', borderRadius: 8, padding: '7px 10px 7px 32px', fontSize: 12, fontFamily: 'inherit', outline: 'none', color: '#374151' }}
-                  />
-                  {searchCategory && (
-                    <button onClick={() => setSearchCategory('')} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', fontSize: 14 }}>✕</button>
-                  )}
+                  <input value={searchCategory} onChange={e => setSearchCategory(e.target.value)} placeholder="카테고리 검색 (예: 식비)"
+                    style={{ width: '100%', border: '1px solid #E5E7EB', borderRadius: 8, padding: '7px 32px', fontSize: 12, fontFamily: 'inherit', outline: 'none', color: '#374151' }} />
+                  {searchCategory && <button onClick={() => setSearchCategory('')} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', fontSize: 14 }}>✕</button>}
                 </div>
                 {(searchMemo || searchCategory) && (
                   <button onClick={() => { setSearchMemo(''); setSearchCategory(''); }}
@@ -336,6 +376,7 @@ export default function TransactionsPage() {
             </div>
           )}
 
+          {/* 날짜 필터 */}
           {showFilter && (
             <div className="date-filter-wrap" style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #F3F4F6', display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
               <input type="date" value={filterDateFrom} onChange={e => setFilterDateFrom(e.target.value)}
@@ -346,18 +387,19 @@ export default function TransactionsPage() {
             </div>
           )}
 
+          {/* 선택 모드 */}
           {selectMode && (
             <div className="select-toolbar" style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #F3F4F6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#374151', cursor: 'pointer' }}>
-                <input type="checkbox" checked={selected.size === filtered.length && filtered.length > 0} onChange={toggleAll} style={{ width: 14, height: 14, accentColor: '#1D4ED8' }} />
-                전체선택 ({selected.size}/{filtered.length})
+                <input type="checkbox" checked={selected.size === transactions.length && transactions.length > 0} onChange={toggleAll} style={{ width: 14, height: 14, accentColor: '#1D4ED8' }} />
+                전체선택 ({selected.size}/{transactions.length})
               </label>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button onClick={handleBulkDelete} disabled={selected.size === 0 || deleteLoading}
                   style={{ ...btnBase, padding: '5px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: selected.size > 0 ? '#EF4444' : '#F3F4F6', color: selected.size > 0 ? '#fff' : '#9CA3AF' }}>
                   선택 삭제 {selected.size > 0 ? `(${selected.size})` : ''}
                 </button>
-                <button onClick={handleDeleteAll} disabled={deleteLoading || filtered.length === 0}
+                <button onClick={handleDeleteAll} disabled={deleteLoading}
                   style={{ ...btnBase, padding: '5px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA' }}>
                   전체삭제
                 </button>
@@ -368,17 +410,15 @@ export default function TransactionsPage() {
 
         {/* 거래 목록 */}
         <div style={{ ...card, overflow: 'hidden' }}>
-          {filtered.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 0', color: '#9CA3AF', fontSize: 13 }}>
-              {transactions.length === 0 ? '거래 내역이 없어요' : '필터 조건에 맞는 내역이 없어요'}
-            </div>
+          {transactions.length === 0 && !loading ? (
+            <div style={{ textAlign: 'center', padding: '40px 0', color: '#9CA3AF', fontSize: 13 }}>거래 내역이 없어요</div>
           ) : (
-            filtered.map((t, idx) => {
+            transactions.map((t, idx) => {
               const srcBadge = SOURCE_BADGE[getSource(t)] || SOURCE_BADGE.manual;
               const isChecked = selected.has(t.id);
               return (
                 <div key={t.id} className="row-hover"
-                  style={{ padding: '14px 16px', borderBottom: idx < filtered.length - 1 ? '1px solid #F9FAFB' : 'none', background: isChecked ? '#EFF6FF' : undefined }}>
+                  style={{ padding: '14px 16px', borderBottom: idx < transactions.length - 1 ? '1px solid #F9FAFB' : 'none', background: isChecked ? '#EFF6FF' : undefined }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                     {selectMode && (
                       <input type="checkbox" checked={isChecked} onChange={() => toggleSelect(t.id)}
@@ -450,17 +490,24 @@ export default function TransactionsPage() {
               );
             })
           )}
-        </div>
 
-        {filtered.length > 0 && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 4px', fontSize: 12, color: '#9CA3AF', flexWrap: 'wrap', gap: 8 }}>
-            <span>총 {filtered.length}건</span>
-            <div style={{ display: 'flex', gap: 16 }}>
-              <span style={{ color: '#059669' }}>수입 +{filtered.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0).toLocaleString()}원</span>
-              <span style={{ color: '#DC2626' }}>지출 -{filtered.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0).toLocaleString()}원</span>
+          {/* 무한스크롤 감지 영역 */}
+          <div ref={bottomRef} style={{ height: 1 }} />
+
+          {/* 로딩 인디케이터 */}
+          {loading && (
+            <div style={{ textAlign: 'center', padding: '20px 0', color: '#9CA3AF', fontSize: 13 }}>
+              불러오는 중...
             </div>
-          </div>
-        )}
+          )}
+
+          {/* 더 이상 없음 */}
+          {!hasMore && transactions.length > 0 && (
+            <div style={{ textAlign: 'center', padding: '16px 0', color: '#D1D5DB', fontSize: 12 }}>
+              총 {transactions.length}건 · 전체 로딩 완료
+            </div>
+          )}
+        </div>
       </div>
 
       {receiptModal && (

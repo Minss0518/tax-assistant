@@ -47,7 +47,10 @@ const Chart = ({ data, height }) => (
   </ResponsiveContainer>
 );
 
-export default function NetProfitHeader({ totalIncome, totalExpense, monthlyData = [], lastTaxResult }) {
+export default function NetProfitHeader({
+  totalIncome, totalExpense, monthlyData = [], lastTaxResult,
+  selectedYear, availableYears = [], currentYear, onYearChange,
+}) {
   const [showModal, setShowModal] = useState(false);
   const netProfit = totalIncome - totalExpense;
   const fmt = (n) => n?.toLocaleString() ?? "0";
@@ -60,6 +63,7 @@ export default function NetProfitHeader({ totalIncome, totalExpense, monthlyData
           .header-top { flex-direction: column !important; gap: 16px !important; }
           .tax-result-box { min-width: 0 !important; width: 100% !important; }
           .net-profit-num { font-size: 28px !important; }
+          .year-selector { flex-wrap: wrap !important; }
         }
       `}</style>
       <div style={{ background: "#111827", padding: "24px 16px 20px" }}>
@@ -119,9 +123,30 @@ export default function NetProfitHeader({ totalIncome, totalExpense, monthlyData
 
           {/* 차트 */}
           {monthlyData.length > 0 ? (
-            <div onClick={() => setShowModal(true)} style={{ cursor: "pointer" }}>
+            <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, flexWrap: "wrap", gap: 8 }}>
-                <p style={{ fontSize: 12, color: "#fff" }}>월별 수입 · 지출 추이</p>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <p style={{ fontSize: 12, color: "#fff" }}>월별 수입 · 지출 추이</p>
+                  {/* 년도 선택 버튼 */}
+                  <div className="year-selector" style={{ display: "flex", gap: 4 }}>
+                    {availableYears.map((y) => (
+                      <button
+                        key={y}
+                        onClick={() => onYearChange(y)}
+                        style={{
+                          fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 12,
+                          border: "1px solid",
+                          background: selectedYear === y ? "#fff" : "transparent",
+                          color: selectedYear === y ? "#111827" : "#9ca3af",
+                          borderColor: selectedYear === y ? "#fff" : "#374151",
+                          cursor: "pointer", fontFamily: "inherit",
+                        }}
+                      >
+                        {y === currentYear ? `${y}(최근1년)` : `${y}년`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <div style={{ display: "flex", gap: 10 }}>
                     <span style={{ fontSize: 11, color: "#34d399", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
@@ -131,7 +156,7 @@ export default function NetProfitHeader({ totalIncome, totalExpense, monthlyData
                       <span style={{ width: 10, height: 2, background: "#f87171", display: "inline-block", borderRadius: 1 }} />지출
                     </span>
                   </div>
-                  <span style={{ fontSize: 11, color: "#fff", background: "#1f2937", padding: "2px 8px", borderRadius: 4 }}>
+                  <span onClick={() => setShowModal(true)} style={{ fontSize: 11, color: "#fff", background: "#1f2937", padding: "2px 8px", borderRadius: 4, cursor: "pointer" }}>
                     확대 ↗
                   </span>
                 </div>
@@ -148,8 +173,13 @@ export default function NetProfitHeader({ totalIncome, totalExpense, monthlyData
       {showModal && (
         <div onClick={() => setShowModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 16 }}>
           <div onClick={(e) => e.stopPropagation()} style={{ background: "#111827", borderRadius: 16, padding: 24, width: "100%", maxWidth: 720 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <p style={{ fontSize: 15, fontWeight: 600, color: "#fff" }}>월별 수입 · 지출 추이</p>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <p style={{ fontSize: 15, fontWeight: 600, color: "#fff" }}>월별 수입 · 지출 추이</p>
+                <span style={{ fontSize: 12, color: "#9ca3af" }}>
+                  {selectedYear === currentYear ? `최근 1년` : `${selectedYear}년`}
+                </span>
+              </div>
               <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                 <div style={{ display: "flex", gap: 14 }}>
                   <span style={{ fontSize: 12, color: "#34d399", fontWeight: 600, display: "flex", alignItems: "center", gap: 5 }}>

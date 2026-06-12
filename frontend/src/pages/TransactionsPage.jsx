@@ -123,13 +123,13 @@ export default function TransactionsPage() {
   };
 
   const handleDeleteAll = async () => {
-    if (!window.confirm(`전체 ${filtered.length}개를 삭제할까요?`)) return;
-    setDeleteLoading(true);
-    await Promise.all(filtered.map(t => deleteTransaction(t.id)));
-    setDeleteLoading(false);
-    setSelectMode(false);
-    fetchTransactions();
-  };
+  if (!window.confirm(`전체 ${filtered.length}개를 삭제할까요?`)) return;
+  setDeleteLoading(true);
+  await api.delete('/transactions/all');
+  setDeleteLoading(false);
+  setSelectMode(false);
+  fetchTransactions();
+};
 
   const handleDelete = async (id) => {
     if (!window.confirm('이 거래를 삭제할까요?')) return;

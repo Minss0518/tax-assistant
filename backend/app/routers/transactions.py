@@ -161,3 +161,13 @@ async def delete_transaction(
     await db.delete(transaction)
     await db.commit()
     return {"message": "삭제되었습니다."}
+
+@router.delete("/all")
+async def delete_all_transactions(
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    user_id = uuid.UUID(current_user["sub"])
+    await db.execute(delete(Transaction).where(Transaction.user_id == user_id))
+    await db.commit()
+    return {"message": "전체 삭제 완료"}

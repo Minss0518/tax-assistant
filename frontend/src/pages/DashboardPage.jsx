@@ -13,15 +13,23 @@ import TabMenu from "../components/dashboard/TabMenu";
 const MONTH_NAMES = ["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
 
 function getMonthlyData(transactions) {
+  const today = new Date();
+  const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+
   const map = {};
-  transactions.forEach((t) => {
-    const d = new Date(t.transaction_date);
-    const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2, "0")}`;
-    if (!map[key]) map[key] = { month: MONTH_NAMES[d.getMonth()], income: 0, expense: 0 };
-    if (t.type === "income") map[key].income += t.amount;
-    else map[key].expense += t.amount;
-  });
-  return Object.entries(map).sort(([a], [b]) => a.localeCompare(b)).slice(-6).map(([, v]) => v);
+  transactions
+    .filter((t) => {
+      const d = new Date(t.transaction_date);
+      return d >= oneYearAgo && d <= today;
+    })
+    .forEach((t) => {
+      const d = new Date(t.transaction_date);
+      const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2, "0")}`;
+      if (!map[key]) map[key] = { month: `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}`, income: 0, expense: 0 };
+      if (t.type === "income") map[key].income += t.amount;
+      else map[key].expense += t.amount;
+    });
+  return Object.entries(map).sort(([a], [b]) => a.localeCompare(b)).map(([, v]) => v);
 }
 
 export default function DashboardPage() {

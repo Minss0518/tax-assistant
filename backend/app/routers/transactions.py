@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, distinct, extract
 from app.database import get_db
 from app.models.transaction import Transaction
 from app.schemas.transaction import TransactionCreate, TransactionResponse
@@ -23,7 +23,6 @@ async def create_transaction(
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    # AI 자동 카테고리 분류
     category_info = {"category": None, "emoji": None, "is_deductible": None}
     if data.memo:
         try:
@@ -82,6 +81,31 @@ async def get_transactions(
     result = await db.execute(query)
     return result.scalars().all()
 
+# /{transaction_id} 보다 위에 위치해야 라우터 충돌 없음
+@router.get("/years")
+async def get_transaction_years(
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    user_id = uuid.UUID(current_user["sub"])
+    result = await db.execute(
+        select(distinct(extract('year', Transaction.transaction_date)))
+        .where(Transaction.user_id == user_id)
+        .order_by(extract('year', Transaction.transaction_date).desc())
+    )
+    years = [int(r[0]) for r in result.all()]
+    return {"years": years}
+
+@router.delete("/all")
+async def delete_all_transactions(
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    user_id = uuid.UUID(current_user["sub"])
+    await db.execute(delete(Transaction).where(Transaction.user_id == user_id))
+    await db.commit()
+    return {"message": "전체 삭제 완료"}
+
 @router.get("/{transaction_id}", response_model=TransactionResponse)
 async def get_transaction(
     transaction_id: uuid.UUID,
@@ -116,7 +140,6 @@ async def update_transaction(
     if not transaction:
         raise HTTPException(status_code=404, detail="거래 내역을 찾을 수 없습니다.")
 
-    # 메모가 바뀌면 카테고리 재분류
     if data.memo != transaction.memo:
         try:
             category_info = await classify_transaction(data.memo, data.type)
@@ -143,7 +166,6 @@ async def update_category(
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """카테고리 수동 수정"""
     result = await db.execute(
         select(Transaction).where(
             Transaction.id == transaction_id,
@@ -161,18 +183,6 @@ async def update_category(
     await db.commit()
     await db.refresh(transaction)
     return transaction
-
-
-@router.delete("/all")
-async def delete_all_transactions(
-    current_user: dict = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    user_id = uuid.UUID(current_user["sub"])
-    await db.execute(delete(Transaction).where(Transaction.user_id == user_id))
-    await db.commit()
-    return {"message": "전체 삭제 완료"}
-
 
 @router.delete("/{transaction_id}")
 async def delete_transaction(

@@ -8,6 +8,7 @@ from app.core.dependencies import get_current_user
 from app.services.category_service import classify_transaction
 from typing import List, Optional
 from pydantic import BaseModel
+from datetime import date as DateType
 import uuid
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
@@ -71,9 +72,9 @@ async def get_transactions(
     if category:
         query = query.where(Transaction.category_name.ilike(f"%{category}%"))
     if date_from:
-        query = query.where(Transaction.transaction_date >= date_from)
+        query = query.where(Transaction.transaction_date >= DateType.fromisoformat(date_from))
     if date_to:
-        query = query.where(Transaction.transaction_date <= date_to)
+        query = query.where(Transaction.transaction_date <= DateType.fromisoformat(date_to))
 
     query = query.order_by(Transaction.transaction_date.desc())
     query = query.offset((page - 1) * limit).limit(limit)

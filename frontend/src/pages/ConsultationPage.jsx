@@ -100,7 +100,7 @@ export default function ConsultationPage() {
         <div className="upgrade-banner" style={{ background: "linear-gradient(135deg, #7c3aed, #a855f7)", borderRadius: 12, padding: "16px 20px", marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <p style={{ color: "white", fontWeight: 700, fontSize: 15, margin: 0 }}>세무사 상담은 Premium 전용 기능이에요</p>
-            <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 13, margin: "4px 0 0" }}>월 29,900원으로 세무사와 직접 상담할 수 있어요 (월 5회)</p>
+            <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 13, margin: "4px 0 0" }}>월 29,900원으로 세무사와 직접 상담할 수 있어요 (무제한)</p>
           </div>
           <button onClick={() => navigate("/pricing")} style={{ background: "white", color: "#7c3aed", fontWeight: 700, fontSize: 13, padding: "8px 16px", borderRadius: 8, border: "none", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>업그레이드 →</button>
         </div>

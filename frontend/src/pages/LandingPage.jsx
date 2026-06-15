@@ -56,7 +56,7 @@ const plans = [
   {
     name: 'Premium', price: '29,900', desc: '세무사와 직접 상담까지', highlight: false, highlightPremium: true, badgeColor: '#7c3aed',
     features: [
-      { text: '세무사 직접 상담 월 5회', premium: true },
+      { text: '세무사 직접 상담 무제한', premium: true },
       { text: 'AI 세무 상담 무제한' },
       { text: '거래 내역 관리' },
       { text: '세금 계산기' },

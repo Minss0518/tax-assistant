@@ -141,7 +141,7 @@ export default function UploadPage() {
 
         {result && (
           <div className={`rounded-2xl p-5 mb-6 border ${result.failed === 0 ? 'bg-emerald-50 border-emerald-100' : 'bg-amber-50 border-amber-100'}`}>
-            <p className="font-bold text-gray-800 mb-3">📊 업로드 결과</p>
+            <p className="font-bold text-gray-800 mb-3">업로드 결과</p>
             <div className="grid grid-cols-2 gap-3 mb-3">
               <div className="bg-white rounded-xl p-4 text-center">
                 <p className="text-2xl font-extrabold text-emerald-500">{result.success}</p>
@@ -175,7 +175,7 @@ export default function UploadPage() {
                 </svg>
                 AI 카테고리 분류 중...
               </>
-            ) : '📂 업로드 시작'}
+            ) : '업로드 시작'}
           </button>
         )}
       </div>

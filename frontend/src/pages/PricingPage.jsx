@@ -35,7 +35,7 @@ const plans = [
     {
         name: 'Premium', price: '29,900', desc: '세무사와 직접 상담까지', color: 'border-violet-400 ring-2 ring-violet-100', badge: '세무사 상담', current: false,
         features: [
-            { text: '세무사 직접 상담 월 5회', included: true, premium: true },
+            { text: '세무사 직접 상담 무제한', included: true, premium: true },
             { text: 'AI 세무 상담 무제한', included: true },
             { text: '거래 내역 관리', included: true },
             { text: '세금 계산기', included: true },
@@ -153,7 +153,7 @@ export default function PricingPage() {
                         <div className="text-5xl mb-4">{selectedPlan.name === 'Premium'}</div>
                         <h3 className="font-bold text-gray-900 text-xl mb-2">{selectedPlan.name} 플랜 시작하기</h3>
                         <p className="text-gray-500 text-sm mb-1 leading-relaxed">
-                            {selectedPlan.name === 'Premium' ? 'AI 세무 상담 무제한 + 세무사 직접 상담 월 5회' : 'AI 세무 상담, OCR, 리포트를 무제한으로 사용할 수 있어요.'}
+                            {selectedPlan.name === 'Premium' ? 'AI 세무 상담 무제한 + 세무사 직접 상담 무제한' : 'AI 세무 상담, OCR, 리포트를 무제한으로 사용할 수 있어요.'}
                         </p>
                         <p className="text-gray-400 text-xs mb-6">월 {selectedPlan.price}원</p>
                         <button onClick={handlePayment} className={`w-full text-white py-3 rounded-xl font-bold text-sm transition mb-2 ${selectedPlan.name === 'Premium' ? 'bg-violet-600 hover:bg-violet-700' : 'bg-blue-600 hover:bg-blue-700'}`}>

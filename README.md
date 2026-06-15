@@ -64,6 +64,8 @@
 
 ### 📊 대시보드
 - 순이익 + 월별 수입/지출 차트 + 세금 계산 결과를 하나의 헤더에 통합
+- **종합소득세 과세기간 기준 차트** (매년 6월 1일 ~ 다음해 5월 31일)
+- **년도 선택 버튼** — 현재 과세기간 / 전년도 / 전전년도 전환 가능
 - 차트 클릭 시 확대 모달 표시
 - Y축 억단위 자동 전환 (만 → 억)
 - 탭 메뉴 (거래내역 / AI세무상담 / 세무사상담 / 세금계산기 / 일괄업로드)
@@ -75,14 +77,16 @@
 - GPT-4o-mini 스트리밍 응답 + 법령 출처 표시
 - 질문 리라이팅으로 세무 용어 자동 정규화
 - 프롬프트 인젝션 방어 처리
+- 사용량 제한 (Free 월 5회 / Pro 무제한)
 
-### 💬 세무사 실시간 채팅 상담
+### 💬 세무사 실시간 채팅 상담 (Premium 전용)
 - WebSocket 기반 실시간 양방향 채팅
 - 비동기 상담 지원 (유저는 언제든 메시지 전송, 세무사는 업무 시간에 답변)
 - 상담 상태 관리 (대기중 → 상담중 → 완료)
-- 세무사 전용 대시보드 (상담 목록 + 월별 필터 + 삭제)
+- 세무사 전용 대시보드 — **년도/월 2단계 필터로 상담 내역 관리**
 - 유저/세무사 독립적 상담 삭제 (상대방 데이터 유지)
 - 관리자가 세무사 계정 직접 생성 (JWT 인증)
+- Premium 플랜 전용 기능 (비Premium 접근 시 업그레이드 유도 모달)
 
 ### 📊 AI 인사이트 위젯
 - 거래 집계 데이터 + 최근 10건 샘플 기반 분석 (컨텍스트 최적화)
@@ -100,9 +104,11 @@
 - 수입 / 지출 CRUD
 - AI 카테고리 자동 분류 (로컬 키워드 분류, API 호출 없음)
 - CSV / Excel 일괄 업로드 (EUC-KR, 다양한 날짜 형식 지원)
-- 벌크 INSERT 적용 → 1,000건 기준 3~5초 처리
+- **무한스크롤 페이지네이션** — 50건씩 순차 로딩 (만건 이상 데이터도 빠르게 렌더링)
+- **벌크 INSERT 최적화** — income/expense 분리 + 500건 청크 처리 → 만건 기준 수십 초 처리
+- **메모 / 카테고리 검색** — 별도 검색 버튼으로 키워드 필터링
 - 수입/지출 탭 필터 + 날짜 범위 필터
-- 체크박스 다중 삭제 + 전체 삭제
+- 체크박스 다중 삭제 + **전체 삭제 API** (단건 반복 호출 → 단일 DELETE 쿼리로 최적화)
 - 출처 뱃지 표시 (직접입력 / OCR / 파일업로드)
 - 영수증 이미지 확인 버튼 + 모달 (OCR 등록 거래)
 
@@ -114,11 +120,20 @@
 ### 🔐 인증
 - 카카오 / 구글 / 네이버 소셜 로그인 (OAuth 2.0 + JWT)
 - 세무사 전용 이메일 + 비밀번호 로그인 (bcrypt 암호화)
+- 닉네임 편집 + 프로필 이미지 업로드 (Supabase Storage)
 
 ### 💳 결제 / 구독
 - 토스페이먼츠 SDK 연동
-- Free / Pro 플랜 구분
-- 구독 취소 시 만료일까지 Pro 유지
+- **Free / Pro / Premium 3단계 플랜**
+  - Free: AI 상담 월 5회, OCR 월 3회
+  - Pro: AI 상담 무제한, OCR 무제한, 신고 기간 알림, 월별 세금 리포트 (9,900원/월)
+  - Premium: Pro 기능 전체 + 세무사 직접 상담 월 5회 (29,900원/월)
+- 구독 취소 시 만료일까지 플랜 유지
+
+### 📱 반응형 UI
+- 전 페이지 모바일 대응 (480px 기준 미디어쿼리)
+- 모바일에서 요금제 카드 1열 전환, 네비 버튼 축약
+- 세무사 상담 페이지 모바일 세로 레이아웃 전환
 
 ---
 
@@ -131,7 +146,7 @@
 | WebSocket | 실시간 채팅 |
 | SQLAlchemy (Async) | ORM |
 | PostgreSQL (Supabase) | 데이터베이스 |
-| Supabase Storage | 영수증 이미지 저장 |
+| Supabase Storage | 영수증 이미지 / 프로필 이미지 저장 |
 | LlamaIndex | RAG 파이프라인 |
 | ChromaDB | 벡터 데이터베이스 |
 | OpenAI GPT-4o-mini | LLM / Vision / Embedding |
@@ -149,12 +164,14 @@
 | Recharts | 차트 라이브러리 |
 | Axios | HTTP 클라이언트 |
 | WebSocket API | 실시간 채팅 |
+| IntersectionObserver | 무한스크롤 감지 |
 
 ### Infrastructure
 | 기술 | 용도 |
 |------|------|
 | Render | 서버 배포 (백엔드 + 프론트 통합) |
 | Supabase | PostgreSQL + Storage 호스팅 |
+| UptimeRobot | Render Free 티어 슬립 방지 (5분 간격 ping) |
 | GitHub Actions | 자동 배포 (push → 자동 빌드) |
 
 ---
@@ -193,7 +210,8 @@
 ┌────────────────────┐           │  (세법 벡터 DB)      │
 │  Supabase Storage  │           └────────────────────┘
 │  - receipts 버킷   │
-│  (영수증 이미지)    │
+│  - profiles 버킷   │
+│  (영수증/프로필)    │
 └────────────────────┘
 ```
 
@@ -209,47 +227,53 @@ tax-assistant/
 │       ├── database.py          # DB 연결 설정
 │       ├── config.py            # 환경변수 설정
 │       ├── models/              # SQLAlchemy 모델
-│       │   ├── user.py
+│       │   ├── user.py          # nickname, profile_image 컬럼 포함
 │       │   ├── transaction.py   # receipt_image_url 컬럼 포함
 │       │   ├── consultation.py  # 상담/메시지/세무사 모델
 │       │   └── subscription.py
 │       ├── routers/             # API 라우터
 │       │   ├── auth.py          # 소셜 로그인
 │       │   ├── advisor_auth.py  # 세무사 인증
-│       │   ├── consultations.py # 상담 CRUD
+│       │   ├── consultations.py # 상담 CRUD + Premium 체크
 │       │   ├── websocket.py     # 실시간 채팅
-│       │   ├── transactions.py  # 거래 CRUD (source, receipt_image_url 포함)
-│       │   ├── upload.py        # CSV/Excel 업로드 (로컬 분류 + 벌크 INSERT)
+│       │   ├── transactions.py  # 거래 CRUD + 페이지네이션 + 검색 + /years API
+│       │   ├── upload.py        # CSV/Excel 업로드 (로컬 분류 + 청크 벌크 INSERT)
 │       │   ├── ocr.py           # 영수증 OCR + Supabase Storage 업로드
 │       │   ├── chat.py          # AI 챗봇 (RAG)
 │       │   ├── ai_insights.py   # AI 인사이트 (집계 컨텍스트 최적화)
 │       │   ├── tax_calculator.py
-│       │   └── payments.py
+│       │   ├── payments.py
+│       │   └── users.py         # 닉네임/프로필 이미지 수정
 │       ├── services/
 │       │   ├── ocr_service.py
 │       │   └── category_service.py
 │       └── core/
 │           ├── security.py
-│           └── dependencies.py
+│           ├── dependencies.py
+│           └── limits.py        # Free/Pro/Premium 사용량 제한 미들웨어
 └── frontend/
     └── src/
         ├── pages/
-        │   ├── LandingPage.jsx          # 대시보드 미리보기 포함
-        │   ├── DashboardPage.jsx
-        │   ├── TransactionsPage.jsx     # 영수증 확인 버튼 + 모달
+        │   ├── LandingPage.jsx          # 대시보드 미리보기 + 반응형
+        │   ├── DashboardPage.jsx        # 과세기간 차트 + 년도 선택
+        │   ├── TransactionsPage.jsx     # 무한스크롤 + 검색 + 전체삭제
         │   ├── ChatPage.jsx
         │   ├── ConsultationPage.jsx     # 유저 상담 페이지
-        │   ├── AdvisorPage.jsx          # 세무사 대시보드
-        │   ├── AdvisorLoginPage.jsx     # 세무사 로그인
+        │   ├── AdvisorPage.jsx          # 세무사 대시보드 (년도/월 2단계 필터)
+        │   ├── AdvisorLoginPage.jsx
         │   ├── TaxCalculatorPage.jsx
-        │   └── PricingPage.jsx
+        │   ├── PricingPage.jsx          # Free/Pro/Premium 3단계
+        │   ├── MyInfoPage.jsx           # 닉네임/프로필 이미지 편집
+        │   ├── NotificationsPage.jsx    # 세금 신고 일정 D-day
+        │   ├── PaymentSuccessPage.jsx
+        │   └── PaymentFailPage.jsx
         ├── components/
         │   ├── layout/
-        │   │   └── Navbar.jsx           # 상단 네비게이션
+        │   │   └── Navbar.jsx
         │   ├── dashboard/
-        │   │   ├── NetProfitHeader.jsx  # 순이익 + 차트 + 세금결과 통합
-        │   │   ├── DeadlineCard.jsx     # D-day 카드
-        │   │   └── TabMenu.jsx          # 하단 탭 메뉴 5개
+        │   │   ├── NetProfitHeader.jsx  # 순이익 + 차트 + 년도 선택 버튼
+        │   │   ├── DeadlineCard.jsx
+        │   │   └── TabMenu.jsx          # Premium 체크 모달 포함
         │   └── AIInsightWidget.jsx
         ├── api/
         │   ├── axios.js
@@ -346,9 +370,9 @@ NAVER_REDIRECT_URI=...
 - **문제**: 한국 은행 내역서의 EUC-KR 인코딩, 다양한 날짜 형식
 - **해결**: 멀티 인코딩 폴백 + 13가지 날짜 형식 파서 구현
 
-### 4. 파일 업로드 성능 최적화
+### 4. 대용량 파일 업로드 성능 최적화
 - **문제**: 거래 분류를 위해 건당 OpenAI API 호출 → 1,000건 업로드 시 수분 소요
-- **해결**: OpenAI API 제거 → 로컬 키워드 기반 분류 + 벌크 INSERT 적용 → 1,000건 기준 3~5초로 단축
+- **해결**: OpenAI API 제거 → 로컬 키워드 기반 분류 + income/expense 분리 후 500건 청크 벌크 INSERT → 만건 기준 수십 초로 단축
 
 ### 5. Supabase Storage 패키지 충돌
 - **문제**: `supabase` Python 패키지가 `httpx` 버전 충돌 발생
@@ -359,10 +383,18 @@ NAVER_REDIRECT_URI=...
 - **해결**: 비동기 채팅 구조 설계 (유저는 언제든 메시지 전송, DB 저장 후 세무사 업무시간에 확인) + 양쪽 온라인 시 자동으로 실시간 채팅으로 전환
 
 ### 7. PostgreSQL Enum 타입 충돌
-- **문제**: SQLAlchemy Enum과 PostgreSQL Enum 타입명 불일치 (`consultationstatus` vs `consultation_status`)
+- **문제**: SQLAlchemy Enum과 PostgreSQL Enum 타입명 불일치
 - **해결**: `SAEnum(ConsultationStatus, name="consultation_status")`로 명시적 타입명 지정
 
-### 8. 소셜 로그인 콜백 URL 관리
+### 8. 만건 이상 거래내역 렌더링 성능
+- **문제**: 전체 데이터를 한 번에 가져와 프론트에서 필터링 → 3만건 이상 시 렉
+- **해결**: 백엔드 페이지네이션 API (`?page=1&limit=50`) + `IntersectionObserver` 무한스크롤로 50건씩 순차 로딩
+
+### 9. 대시보드 차트 데이터 과부하
+- **문제**: 전체 거래 데이터를 가져와 차트 집계 → 만건 이상 시 대시보드 로딩 느림
+- **해결**: `/transactions/years` API로 보유 년도만 조회 + 선택된 과세기간 범위만 별도 API 호출 → 필요한 데이터만 로딩
+
+### 10. 소셜 로그인 콜백 URL 관리
 - **문제**: 배포 환경 변경 시 OAuth 콜백 URL 불일치
 - **해결**: 환경변수로 REDIRECT_URI 관리, 콘솔별 URL 등록
 

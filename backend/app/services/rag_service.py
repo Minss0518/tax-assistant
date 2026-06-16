@@ -150,7 +150,7 @@ def init_llama_settings():
 def get_or_create_index():
     init_llama_settings()
     chroma_client = chromadb.PersistentClient(path=CHROMA_PATH)
-    collection = chroma_client.get_or_create_collection("tax_documents")
+    collection = chroma_client.get_or_create_collection("tax_documents_v2")
     vector_store = ChromaVectorStore(chroma_collection=collection)
 
     if collection.count() > 0:

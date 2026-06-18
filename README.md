@@ -73,9 +73,12 @@
 
 ### 🤖 AI 세무 상담 (RAG 챗봇)
 - LlamaIndex + ChromaDB 기반 RAG 파이프라인
-- 세법 문서를 벡터 DB에 저장 후 질문과 관련된 문서 검색
+- 세법 문서를 벡터 DB에 저장 후 질문과 관련된 문서 **검색(retriever)**
+- 검색된 context를 OpenAI API에 직접 전달하여 답변 생성 (query engine 미사용)
+- RAG 문서에 관련 내용이 없어도 세무 질문이면 일반 세무 지식으로 반드시 답변
 - GPT-4o-mini 스트리밍 응답 + 법령 출처 표시
-- 질문 리라이팅으로 세무 용어 자동 정규화
+- 질문 리라이팅으로 세무 용어 자동 정규화 (예: 종소세 → 종합소득세)
+- system/user role 분리로 지시사항이 강하게 적용되는 프롬프트 구조
 - 프롬프트 인젝션 방어 처리
 - 사용량 제한 (Free 월 5회 / Pro 무제한)
 
@@ -93,6 +96,7 @@
 - 카테고리별 지출 비율 바차트 자동 생성
 - 이상 지출 자동 탐지 (일평균 대비 500% 초과 지출 감지)
 - 자연어 질문 기반 실시간 스트리밍 답변
+- AI 세무 챗봇과 동일한 GPT-4o-mini 사용, 단 context가 세법 문서가 아닌 해당 유저의 실제 거래 데이터
 
 ### 📷 영수증 OCR
 - GPT-4o-mini Vision으로 영수증 이미지 분석
@@ -147,7 +151,7 @@
 | SQLAlchemy (Async) | ORM |
 | PostgreSQL (Supabase) | 데이터베이스 |
 | Supabase Storage | 영수증 이미지 / 프로필 이미지 저장 |
-| LlamaIndex | RAG 파이프라인 |
+| LlamaIndex | RAG 문서 검색 (retriever 전용) |
 | ChromaDB | 벡터 데이터베이스 |
 | OpenAI GPT-4o-mini | LLM / Vision / Embedding |
 | httpx | Supabase Storage 직접 호출 |
@@ -397,6 +401,11 @@ NAVER_REDIRECT_URI=...
 ### 10. 소셜 로그인 콜백 URL 관리
 - **문제**: 배포 환경 변경 시 OAuth 콜백 URL 불일치
 - **해결**: 환경변수로 REDIRECT_URI 관리, 콘솔별 URL 등록
+
+### 11. RAG query engine이 세무 질문을 오거절하는 문제
+- **문제**: LlamaIndex `query_engine`이 벡터 DB에서 관련 문서를 찾지 못하면 내부 응답 로직이 개입해 시스템 프롬프트의 거절 규칙을 잘못 적용 → "절세 방법", "종합소득세" 같은 핵심 세무 질문도 거절 응답 출력
+- **1차 시도**: 시스템 프롬프트에 "절세는 거절하지 말 것" 명시 → 프롬프트 안에 거절 예시 문구 자체가 남아있어 LLM이 해당 패턴을 그대로 학습하여 실패
+- **근본 해결**: LlamaIndex를 **retriever 전용**으로 분리 (문서 검색만 담당) + OpenAI API 직접 호출로 답변 생성 분리 → LlamaIndex 내부 응답 로직 완전 우회. 프롬프트에서 거절 문구 완전 제거 후 `system` / `user` role을 명시적으로 분리하여 지시사항 적용 강도 향상. 거절은 Python 코드(`is_tax_related`)만 담당하도록 역할 명확화
 
 ---
 

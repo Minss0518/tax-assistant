@@ -144,14 +144,36 @@ def get_or_create_index():
         )
     return index
 
+LAW_API_COLLECTION_NAME = "tax_law_api_v1"
+
+
+def get_or_create_law_api_index():
+    init_llama_settings()
+    chroma_client = chromadb.PersistentClient(path=CHROMA_PATH)
+    collection = chroma_client.get_or_create_collection(LAW_API_COLLECTION_NAME)
+    vector_store = ChromaVectorStore(chroma_collection=collection)
+    storage_context = StorageContext.from_defaults(vector_store=vector_store)
+    return VectorStoreIndex.from_vector_store(vector_store, storage_context=storage_context)
+
 def retrieve_context(question: str) -> str:
     try:
         index = get_or_create_index()
         retriever = index.as_retriever(similarity_top_k=5)
         nodes = retriever.retrieve(question)
-        if not nodes:
+
+        law_api_index = get_or_create_law_api_index()
+        law_api_retriever = law_api_index.as_retriever(similarity_top_k=5)
+        law_api_nodes = law_api_retriever.retrieve(question)
+
+        merged = sorted(
+            [*nodes, *law_api_nodes],
+            key=lambda n: n.score if n.score is not None else 0.0,
+            reverse=True,
+        )[:5]
+
+        if not merged:
             return ""
-        return "\n\n".join([node.get_content() for node in nodes])
+        return "\n\n".join([node.get_content() for node in merged])
     except Exception:
         return ""
 

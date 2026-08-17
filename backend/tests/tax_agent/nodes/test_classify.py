@@ -18,7 +18,7 @@ async def test_classify_node_produces_search_queries_per_income_type():
     fake_client = MagicMock()
     fake_client.chat.completions.create = AsyncMock(return_value=fake_response)
 
-    with patch("app.tax_agent.nodes.classify.AsyncOpenAI", return_value=fake_client):
+    with patch("app.tax_agent.nodes.classify.get_openai_client", return_value=fake_client):
         result = await classify_node(state)
 
     assert len(result["search_queries"]) == 2

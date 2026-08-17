@@ -25,7 +25,7 @@ async def test_intake_node_extracts_income_and_reports_missing_info():
         "missing_info": ["근로소득 금액", "사업소득 금액", "사업소득 필요경비"],
     })
 
-    with patch("app.tax_agent.nodes.intake.AsyncOpenAI", return_value=fake_client):
+    with patch("app.tax_agent.nodes.intake.get_openai_client", return_value=fake_client):
         result = await intake_node(state)
 
     assert result["income_types"] == ["근로소득", "사업소득"]
@@ -48,7 +48,7 @@ async def test_intake_node_reevaluates_with_existing_income_data():
         "missing_info": [],
     })
 
-    with patch("app.tax_agent.nodes.intake.AsyncOpenAI", return_value=fake_client):
+    with patch("app.tax_agent.nodes.intake.get_openai_client", return_value=fake_client):
         result = await intake_node(state)
 
     assert result["missing_info"] == []

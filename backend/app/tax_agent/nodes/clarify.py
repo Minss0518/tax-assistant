@@ -1,9 +1,8 @@
 import json
 
 from langgraph.types import interrupt
-from openai import AsyncOpenAI
 
-from app.config import settings as app_settings
+from app.tax_agent.llm_client import get_openai_client
 from app.tax_agent.state import TaxAgentState
 
 CLARIFY_PARSE_PROMPT = """사용자가 부족했던 정보에 대한 답변을 보냈습니다.
@@ -30,7 +29,7 @@ async def clarify_node(state: TaxAgentState) -> dict:
         "question": _build_question(state["missing_info"]),
     })
 
-    client = AsyncOpenAI(api_key=app_settings.OPENAI_API_KEY)
+    client = get_openai_client()
     user_content = (
         f"[현재까지 파악된 소득 정보]\n{json.dumps(state.get('income_data', {}), ensure_ascii=False)}\n\n"
         f"[부족했던 정보]\n{', '.join(state['missing_info'])}\n\n"

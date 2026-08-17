@@ -26,9 +26,22 @@ async def lifespan(app: FastAPI):
         await conn.run_sync(Base.metadata.create_all)
 
     from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+    from psycopg.rows import dict_row
+    from psycopg_pool import AsyncConnectionPool
 
     dsn = to_psycopg_dsn(settings.DATABASE_URL)
-    async with AsyncPostgresSaver.from_conn_string(dsn) as checkpointer:
+    # Use a pool (instead of a single from_conn_string() connection) so the
+    # process doesn't wedge for the rest of its lifetime if the one
+    # connection drops (e.g. behind pgbouncer/Supabase's pooler). autocommit
+    # + prepare_threshold=0 match what AsyncPostgresSaver.from_conn_string()
+    # sets, and are required for pgbouncer transaction-pooling compatibility.
+    async with AsyncConnectionPool(
+        conninfo=dsn,
+        kwargs={"autocommit": True, "prepare_threshold": 0, "row_factory": dict_row},
+        open=False,
+    ) as pool:
+        await pool.open(wait=True)
+        checkpointer = AsyncPostgresSaver(conn=pool)
         await checkpointer.setup()
         app.state.tax_agent_graph = build_graph(checkpointer)
         yield

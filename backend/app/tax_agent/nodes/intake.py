@@ -1,8 +1,6 @@
 import json
 
-from openai import AsyncOpenAI
-
-from app.config import settings as app_settings
+from app.tax_agent.llm_client import get_openai_client
 from app.tax_agent.state import TaxAgentState
 
 INTAKE_SYSTEM_PROMPT = """당신은 대한민국 종합소득세 상담 AI입니다.
@@ -31,7 +29,7 @@ INTAKE_SYSTEM_PROMPT = """당신은 대한민국 종합소득세 상담 AI입니
 
 
 async def intake_node(state: TaxAgentState) -> dict:
-    client = AsyncOpenAI(api_key=app_settings.OPENAI_API_KEY)
+    client = get_openai_client()
     known = json.dumps(state.get("income_data", {}), ensure_ascii=False)
     user_content = f"[원본 질문]\n{state['user_query']}\n\n[현재까지 파악된 소득 정보]\n{known}"
 

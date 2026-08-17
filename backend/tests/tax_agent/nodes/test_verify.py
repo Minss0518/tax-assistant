@@ -27,7 +27,7 @@ def _fake_client(verified: bool, notes: str):
 
 async def test_verify_node_pass_keeps_retry_count():
     fake_client = _fake_client(True, "")
-    with patch("app.tax_agent.nodes.verify.AsyncOpenAI", return_value=fake_client):
+    with patch("app.tax_agent.nodes.verify.get_openai_client", return_value=fake_client):
         result = await verify_node(_state(retry_count=0))
 
     assert result["verified"] is True
@@ -36,7 +36,7 @@ async def test_verify_node_pass_keeps_retry_count():
 
 async def test_verify_node_fail_increments_retry_count():
     fake_client = _fake_client(False, "공제 근거 불일치")
-    with patch("app.tax_agent.nodes.verify.AsyncOpenAI", return_value=fake_client):
+    with patch("app.tax_agent.nodes.verify.get_openai_client", return_value=fake_client):
         result = await verify_node(_state(retry_count=1))
 
     assert result["verified"] is False

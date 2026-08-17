@@ -38,7 +38,7 @@ async def test_clarify_node_interrupts_and_resumes_with_merged_income_data():
     graph = _build_single_node_graph()
     config = {"configurable": {"thread_id": "clarify-test"}}
 
-    with patch("app.tax_agent.nodes.clarify.AsyncOpenAI", return_value=fake_client):
+    with patch("app.tax_agent.nodes.clarify.get_openai_client", return_value=fake_client):
         interrupted = await graph.ainvoke(_initial_state(), config)
         assert "__interrupt__" in interrupted
 

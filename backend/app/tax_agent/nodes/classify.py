@@ -1,8 +1,6 @@
 import json
 
-from openai import AsyncOpenAI
-
-from app.config import settings as app_settings
+from app.tax_agent.llm_client import get_openai_client
 from app.tax_agent.state import TaxAgentState
 
 CLASSIFY_SYSTEM_PROMPT = """당신은 대한민국 종합소득세 공제 규정 분류 전문가입니다.
@@ -19,7 +17,7 @@ CLASSIFY_SYSTEM_PROMPT = """당신은 대한민국 종합소득세 공제 규정
 
 
 async def classify_node(state: TaxAgentState) -> dict:
-    client = AsyncOpenAI(api_key=app_settings.OPENAI_API_KEY)
+    client = get_openai_client()
     user_content = f"소득 유형: {', '.join(state['income_types'])}"
 
     response = await client.chat.completions.create(

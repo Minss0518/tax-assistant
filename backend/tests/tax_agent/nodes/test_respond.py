@@ -16,7 +16,7 @@ async def test_respond_node_returns_final_answer_text():
     fake_client = MagicMock()
     fake_client.chat.completions.create = AsyncMock(return_value=fake_response)
 
-    with patch("app.tax_agent.nodes.respond.AsyncOpenAI", return_value=fake_client):
+    with patch("app.tax_agent.nodes.respond.get_openai_client", return_value=fake_client):
         result = await respond_node(state)
 
     assert result["final_answer"] == "결정세액은 5,000원입니다."
@@ -42,7 +42,7 @@ async def test_respond_node_grounds_prompt_in_user_query_and_retrieved_docs():
     fake_client = MagicMock()
     fake_client.chat.completions.create = AsyncMock(return_value=fake_response)
 
-    with patch("app.tax_agent.nodes.respond.AsyncOpenAI", return_value=fake_client):
+    with patch("app.tax_agent.nodes.respond.get_openai_client", return_value=fake_client):
         await respond_node(state)
 
     call_kwargs = fake_client.chat.completions.create.call_args.kwargs

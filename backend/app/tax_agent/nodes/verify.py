@@ -1,8 +1,6 @@
 import json
 
-from openai import AsyncOpenAI
-
-from app.config import settings as app_settings
+from app.tax_agent.llm_client import get_openai_client
 from app.tax_agent.state import TaxAgentState
 
 VERIFY_SYSTEM_PROMPT = """당신은 대한민국 종합소득세 계산 검증 전문가입니다.
@@ -18,7 +16,7 @@ VERIFY_SYSTEM_PROMPT = """당신은 대한민국 종합소득세 계산 검증 �
 
 
 async def verify_node(state: TaxAgentState) -> dict:
-    client = AsyncOpenAI(api_key=app_settings.OPENAI_API_KEY)
+    client = get_openai_client()
     docs_text = "\n\n".join(d["content"] for d in state["retrieved_docs"]) or "관련 문서 없음"
     user_content = (
         f"[적용된 공제]\n{json.dumps(state['deductions'], ensure_ascii=False)}\n\n"

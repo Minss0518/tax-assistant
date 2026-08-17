@@ -1,8 +1,6 @@
 import json
 
-from openai import AsyncOpenAI
-
-from app.config import settings as app_settings
+from app.tax_agent.llm_client import get_openai_client
 from app.tax_agent.state import TaxAgentState
 
 RESPOND_SYSTEM_PROMPT = """당신은 대한민국 10년 경력의 전문 세무사 AI 어시스턴트입니다.
@@ -21,7 +19,7 @@ _DOCS_EXCERPT_LIMIT = 3000
 
 
 async def respond_node(state: TaxAgentState) -> dict:
-    client = AsyncOpenAI(api_key=app_settings.OPENAI_API_KEY)
+    client = get_openai_client()
     docs_excerpt = "\n\n".join(
         d["content"] for d in state.get("retrieved_docs", [])
     )[:_DOCS_EXCERPT_LIMIT] or "관련 문서 없음"

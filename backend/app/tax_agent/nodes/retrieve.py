@@ -1,9 +1,10 @@
 import asyncio
 
-from app.services.rag_service import get_or_create_index
+from app.services.rag_service import get_or_create_index, get_or_create_law_api_index
 from app.tax_agent.state import TaxAgentState
 
 _index_cache = None
+_law_api_index_cache = None
 
 
 def _get_cached_index():
@@ -13,21 +14,42 @@ def _get_cached_index():
     return _index_cache
 
 
+def _get_cached_law_api_index():
+    global _law_api_index_cache
+    if _law_api_index_cache is None:
+        _law_api_index_cache = get_or_create_law_api_index()
+    return _law_api_index_cache
+
+
 async def _search_one(query: str) -> list[dict]:
-    # get_or_create_index() is synchronous and can do blocking disk I/O (and,
-    # on a cold start, a full document embedding pass). Running it directly
-    # here would freeze the event loop for the whole server since this
-    # coroutine executes under asyncio.gather in retrieve_node.
+    # get_or_create_index()/get_or_create_law_api_index()는 동기 함수라 콜드 스타트 시
+    # 디스크 I/O나 전체 문서 임베딩을 블로킹으로 수행할 수 있다. retrieve_node에서
+    # asyncio.gather로 이 코루틴을 병렬 실행하므로, 직접 호출하면 이벤트 루프 전체가
+    # 멈춘다 — 그래서 to_thread로 스레드풀에 위임한다.
     index = await asyncio.to_thread(_get_cached_index)
+    law_api_index = await asyncio.to_thread(_get_cached_law_api_index)
+
     retriever = index.as_retriever(similarity_top_k=5)
-    nodes = await retriever.aretrieve(query)
+    law_api_retriever = law_api_index.as_retriever(similarity_top_k=5)
+
+    nodes, law_api_nodes = await asyncio.gather(
+        retriever.aretrieve(query),
+        law_api_retriever.aretrieve(query),
+    )
+
+    merged = sorted(
+        [*nodes, *law_api_nodes],
+        key=lambda n: n.score if n.score is not None else 0.0,
+        reverse=True,
+    )[:5]
+
     return [
         {
             "source": n.node.metadata.get("file_name", "unknown"),
             "content": n.get_content(),
             "score": n.score,
         }
-        for n in nodes
+        for n in merged
     ]
 
 

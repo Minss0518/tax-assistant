@@ -23,6 +23,11 @@ async def test_retrieve_node_merges_results_across_queries():
     fake_index = MagicMock()
     fake_index.as_retriever.return_value = fake_retriever
 
+    empty_law_api_retriever = MagicMock()
+    empty_law_api_retriever.aretrieve = AsyncMock(return_value=[])
+    empty_law_api_index = MagicMock()
+    empty_law_api_index.as_retriever.return_value = empty_law_api_retriever
+
     state = {
         "user_query": "", "income_types": ["근로소득", "사업소득"], "income_data": {},
         "missing_info": [], "search_queries": ["근로소득공제 소득세법", "필요경비 소득세법"],
@@ -31,7 +36,10 @@ async def test_retrieve_node_merges_results_across_queries():
         "retry_count": 0, "final_answer": "",
     }
 
-    with patch("app.tax_agent.nodes.retrieve._get_cached_index", return_value=fake_index):
+    with (
+        patch("app.tax_agent.nodes.retrieve._get_cached_index", return_value=fake_index),
+        patch("app.tax_agent.nodes.retrieve._get_cached_law_api_index", return_value=empty_law_api_index),
+    ):
         result = await retrieve_node(state)
 
     contents = [d["content"] for d in result["retrieved_docs"]]
@@ -54,6 +62,11 @@ async def test_retrieve_node_adds_verification_notes_as_extra_query_on_retry():
     fake_index = MagicMock()
     fake_index.as_retriever.return_value = fake_retriever
 
+    empty_law_api_retriever = MagicMock()
+    empty_law_api_retriever.aretrieve = AsyncMock(return_value=[])
+    empty_law_api_index = MagicMock()
+    empty_law_api_index.as_retriever.return_value = empty_law_api_retriever
+
     state = {
         "user_query": "", "income_types": ["근로소득"], "income_data": {},
         "missing_info": [], "search_queries": ["근로소득공제 소득세법"],
@@ -62,7 +75,10 @@ async def test_retrieve_node_adds_verification_notes_as_extra_query_on_retry():
         "final_answer": "",
     }
 
-    with patch("app.tax_agent.nodes.retrieve._get_cached_index", return_value=fake_index):
+    with (
+        patch("app.tax_agent.nodes.retrieve._get_cached_index", return_value=fake_index),
+        patch("app.tax_agent.nodes.retrieve._get_cached_law_api_index", return_value=empty_law_api_index),
+    ):
         result = await retrieve_node(state)
 
     assert fake_retriever.aretrieve.call_count == 2
@@ -89,9 +105,51 @@ async def test_search_one_offloads_index_lookup_to_a_thread():
         fake_index.as_retriever.return_value = fake_retriever
         return fake_index
 
-    with patch.object(retrieve_module, "_get_cached_index", side_effect=fake_get_cached_index):
+    empty_law_api_retriever = MagicMock()
+    empty_law_api_retriever.aretrieve = AsyncMock(return_value=[])
+    empty_law_api_index = MagicMock()
+    empty_law_api_index.as_retriever.return_value = empty_law_api_retriever
+
+    with (
+        patch.object(retrieve_module, "_get_cached_index", side_effect=fake_get_cached_index),
+        patch.object(retrieve_module, "_get_cached_law_api_index", return_value=empty_law_api_index),
+    ):
         import threading
         main_thread_ident = threading.get_ident()
         await retrieve_module._search_one("쿼리")
 
     assert calling_thread["ident"] != main_thread_ident
+
+
+async def test_retrieve_node_merges_pdf_and_law_api_indexes_by_score():
+    pdf_retriever = MagicMock()
+    pdf_retriever.aretrieve = AsyncMock(
+        return_value=[_fake_node_with_score("PDF 조문", 0.6, "income_tax_law.pdf")]
+    )
+    pdf_index = MagicMock()
+    pdf_index.as_retriever.return_value = pdf_retriever
+
+    law_api_retriever = MagicMock()
+    law_api_retriever.aretrieve = AsyncMock(
+        return_value=[_fake_node_with_score("API 조문", 0.95, "소득세법 제15조")]
+    )
+    law_api_index = MagicMock()
+    law_api_index.as_retriever.return_value = law_api_retriever
+
+    state = {
+        "user_query": "", "income_types": [], "income_data": {}, "missing_info": [],
+        "search_queries": ["종합소득세 세율"], "retrieved_docs": [], "deductions": [],
+        "tax_result": None, "verified": False, "verification_notes": "", "retry_count": 0,
+        "final_answer": "",
+    }
+
+    with (
+        patch("app.tax_agent.nodes.retrieve._get_cached_index", return_value=pdf_index),
+        patch("app.tax_agent.nodes.retrieve._get_cached_law_api_index", return_value=law_api_index),
+    ):
+        result = await retrieve_node(state)
+
+    contents = [d["content"] for d in result["retrieved_docs"]]
+    assert contents[0] == "API 조문"  # 점수가 더 높은 쪽이 먼저 옴
+    assert "PDF 조문" in contents
+    assert len(result["retrieved_docs"]) == 2

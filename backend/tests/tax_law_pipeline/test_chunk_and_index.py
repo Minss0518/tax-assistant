@@ -32,6 +32,24 @@ def test_build_law_chunks_uses_file_name_compatible_metadata():
     assert chunks[0]["metadata"]["조문번호"] == "15"
 
 
+def test_build_law_chunks_appends_branch_number_to_avoid_citation_collision():
+    # I3: 소득세법 제20조는 base article(조문가지번호 없음) 외에도 제20조의2,
+    # 제20조의3(연금소득) 처럼 조문가지번호가 붙은 서로 다른 조문이 실존한다.
+    # 조문가지번호를 무시하면 셋 다 "소득세법 제20조"라는 동일한 인용으로
+    # 뭉개져 사용자에게 잘못된 출처가 노출된다.
+    articles = [
+        {
+            "조문번호": "20",
+            "조문가지번호": "3",
+            "조문시행일자": "20260101",
+            "조문제목": "연금소득",
+            "조문내용": "제20조의3(연금소득) 연금소득은...",
+        }
+    ]
+    chunks = build_law_chunks(articles, law_name="소득세법")
+    assert chunks[0]["file_name"] == "소득세법 제20조의3"
+
+
 def test_build_law_chunks_skips_articles_with_empty_content():
     articles = [{"조문번호": "1", "조문내용": ""}]
     assert build_law_chunks(articles, law_name="소득세법") == []

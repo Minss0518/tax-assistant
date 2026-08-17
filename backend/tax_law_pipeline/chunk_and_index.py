@@ -23,10 +23,12 @@ def build_law_chunks(articles: list[dict], law_name: str) -> list[dict]:
         if not content:
             continue
         article_no = unit.get("조문번호", "")
+        branch_no = unit.get("조문가지번호")
+        article_label = f"제{article_no}조의{branch_no}" if branch_no else f"제{article_no}조"
         chunks.append(
             {
                 "text": content,
-                "file_name": f"{law_name} 제{article_no}조",
+                "file_name": f"{law_name} {article_label}",
                 "metadata": {
                     "출처": law_name,
                     "조문번호": article_no,

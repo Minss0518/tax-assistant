@@ -27,6 +27,8 @@ class Settings(BaseSettings):
     SUPABASE_URL: str = ""
     SUPABASE_SERVICE_KEY: str = ""
 
+    LAW_API_OC: str = ""
+
     class Config:
         env_file = ".env"
 

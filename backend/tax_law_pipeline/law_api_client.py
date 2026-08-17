@@ -80,3 +80,15 @@ def _fetch(target: str, item_id: str, oc: str) -> dict | None:
         {"OC": oc, "target": target, id_param: item_id, "type": "JSON"},
     )
     return data.get(_FETCH_WRAPPER_KEY[target])
+
+
+def fetch_law(mst: str, oc: str) -> dict | None:
+    return _fetch("law", mst, oc)
+
+
+def fetch_prec(prec_id: str, oc: str) -> dict | None:
+    return _fetch("prec", prec_id, oc)
+
+
+def fetch_expc(expc_id: str, oc: str) -> dict | None:
+    return _fetch("expc", expc_id, oc)

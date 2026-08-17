@@ -5,6 +5,7 @@ load_dotenv()
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import app.models.tax_calculation
+from app.config import settings
 from app.database import engine, Base
 import app.models.user
 import app.models.transaction
@@ -12,8 +13,10 @@ import app.models.chat
 import app.models.subscription
 import app.models.consultation
 from app.routers.ai_insights import router as ai_insights_router
-from app.routers import auth, transactions, chat, ocr, users, upload, payments, tax_calculator
+from app.routers import auth, transactions, chat, ocr, users, upload, payments, tax_calculator, tax_agent
 from app.routers import advisor_auth, consultations, websocket
+from app.tax_agent.checkpointer import to_psycopg_dsn
+from app.tax_agent.graph import build_graph
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
@@ -21,7 +24,14 @@ from fastapi.responses import FileResponse
 async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    yield
+
+    from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+
+    dsn = to_psycopg_dsn(settings.DATABASE_URL)
+    async with AsyncPostgresSaver.from_conn_string(dsn) as checkpointer:
+        await checkpointer.setup()
+        app.state.tax_agent_graph = build_graph(checkpointer)
+        yield
 
 app = FastAPI(title="AI 세무 비서", version="0.1.0", lifespan=lifespan)
 
@@ -45,6 +55,7 @@ app.include_router(users.router)
 app.include_router(upload.router)
 app.include_router(payments.router)
 app.include_router(tax_calculator.router)
+app.include_router(tax_agent.router)
 app.include_router(ai_insights_router)
 app.include_router(advisor_auth.router)
 app.include_router(consultations.router)

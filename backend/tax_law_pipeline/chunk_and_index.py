@@ -10,10 +10,8 @@ from llama_index.core import Document, StorageContext, VectorStoreIndex
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.vector_stores.chroma import ChromaVectorStore
 
-from app.services.rag_service import CHROMA_PATH, init_llama_settings
+from app.services.rag_service import CHROMA_PATH, LAW_API_COLLECTION_NAME, init_llama_settings
 from tax_law_pipeline.clean_text import clean_text
-
-LAW_API_COLLECTION_NAME = "tax_law_api_v1"
 
 
 def build_law_chunks(articles: list[dict], law_name: str) -> list[dict]:

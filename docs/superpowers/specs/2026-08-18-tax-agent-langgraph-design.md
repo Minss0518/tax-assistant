@@ -137,6 +137,10 @@ class TaxAgentState(TypedDict):
   바꿨다. 이 노드는 그 **retriever 패턴**을 감싸야 하며, 쿼리 엔진 방식으로 되돌리지 않는다.
 - `classify_node`가 만든 쿼리 리스트로 검색을 수행하며, `income_types` 개수만큼의 검색은
   `asyncio.gather`로 병렬 실행한다(순차 실행 아님 — 노드 수가 늘어난 만큼 지연시간에 민감).
+  **주의**: 검색은 반드시 `retriever.aretrieve()`(LlamaIndex의 비동기 API)로 호출한다.
+  동기 `retrieve()`를 코루틴으로만 감싸서 `gather`에 넣으면 이벤트 루프가 그 안에서
+  블로킹되어 사실상 순차 실행과 동일해진다. `aretrieve()`를 쓸 수 없는 경우
+  `asyncio.to_thread()`로 스레드풀에 위임한다.
 - 결과를 `{source, content, score}` 형태로 정규화해 `retrieved_docs`에 누적
 - 재검색 루프로 재진입할 경우, `verification_notes`를 참고해 검색 쿼리를 보정
 - `get_or_create_index()`가 매 호출마다 인덱스를 새로 구성하는 기존 방식은 비효율적이다

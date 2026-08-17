@@ -356,7 +356,42 @@ GOOGLE_REDIRECT_URI=...
 NAVER_CLIENT_ID=...
 NAVER_CLIENT_SECRET=...
 NAVER_REDIRECT_URI=...
+
+# 국가법령정보 공동활용 API (법령/판례/해석례 파이프라인)
+LAW_API_OC=...
 ```
+
+---
+
+## ⚖️ 세법 API 파이프라인 (법령 / 판례 / 해석례 수집)
+
+AI 세무 상담(RAG)의 검색 대상을 기존 PDF 문서에 더해, 국가법령정보 공동활용 Open API에서
+직접 수집한 소득세법 조문·판례·법령해석례로 넓히는 별도 파이프라인입니다. 결과는 PDF 컬렉션과
+분리된 `tax_law_api_v1` ChromaDB 컬렉션에 저장되고, `/chat`과 LangGraph 세무 에이전트가 검색 시
+두 컬렉션을 함께 조회해 병합합니다.
+
+### `LAW_API_OC` 발급
+- [open.law.go.kr](https://open.law.go.kr) (국가법령정보 공동활용 Open API)에서 이용자 ID(OC)를 발급받습니다.
+- 발급받은 값을 `backend/.env`에 `LAW_API_OC=<값>` 형식으로 추가합니다.
+
+### 파이프라인 실행
+```bash
+cd backend
+python -m tax_law_pipeline.run_pipeline
+```
+
+### ⚠️ 운영 시 유의사항
+- `rebuild_law_api_collection()`은 실행할 때마다 `tax_law_api_v1` 컬렉션을 **삭제 후 재생성**합니다
+  (법 개정 전/후 조문이 동시에 검색되는 문제를 막기 위한 설계 — upsert 대신 전체 재구축 방식).
+- 이 때문에 이미 떠 있는 웹 서버는 삭제되기 전 컬렉션을 가리키는 인덱스 핸들을 캐싱하고 있습니다.
+  파이프라인을 라이브 배포 환경의 `chroma_db`에 대해 실행한 뒤에는 **웹 프로세스를 재시작**해야
+  새로 색인된 데이터가 실제로 반영됩니다. (캐시된 핸들이 삭제된 컬렉션을 가리키는 상태 자체는
+  더 이상 전체 상담 장애로 이어지지 않고 PDF 전용 검색으로 자동 축소되지만, 재시작 전까지는
+  법령 API로 수집한 새 데이터가 검색에 포함되지 않습니다.)
+- `backend/chroma_db/`는 `.gitignore`에 포함되어 있으며, 현재 배포 설정에는 이 디렉터리를
+  영구 디스크(persistent disk)에 유지하는 장치가 없습니다. 재배포/재시작마다 데이터가 유실될
+  수 있는 알려진 gap이며, 이번 수정에서는 다루지 않았습니다 — 배포 환경을 관리하는 담당자가
+  별도로 확인해야 합니다.
 
 ---
 

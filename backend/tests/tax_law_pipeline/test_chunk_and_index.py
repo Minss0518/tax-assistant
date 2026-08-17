@@ -1,4 +1,7 @@
+from unittest.mock import patch
+
 import chromadb
+import pytest
 from llama_index.core import Settings
 from llama_index.core.embeddings import MockEmbedding
 
@@ -114,3 +117,23 @@ def test_rebuild_law_api_collection_handles_empty_chunks(tmp_path, monkeypatch):
     client = chromadb.PersistentClient(path=str(tmp_path))
     collection = client.get_or_create_collection(LAW_API_COLLECTION_NAME)
     assert collection.count() == 0
+
+
+def test_rebuild_law_api_collection_does_not_swallow_non_notfound_errors(tmp_path, monkeypatch):
+    monkeypatch.setattr(Settings, "embed_model", MockEmbedding(embed_dim=8))
+    monkeypatch.setattr(Settings, "llm", None)
+    import tax_law_pipeline.chunk_and_index as cai
+    monkeypatch.setattr(cai, "init_llama_settings", lambda: None)
+
+    def raise_permission_error(self, name):
+        raise PermissionError("simulated lock")
+
+    # chromadb.PersistentClient is a factory function (not a class) that returns a
+    # chromadb.api.client.Client instance, so we patch delete_collection on that
+    # underlying class rather than on PersistentClient itself.
+    with patch.object(chromadb.api.client.Client, "delete_collection", raise_permission_error):
+        with pytest.raises(PermissionError):
+            rebuild_law_api_collection(
+                [{"text": "x", "file_name": "y", "metadata": {}}],
+                chroma_path=str(tmp_path),
+            )

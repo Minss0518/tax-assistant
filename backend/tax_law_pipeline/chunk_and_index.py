@@ -100,7 +100,7 @@ def rebuild_law_api_collection(chunks: list[dict], chroma_path: str | None = Non
 
     try:
         chroma_client.delete_collection(name=LAW_API_COLLECTION_NAME)
-    except Exception:
+    except chromadb.errors.NotFoundError:
         pass  # 첫 실행이면 컬렉션이 아직 없음
 
     collection = chroma_client.get_or_create_collection(LAW_API_COLLECTION_NAME)

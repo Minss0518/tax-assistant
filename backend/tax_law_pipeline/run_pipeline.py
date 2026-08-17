@@ -45,7 +45,13 @@ def run() -> dict:
         prec_id = item.get("판례일련번호")
         if not prec_id:
             continue
-        detail = law_api_client.fetch_prec(prec_id, oc)
+        try:
+            detail = law_api_client.fetch_prec(prec_id, oc)
+        except Exception:
+            # fetch_prec은 이미 내부적으로 3회 재시도한다 — 그래도 실패하면
+            # (네트워크 순단 등) 이 한 건만 건너뛰고 전체 실행(1000건 이상일 수
+            # 있는 나머지 항목들)은 계속 진행한다.
+            continue
         time.sleep(FETCH_SLEEP_SECONDS)
         if detail is not None:
             prec_details.append(detail)
@@ -56,7 +62,12 @@ def run() -> dict:
         expc_id = item.get("법령해석례일련번호")
         if not expc_id:
             continue
-        detail = law_api_client.fetch_expc(expc_id, oc)
+        try:
+            detail = law_api_client.fetch_expc(expc_id, oc)
+        except Exception:
+            # 위 prec 루프와 동일한 이유로, 재시도 후에도 실패한 건 하나 때문에
+            # 전체 실행이 중단되지 않도록 건너뛴다.
+            continue
         time.sleep(FETCH_SLEEP_SECONDS)
         if detail is not None:
             expc_details.append(detail)

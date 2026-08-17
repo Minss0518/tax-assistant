@@ -21,6 +21,9 @@ INTAKE_SYSTEM_PROMPT = """당신은 대한민국 종합소득세 상담 AI입니
   추가하세요.
 - income_data의 각 소득 유형 값은 {"gross": 정수} 또는 {"gross": 정수, "expense": 정수} 형태로
   작성하세요.
+- 소득 유형이나 금액을 하나도 파악하지 못했다면(income_data가 비어 있다면) 절대로
+  missing_info를 빈 배열로 두지 마세요. 이 경우 missing_info에 최소 한 개 이상의 항목
+  (예: "소득 종류와 금액")을 반드시 포함해서, 추측으로 세액을 계산하지 않도록 하세요.
 
 다음 JSON 형식으로만 답하세요:
 {"income_types": ["근로소득"], "income_data": {"근로소득": {"gross": 30000000}}, "missing_info": []}

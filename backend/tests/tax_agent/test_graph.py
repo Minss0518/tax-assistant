@@ -29,7 +29,9 @@ async def test_guard_rejection_short_circuits_before_intake(monkeypatch):
 
 async def test_verify_retry_loop_stops_at_max_retry(monkeypatch):
     monkeypatch.setattr(graph_module, "guard_node", AsyncMock(return_value={}))
-    monkeypatch.setattr(graph_module, "intake_node", AsyncMock(return_value={"missing_info": []}))
+    monkeypatch.setattr(graph_module, "intake_node", AsyncMock(return_value={
+        "missing_info": [], "income_data": {"근로소득": {"gross": 30_000_000}},
+    }))
     monkeypatch.setattr(graph_module, "classify_node", AsyncMock(return_value={"search_queries": ["q"]}))
     monkeypatch.setattr(graph_module, "retrieve_node", AsyncMock(return_value={"retrieved_docs": []}))
     monkeypatch.setattr(graph_module, "calculate_node", AsyncMock(return_value={"tax_result": {}, "deductions": []}))
@@ -87,3 +89,27 @@ async def test_clarify_interrupt_then_resume_reaches_respond(monkeypatch):
 
     resumed = await graph.ainvoke(Command(resume="3천만원이요"), config)
     assert resumed["final_answer"] == "완료"
+
+
+async def test_route_after_intake_clarifies_when_income_data_empty_even_if_missing_info_empty(monkeypatch):
+    # Regression guard for C2: an LLM response with income_data == {} and
+    # missing_info == [] must NOT fall through to classify/calculate/respond
+    # (which would silently produce a confident "0원" answer). It must be
+    # routed to clarify instead.
+    monkeypatch.setattr(graph_module, "guard_node", AsyncMock(return_value={}))
+    monkeypatch.setattr(graph_module, "intake_node", AsyncMock(return_value={
+        "income_types": [], "income_data": {}, "missing_info": [],
+    }))
+    monkeypatch.setattr(graph_module, "classify_node", AsyncMock(side_effect=AssertionError("classify는 호출되면 안 됨")))
+    monkeypatch.setattr(graph_module, "retrieve_node", AsyncMock(side_effect=AssertionError("retrieve는 호출되면 안 됨")))
+    monkeypatch.setattr(graph_module, "calculate_node", AsyncMock(side_effect=AssertionError("calculate는 호출되면 안 됨")))
+    monkeypatch.setattr(graph_module, "verify_node", AsyncMock(side_effect=AssertionError("verify는 호출되면 안 됨")))
+    monkeypatch.setattr(graph_module, "respond_node", AsyncMock(side_effect=AssertionError("respond는 호출되면 안 됨")))
+
+    graph = graph_module.build_graph(InMemorySaver())
+    result = await graph.ainvoke(
+        _base_state(), {"configurable": {"thread_id": "empty-income-test"}}
+    )
+
+    assert "__interrupt__" in result
+    assert result.get("final_answer", "") == ""

@@ -18,6 +18,13 @@ def route_after_guard(state: TaxAgentState) -> str:
 
 
 def route_after_intake(state: TaxAgentState) -> str:
+    # Defensive check: even if the LLM reported no missing_info, never proceed
+    # to calculation with zero income data captured. Routing functions cannot
+    # mutate state, so clarify_node's question may be generic in this
+    # (expected-rare) fallback case; the primary defense is the strengthened
+    # INTAKE_SYSTEM_PROMPT in intake.py.
+    if not state.get("income_data"):
+        return "clarify"
     return "clarify" if state.get("missing_info") else "classify"
 
 

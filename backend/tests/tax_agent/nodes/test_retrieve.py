@@ -1,3 +1,4 @@
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from app.tax_agent.nodes.retrieve import retrieve_node
@@ -39,3 +40,58 @@ async def test_retrieve_node_merges_results_across_queries():
     assert "필요경비 내용" in contents
     assert len(result["retrieved_docs"]) == 3  # 기존 1건 + 새 2건 누적
     assert fake_retriever.aretrieve.call_count == 2
+
+
+async def test_retrieve_node_adds_verification_notes_as_extra_query_on_retry():
+    # I3: a retry (verification_notes non-empty) must search for something
+    # different than the first attempt, not repeat the exact same queries
+    # and guarantee the same failure.
+    fake_retriever = MagicMock()
+    fake_retriever.aretrieve = AsyncMock(side_effect=[
+        [_fake_node_with_score("근로소득공제 내용", 0.9, "income_tax_law.pdf")],
+        [_fake_node_with_score("불일치 관련 내용", 0.8, "income_tax_law.pdf")],
+    ])
+    fake_index = MagicMock()
+    fake_index.as_retriever.return_value = fake_retriever
+
+    state = {
+        "user_query": "", "income_types": ["근로소득"], "income_data": {},
+        "missing_info": [], "search_queries": ["근로소득공제 소득세법"],
+        "retrieved_docs": [], "deductions": [], "tax_result": None, "verified": False,
+        "verification_notes": "근로소득공제 근거 조문이 검색된 문서와 불일치", "retry_count": 1,
+        "final_answer": "",
+    }
+
+    with patch("app.tax_agent.nodes.retrieve._get_cached_index", return_value=fake_index):
+        result = await retrieve_node(state)
+
+    assert fake_retriever.aretrieve.call_count == 2
+    queried = [call.args[0] for call in fake_retriever.aretrieve.call_args_list]
+    assert "근로소득공제 소득세법" in queried
+    assert "근로소득공제 근거 조문이 검색된 문서와 불일치" in queried
+    assert len(result["retrieved_docs"]) == 2
+
+
+async def test_search_one_offloads_index_lookup_to_a_thread():
+    # I9: get_or_create_index() is synchronous and can block on disk I/O /
+    # embedding. It must run via asyncio.to_thread so it can't freeze the
+    # event loop when called from inside asyncio.gather.
+    import app.tax_agent.nodes.retrieve as retrieve_module
+
+    calling_thread = {}
+
+    def fake_get_cached_index():
+        import threading
+        calling_thread["ident"] = threading.get_ident()
+        fake_retriever = MagicMock()
+        fake_retriever.aretrieve = AsyncMock(return_value=[])
+        fake_index = MagicMock()
+        fake_index.as_retriever.return_value = fake_retriever
+        return fake_index
+
+    with patch.object(retrieve_module, "_get_cached_index", side_effect=fake_get_cached_index):
+        import threading
+        main_thread_ident = threading.get_ident()
+        await retrieve_module._search_one("쿼리")
+
+    assert calling_thread["ident"] != main_thread_ident

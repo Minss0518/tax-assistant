@@ -32,10 +32,24 @@ async def _search_one(query: str) -> list[dict]:
     retriever = index.as_retriever(similarity_top_k=5)
     law_api_retriever = law_api_index.as_retriever(similarity_top_k=5)
 
-    nodes, law_api_nodes = await asyncio.gather(
+    nodes_result, law_api_result = await asyncio.gather(
         retriever.aretrieve(query),
         law_api_retriever.aretrieve(query),
+        return_exceptions=True,
     )
+
+    if isinstance(nodes_result, BaseException):
+        nodes = []
+    else:
+        nodes = nodes_result
+
+    if isinstance(law_api_result, BaseException):
+        # 법령 API 컬렉션이 파이프라인 재실행으로 막 재구축된 직후라 캐시된 핸들이
+        # 삭제된 컬렉션을 가리키는 경우에도, 전체 상담이 502로 실패하지 않도록
+        # PDF 검색 결과만으로 계속 진행한다.
+        law_api_nodes = []
+    else:
+        law_api_nodes = law_api_result
 
     merged = sorted(
         [*nodes, *law_api_nodes],

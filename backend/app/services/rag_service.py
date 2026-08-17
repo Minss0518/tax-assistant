@@ -160,22 +160,28 @@ def retrieve_context(question: str) -> str:
         index = get_or_create_index()
         retriever = index.as_retriever(similarity_top_k=5)
         nodes = retriever.retrieve(question)
+    except Exception:
+        return ""
 
+    try:
         law_api_index = get_or_create_law_api_index()
         law_api_retriever = law_api_index.as_retriever(similarity_top_k=5)
         law_api_nodes = law_api_retriever.retrieve(question)
-
-        merged = sorted(
-            [*nodes, *law_api_nodes],
-            key=lambda n: n.score if n.score is not None else 0.0,
-            reverse=True,
-        )[:5]
-
-        if not merged:
-            return ""
-        return "\n\n".join([node.get_content() for node in merged])
     except Exception:
+        # 법령 API 컬렉션이 재구축 직후(파이프라인 재실행)라 캐시된 핸들이 삭제된
+        # 컬렉션을 가리키거나, 아직 한 번도 채워지지 않은 경우에도 기존 PDF 검색
+        # 결과는 그대로 살려서 반환한다.
+        law_api_nodes = []
+
+    merged = sorted(
+        [*nodes, *law_api_nodes],
+        key=lambda n: n.score if n.score is not None else 0.0,
+        reverse=True,
+    )[:5]
+
+    if not merged:
         return ""
+    return "\n\n".join([node.get_content() for node in merged])
 
 NON_TAX_RESPONSE = "저는 세무 관련 질문만 답변할 수 있어요. 세금이나 신고에 관해 궁금한 점을 질문해 주세요 😊"
 

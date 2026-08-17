@@ -121,6 +121,39 @@ async def test_search_one_offloads_index_lookup_to_a_thread():
     assert calling_thread["ident"] != main_thread_ident
 
 
+async def test_search_one_degrades_gracefully_when_law_api_retrieval_raises():
+    # C1: a pipeline run against a live server rebuilds the tax_law_api_v1
+    # collection, which can leave a cached VectorStoreIndex handle pointing at
+    # a deleted collection. That must not take down PDF search results too.
+    pdf_retriever = MagicMock()
+    pdf_retriever.aretrieve = AsyncMock(
+        return_value=[_fake_node_with_score("PDF 조문", 0.6, "income_tax_law.pdf")]
+    )
+    pdf_index = MagicMock()
+    pdf_index.as_retriever.return_value = pdf_retriever
+
+    law_api_retriever = MagicMock()
+    law_api_retriever.aretrieve = AsyncMock(side_effect=Exception("chroma NotFoundError"))
+    law_api_index = MagicMock()
+    law_api_index.as_retriever.return_value = law_api_retriever
+
+    state = {
+        "user_query": "", "income_types": [], "income_data": {}, "missing_info": [],
+        "search_queries": ["종합소득세 세율"], "retrieved_docs": [], "deductions": [],
+        "tax_result": None, "verified": False, "verification_notes": "", "retry_count": 0,
+        "final_answer": "",
+    }
+
+    with (
+        patch("app.tax_agent.nodes.retrieve._get_cached_index", return_value=pdf_index),
+        patch("app.tax_agent.nodes.retrieve._get_cached_law_api_index", return_value=law_api_index),
+    ):
+        result = await retrieve_node(state)
+
+    contents = [d["content"] for d in result["retrieved_docs"]]
+    assert contents == ["PDF 조문"]
+
+
 async def test_retrieve_node_merges_pdf_and_law_api_indexes_by_score():
     pdf_retriever = MagicMock()
     pdf_retriever.aretrieve = AsyncMock(

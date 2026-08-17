@@ -66,7 +66,7 @@ def test_retrieve_context_degrades_gracefully_when_law_api_retrieval_raises():
     ):
         result = rag_service.retrieve_context("종합소득세 계산 방법")
 
-    assert result == ""
+    assert "PDF 문서 내용" in result
 
 
 def test_get_or_create_law_api_index_uses_separate_collection_name():

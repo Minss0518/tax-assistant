@@ -19,7 +19,8 @@ def _build_single_node_graph():
 
 def _initial_state():
     return {
-        "user_query": "", "income_types": ["사업소득"], "income_data": {},
+        "user_query": "", "income_types": ["근로소득", "사업소득"],
+        "income_data": {"근로소득": {"gross": 30_000_000}},
         "missing_info": ["사업소득 필요경비"], "search_queries": [], "retrieved_docs": [],
         "deductions": [], "tax_result": None, "verified": False, "verification_notes": "",
         "retry_count": 0, "final_answer": "",
@@ -45,3 +46,6 @@ async def test_clarify_node_interrupts_and_resumes_with_merged_income_data():
 
     assert resumed["income_data"]["사업소득"]["expense"] == 20_000_000
     assert resumed["income_data"]["사업소득"]["gross"] == 50_000_000
+    # Pre-existing income_data for a type the fake LLM response never mentions
+    # must survive the merge (regression guard against a naive overwrite).
+    assert resumed["income_data"]["근로소득"]["gross"] == 30_000_000

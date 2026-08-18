@@ -13,7 +13,7 @@ import app.models.chat
 import app.models.subscription
 import app.models.consultation
 from app.routers.ai_insights import router as ai_insights_router
-from app.routers import auth, transactions, chat, ocr, users, upload, payments, tax_calculator, tax_agent
+from app.routers import auth, transactions, chat, ocr, users, upload, payments, tax_calculator, tax_agent, admin
 from app.routers import advisor_auth, consultations, websocket
 from app.tax_agent.checkpointer import to_psycopg_dsn
 from app.tax_agent.graph import build_graph
@@ -69,6 +69,7 @@ app.include_router(upload.router)
 app.include_router(payments.router)
 app.include_router(tax_calculator.router)
 app.include_router(tax_agent.router)
+app.include_router(admin.router)
 app.include_router(ai_insights_router)
 app.include_router(advisor_auth.router)
 app.include_router(consultations.router)

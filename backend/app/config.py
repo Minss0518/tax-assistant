@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     SUPABASE_SERVICE_KEY: str = ""
 
     LAW_API_OC: str = ""
+    ADMIN_PIPELINE_TOKEN: str = ""
 
     class Config:
         env_file = ".env"

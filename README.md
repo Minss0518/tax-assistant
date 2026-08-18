@@ -359,6 +359,7 @@ NAVER_REDIRECT_URI=...
 
 # 국가법령정보 공동활용 API (법령/판례/해석례 파이프라인)
 LAW_API_OC=...
+ADMIN_PIPELINE_TOKEN=...
 ```
 
 ---
@@ -379,6 +380,22 @@ AI 세무 상담(RAG)의 검색 대상을 기존 PDF 문서에 더해, 국가법
 cd backend
 python -m tax_law_pipeline.run_pipeline
 ```
+
+### Shell 접근이 없는 배포 환경(예: Render 무료 플랜)에서 실행하기
+서버에 터미널로 접속할 방법이 없는 경우, 비밀 토큰으로 보호된 관리자 전용 엔드포인트로
+파이프라인을 트리거할 수 있습니다.
+
+1. `backend/.env`(그리고 배포 환경의 환경변수 설정)에 `ADMIN_PIPELINE_TOKEN`을 충분히 긴
+   무작위 문자열로 설정합니다. 예: `python -c "import secrets; print(secrets.token_urlsafe(32))"`
+2. 배포 후 아래처럼 호출하면 파이프라인이 백그라운드로 시작되고 응답은 즉시 반환됩니다:
+   ```bash
+   curl -X POST https://<배포-주소>/admin/run-law-pipeline \
+     -H "x-admin-token: <ADMIN_PIPELINE_TOKEN 값>"
+   ```
+3. 진행 상황/완료 여부는 Render의 **Logs** 탭에서 `[law-pipeline]` 로그로 확인합니다
+   (완료/실패 여부만 로그로 남고, 별도 상태 조회 엔드포인트는 없습니다).
+4. `ADMIN_PIPELINE_TOKEN`을 설정하지 않으면 이 엔드포인트는 항상 403을 반환합니다 — 운영
+   환경에서 실수로 열려있지 않도록 하는 기본 안전장치입니다.
 
 ### ⚠️ 운영 시 유의사항
 - `rebuild_law_api_collection()`은 실행할 때마다 `tax_law_api_v1` 컬렉션을 **삭제 후 재생성**합니다

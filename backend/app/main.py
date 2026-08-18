@@ -32,12 +32,23 @@ async def lifespan(app: FastAPI):
     dsn = to_psycopg_dsn(settings.DATABASE_URL)
     # Use a pool (instead of a single from_conn_string() connection) so the
     # process doesn't wedge for the rest of its lifetime if the one
-    # connection drops (e.g. behind pgbouncer/Supabase's pooler). autocommit
-    # + prepare_threshold=0 match what AsyncPostgresSaver.from_conn_string()
-    # sets, and are required for pgbouncer transaction-pooling compatibility.
+    # connection drops (e.g. behind pgbouncer/Supabase's pooler).
+    #
+    # prepare_threshold=None (NOT 0 -- in psycopg3, 0 means "prepare every
+    # query on first use", the opposite of disabling prepared statements)
+    # fully disables server-side prepared statements. This is required
+    # because psycopg_pool cycles through multiple physical connections over
+    # the process lifetime, and each fresh psycopg connection's prepared-
+    # statement name counter restarts at "_pg3_0". Under Supabase's
+    # transaction-mode pgbouncer, a "new" psycopg connection's first query
+    # can land on a backend connection that already has a leftover
+    # "_pg3_0" from a different, still-open pool connection recycled by
+    # pgbouncer, raising psycopg.errors.DuplicatePreparedStatement and
+    # crashing app startup. A single from_conn_string() connection doesn't
+    # hit this (only one counter for the app's lifetime), but a pool does.
     async with AsyncConnectionPool(
         conninfo=dsn,
-        kwargs={"autocommit": True, "prepare_threshold": 0, "row_factory": dict_row},
+        kwargs={"autocommit": True, "prepare_threshold": None, "row_factory": dict_row},
         open=False,
     ) as pool:
         await pool.open(wait=True)

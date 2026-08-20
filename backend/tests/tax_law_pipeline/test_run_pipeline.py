@@ -166,3 +166,45 @@ def test_run_indexes_prec_results_in_batches_without_holding_entire_dataset(monk
     assert all(size <= 3 for size in batch_sizes)
     assert sum(batch_sizes) == 7
     assert summary["prec_cases"] == 7
+
+
+def test_run_caps_prec_items_at_max_prec_items(monkeypatch):
+    # OOM 재수정: 배치 처리로도 못 막는 ChromaDB 자체의 누적 메모리 사용량 때문에,
+    # 검색 결과가 아무리 많아도(실제로는 1000건 이상) 한 번 실행에서 처리하는
+    # 총량 자체를 MAX_PREC_ITEMS로 제한해야 한다.
+    monkeypatch.setattr(run_pipeline.settings, "LAW_API_OC", "test-oc")
+    monkeypatch.setattr(run_pipeline.time, "sleep", lambda s: None)
+    monkeypatch.setattr(run_pipeline, "MAX_PREC_ITEMS", 5)
+
+    law_search_result = [
+        {"법령일련번호": "280405", "법령명한글": "소득세법", "법령구분명": "법률"},
+    ]
+    # 실제로는 1000건 이상 나올 수 있는 상황을 흉내낸 20건
+    prec_search_result = [{"판례일련번호": str(i)} for i in range(20)]
+    expc_search_result = []
+
+    law_detail = {"조문": {"조문단위": []}}
+
+    def fake_search(target, query, oc):
+        return {"law": law_search_result, "prec": prec_search_result, "expc": expc_search_result}[target]
+
+    def fake_fetch_prec(prec_id, oc):
+        return {"사건번호": prec_id, "사건명": "x", "판시사항": "", "판결요지": "", "참조조문": ""}
+
+    fake_index = MagicMock()
+
+    with (
+        patch.object(run_pipeline.law_api_client, "search", side_effect=fake_search),
+        patch.object(run_pipeline.law_api_client, "fetch_law", return_value=law_detail),
+        patch.object(run_pipeline.law_api_client, "fetch_prec", side_effect=fake_fetch_prec) as mock_fetch_prec,
+        patch.object(run_pipeline, "reset_law_api_collection", return_value=fake_index),
+        patch.object(run_pipeline, "index_chunks_batch"),
+    ):
+        summary = run_pipeline.run()
+
+    # 검색 결과가 20건이어도 MAX_PREC_ITEMS(5)만큼만 실제로 fetch/인덱싱해야 한다.
+    assert mock_fetch_prec.call_count == 5
+    assert summary["prec_cases"] == 5
+    # 다만 전체 검색 결과 건수(20)는 요약에 별도로 남겨서, 실제로 얼마나
+    # 제한됐는지 운영자가 알 수 있게 한다.
+    assert summary["prec_cases_available"] == 20

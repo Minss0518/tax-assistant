@@ -3,11 +3,17 @@
 사용법: cd backend && .venv/Scripts/python.exe -m tax_law_pipeline.run_pipeline
 (LAW_API_OC는 backend/.env에서 읽는다)
 
-판례(prec) 검색 결과만 1000건이 넘는다 — 전체 본문을 한 번에 메모리에 모았다가
-일괄 인덱싱하면 무료 호스팅 환경(Render 512MB)에서 실제로 OOM으로 프로세스가
-죽는 것을 확인했다. 그래서 검색 결과를 순회하면서 INDEX_BATCH_SIZE개씩 모일
-때마다 바로 인덱싱하고 그 배치는 메모리에서 비운다 — 전체 데이터셋을 동시에
-들고 있지 않는다.
+판례(prec) 검색 결과만 1000건이 넘는다. 문서 추가를 작은 배치로 나누고
+(index_chunks_batch), VectorStoreIndex 대신 ChromaVectorStore에 직접 쓰는
+저수준 경로로 바꿔도(chunk_and_index.py 참고) Render 512MB 무료 인스턴스에서
+여전히 OOM이 재현됐다 — ChromaDB 자체가 컬렉션에 추가된 벡터의 검색 인덱스를
+프로세스 메모리에 계속 들고 있어서, "한 번 실행에서 이 컬렉션에 총 몇 건을
+넣었는가"에 비례해 메모리가 계속 쌓이는 구조이기 때문이다. 이건 인덱싱을 어떻게
+배치로 나누든 피할 수 없다.
+
+그래서 배치 처리에 더해 한 실행당 인덱싱하는 총량 자체를 MAX_PREC_ITEMS로
+제한한다. 판례 API 검색 결과가 관련도순으로 오는 것으로 보이므로, 상위
+MAX_PREC_ITEMS건만 사용해도 RAG 검색 품질에 큰 손해는 없을 것으로 판단했다.
 """
 
 import time
@@ -25,6 +31,9 @@ from tax_law_pipeline.filter_articles import filter_comprehensive_income_article
 
 FETCH_SLEEP_SECONDS = 0.15
 INDEX_BATCH_SIZE = 20
+MAX_PREC_ITEMS = 300
+MAX_EXPC_ITEMS = 300
+PROGRESS_LOG_EVERY = 50
 
 
 def run() -> dict:
@@ -55,7 +64,8 @@ def run() -> dict:
 
     total_chunks = len(law_chunks)
 
-    prec_search_results = law_api_client.search("prec", "종합소득세", oc)
+    prec_search_results_all = law_api_client.search("prec", "종합소득세", oc)
+    prec_search_results = prec_search_results_all[:MAX_PREC_ITEMS]
     prec_count = 0
     batch: list[dict] = []
     for item in prec_search_results:
@@ -66,8 +76,8 @@ def run() -> dict:
             detail = law_api_client.fetch_prec(prec_id, oc)
         except Exception:
             # fetch_prec은 이미 내부적으로 3회 재시도한다 — 그래도 실패하면
-            # (네트워크 순단 등) 이 한 건만 건너뛰고 전체 실행(1000건 이상일 수
-            # 있는 나머지 항목들)은 계속 진행한다.
+            # (네트워크 순단 등) 이 한 건만 건너뛰고 나머지 항목들은 계속
+            # 진행한다.
             continue
         time.sleep(FETCH_SLEEP_SECONDS)
         if detail is None:
@@ -78,12 +88,14 @@ def run() -> dict:
             index_chunks_batch(vector_store, batch)
             total_chunks += len(batch)
             batch = []
+        if prec_count % PROGRESS_LOG_EVERY == 0:
+            print(f"[law-pipeline] 진행중: 판례 {prec_count}/{len(prec_search_results)}건 처리")
     if batch:
         index_chunks_batch(vector_store, batch)
         total_chunks += len(batch)
         batch = []
 
-    expc_search_results = law_api_client.search("expc", "종합소득세", oc)
+    expc_search_results = law_api_client.search("expc", "종합소득세", oc)[:MAX_EXPC_ITEMS]
     expc_count = 0
     for item in expc_search_results:
         expc_id = item.get("법령해석례일련번호")
@@ -111,6 +123,7 @@ def run() -> dict:
     return {
         "law_articles": len(articles),
         "prec_cases": prec_count,
+        "prec_cases_available": len(prec_search_results_all),
         "expc_cases": expc_count,
         "total_chunks": total_chunks,
     }

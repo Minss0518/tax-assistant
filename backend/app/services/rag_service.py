@@ -168,6 +168,29 @@ def get_or_create_law_api_index():
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
     return VectorStoreIndex.from_vector_store(vector_store, storage_context=storage_context)
 
+LAW_API_MERGE_FLOOR = 2
+
+
+def merge_with_law_api_floor(pdf_nodes, law_api_nodes, total: int = 5, law_api_floor: int = LAW_API_MERGE_FLOOR):
+    """PDF와 법령 API 검색 결과를 점수 순으로 합치되, 법령 API 쪽에서 최소
+    law_api_floor개는 점수와 무관하게 결과에 포함되도록 보장한다.
+
+    PDF 청크는 512자, 법령 API 청크(판례 등)는 최대 2048자로 훨씬 길다 —
+    벡터 검색에서는 짧은 청크가 코사인 유사도 점수가 더 높게 나오는 경향이 있어서,
+    순수 점수 기반 병합만 쓰면 법령 API로 새로 넣은 데이터가 계속 밀려날 수 있다.
+    실사용 중 확인됨: "종합소득세 관련 판례가 있어?" 같은 일반적인 질문에서 PDF
+    청크가 상위 5개를 전부 차지해, 실제로 인덱싱된 판례 데이터가 AI에게 전혀
+    전달되지 않았다."""
+    sorted_law_api = sorted(law_api_nodes, key=lambda n: n.score if n.score is not None else 0.0, reverse=True)
+    guaranteed = sorted_law_api[:law_api_floor]
+
+    remaining_pool = list(pdf_nodes) + sorted_law_api[law_api_floor:]
+    remaining_sorted = sorted(remaining_pool, key=lambda n: n.score if n.score is not None else 0.0, reverse=True)
+    remaining_slots = max(total - len(guaranteed), 0)
+
+    return guaranteed + remaining_sorted[:remaining_slots]
+
+
 def retrieve_context(question: str) -> str:
     try:
         index = get_or_create_index()
@@ -186,11 +209,7 @@ def retrieve_context(question: str) -> str:
         # 결과는 그대로 살려서 반환한다.
         law_api_nodes = []
 
-    merged = sorted(
-        [*nodes, *law_api_nodes],
-        key=lambda n: n.score if n.score is not None else 0.0,
-        reverse=True,
-    )[:5]
+    merged = merge_with_law_api_floor(nodes, law_api_nodes)
 
     if not merged:
         return ""

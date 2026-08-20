@@ -154,6 +154,41 @@ async def test_search_one_degrades_gracefully_when_law_api_retrieval_raises():
     assert contents == ["PDF 조문"]
 
 
+async def test_search_one_guarantees_minimum_law_api_results_even_when_outscored():
+    # PDF 청크가 법령 API 청크보다 점수가 체계적으로 높게 나오는 경향이 있어서,
+    # 순수 점수 병합만 쓰면 법령 API 결과가 상위 5개에서 전부 밀려날 수 있다 —
+    # rag_service.merge_with_law_api_floor()와 동일한 하한선 보장이 여기서도
+    # 적용돼야 한다.
+    import app.tax_agent.nodes.retrieve as retrieve_module
+
+    pdf_retriever = MagicMock()
+    pdf_retriever.aretrieve = AsyncMock(
+        return_value=[_fake_node_with_score(f"PDF{i}", 0.9, f"pdf{i}") for i in range(5)]
+    )
+    pdf_index = MagicMock()
+    pdf_index.as_retriever.return_value = pdf_retriever
+
+    law_api_retriever = MagicMock()
+    law_api_retriever.aretrieve = AsyncMock(
+        return_value=[
+            _fake_node_with_score("API 판례 A", 0.2, "판례 A"),
+            _fake_node_with_score("API 판례 B", 0.1, "판례 B"),
+        ]
+    )
+    law_api_index = MagicMock()
+    law_api_index.as_retriever.return_value = law_api_retriever
+
+    with (
+        patch.object(retrieve_module, "_get_cached_index", return_value=pdf_index),
+        patch.object(retrieve_module, "_get_cached_law_api_index", return_value=law_api_index),
+    ):
+        docs = await retrieve_module._search_one("쿼리")
+
+    contents = [d["content"] for d in docs]
+    assert "API 판례 A" in contents
+    assert "API 판례 B" in contents
+
+
 async def test_retrieve_node_merges_pdf_and_law_api_indexes_by_score():
     pdf_retriever = MagicMock()
     pdf_retriever.aretrieve = AsyncMock(

@@ -1,6 +1,6 @@
 import asyncio
 
-from app.services.rag_service import get_or_create_index, get_or_create_law_api_index
+from app.services.rag_service import get_or_create_index, get_or_create_law_api_index, merge_with_law_api_floor
 from app.tax_agent.state import TaxAgentState
 
 _index_cache = None
@@ -51,11 +51,7 @@ async def _search_one(query: str) -> list[dict]:
     else:
         law_api_nodes = law_api_result
 
-    merged = sorted(
-        [*nodes, *law_api_nodes],
-        key=lambda n: n.score if n.score is not None else 0.0,
-        reverse=True,
-    )[:5]
+    merged = merge_with_law_api_floor(nodes, law_api_nodes)
 
     return [
         {

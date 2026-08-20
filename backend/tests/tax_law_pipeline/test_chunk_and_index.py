@@ -10,7 +10,8 @@ from tax_law_pipeline.chunk_and_index import (
     build_expc_chunks,
     build_law_chunks,
     build_prec_chunks,
-    rebuild_law_api_collection,
+    index_chunks_batch,
+    reset_law_api_collection,
 )
 
 
@@ -95,7 +96,7 @@ def test_build_expc_chunks_combines_question_and_answer():
     assert chunks[0]["metadata"]["데이터유형"] == "법령해석례"
 
 
-def test_rebuild_law_api_collection_replaces_stale_documents(tmp_path, monkeypatch):
+def test_reset_then_index_chunks_batch_replaces_stale_documents(tmp_path, monkeypatch):
     # 실제 컬렉션 삭제/재생성 라운드트립 검증 (임베딩은 MockEmbedding으로 대체해 실제
     # OpenAI 호출 없이 테스트). tmp_path 사용 — Windows에서 TemporaryDirectory()를
     # 직접 쓰면 ChromaDB가 파일 핸들을 쥐고 있어 정리 시 PermissionError가 남을 확인함.
@@ -107,13 +108,14 @@ def test_rebuild_law_api_collection_replaces_stale_documents(tmp_path, monkeypat
 
     chroma_path = str(tmp_path)
 
-    rebuild_law_api_collection(
-        [{"text": "구버전 조문", "file_name": "소득세법 제1조", "metadata": {}}],
-        chroma_path=chroma_path,
+    old_index = reset_law_api_collection(chroma_path=chroma_path)
+    index_chunks_batch(
+        old_index, [{"text": "구버전 조문", "file_name": "소득세법 제1조", "metadata": {}}]
     )
-    rebuild_law_api_collection(
-        [{"text": "신버전 조문", "file_name": "소득세법 제1조", "metadata": {}}],
-        chroma_path=chroma_path,
+
+    new_index = reset_law_api_collection(chroma_path=chroma_path)
+    index_chunks_batch(
+        new_index, [{"text": "신버전 조문", "file_name": "소득세법 제1조", "metadata": {}}]
     )
 
     client = chromadb.PersistentClient(path=chroma_path)
@@ -124,20 +126,56 @@ def test_rebuild_law_api_collection_replaces_stale_documents(tmp_path, monkeypat
     assert all_docs["documents"] == ["신버전 조문"]
 
 
-def test_rebuild_law_api_collection_handles_empty_chunks(tmp_path, monkeypatch):
+def test_index_chunks_batch_can_be_called_multiple_times_without_losing_earlier_batches(
+    tmp_path, monkeypatch
+):
+    # run_pipeline.py는 reset_law_api_collection()을 한 번만 호출하고
+    # index_chunks_batch()를 여러 배치로 나눠서 반복 호출한다 — 이전 배치가
+    # 다음 배치 인덱싱으로 지워지면 안 된다.
     monkeypatch.setattr(Settings, "embed_model", MockEmbedding(embed_dim=8))
     monkeypatch.setattr(Settings, "llm", None)
     import tax_law_pipeline.chunk_and_index as cai
     monkeypatch.setattr(cai, "init_llama_settings", lambda: None)
 
-    rebuild_law_api_collection([], chroma_path=str(tmp_path))
+    chroma_path = str(tmp_path)
+    index = reset_law_api_collection(chroma_path=chroma_path)
+
+    index_chunks_batch(index, [{"text": "첫 배치 문서", "file_name": "a", "metadata": {}}])
+    index_chunks_batch(index, [{"text": "두번째 배치 문서", "file_name": "b", "metadata": {}}])
+
+    client = chromadb.PersistentClient(path=chroma_path)
+    collection = client.get_or_create_collection(LAW_API_COLLECTION_NAME)
+    assert collection.count() == 2
+
+
+def test_reset_law_api_collection_handles_empty_collection(tmp_path, monkeypatch):
+    monkeypatch.setattr(Settings, "embed_model", MockEmbedding(embed_dim=8))
+    monkeypatch.setattr(Settings, "llm", None)
+    import tax_law_pipeline.chunk_and_index as cai
+    monkeypatch.setattr(cai, "init_llama_settings", lambda: None)
+
+    reset_law_api_collection(chroma_path=str(tmp_path))
 
     client = chromadb.PersistentClient(path=str(tmp_path))
     collection = client.get_or_create_collection(LAW_API_COLLECTION_NAME)
     assert collection.count() == 0
 
 
-def test_rebuild_law_api_collection_does_not_swallow_non_notfound_errors(tmp_path, monkeypatch):
+def test_index_chunks_batch_with_empty_list_is_a_no_op(tmp_path, monkeypatch):
+    monkeypatch.setattr(Settings, "embed_model", MockEmbedding(embed_dim=8))
+    monkeypatch.setattr(Settings, "llm", None)
+    import tax_law_pipeline.chunk_and_index as cai
+    monkeypatch.setattr(cai, "init_llama_settings", lambda: None)
+
+    index = reset_law_api_collection(chroma_path=str(tmp_path))
+    index_chunks_batch(index, [])
+
+    client = chromadb.PersistentClient(path=str(tmp_path))
+    collection = client.get_or_create_collection(LAW_API_COLLECTION_NAME)
+    assert collection.count() == 0
+
+
+def test_reset_law_api_collection_does_not_swallow_non_notfound_errors(tmp_path, monkeypatch):
     monkeypatch.setattr(Settings, "embed_model", MockEmbedding(embed_dim=8))
     monkeypatch.setattr(Settings, "llm", None)
     import tax_law_pipeline.chunk_and_index as cai
@@ -151,7 +189,4 @@ def test_rebuild_law_api_collection_does_not_swallow_non_notfound_errors(tmp_pat
     # underlying class rather than on PersistentClient itself.
     with patch.object(chromadb.api.client.Client, "delete_collection", raise_permission_error):
         with pytest.raises(PermissionError):
-            rebuild_law_api_collection(
-                [{"text": "x", "file_name": "y", "metadata": {}}],
-                chroma_path=str(tmp_path),
-            )
+            reset_law_api_collection(chroma_path=str(tmp_path))

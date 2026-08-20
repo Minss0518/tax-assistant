@@ -35,12 +35,20 @@ def test_run_orchestrates_search_fetch_filter_chunk_index(monkeypatch):
     def fake_fetch_prec(prec_id, oc):
         return prec_detail if prec_id == "618513" else None
 
+    fake_index = MagicMock()
+    indexed_batches = []
+
+    def fake_index_chunks_batch(index, chunks):
+        assert index is fake_index
+        indexed_batches.append(chunks)
+
     with (
-        patch.object(run_pipeline.law_api_client, "search", side_effect=fake_search) as mock_search,
+        patch.object(run_pipeline.law_api_client, "search", side_effect=fake_search),
         patch.object(run_pipeline.law_api_client, "fetch_law", return_value=law_detail) as mock_fetch_law,
         patch.object(run_pipeline.law_api_client, "fetch_prec", side_effect=fake_fetch_prec) as mock_fetch_prec,
         patch.object(run_pipeline.law_api_client, "fetch_expc", return_value=expc_detail) as mock_fetch_expc,
-        patch.object(run_pipeline, "rebuild_law_api_collection") as mock_rebuild,
+        patch.object(run_pipeline, "reset_law_api_collection", return_value=fake_index) as mock_reset,
+        patch.object(run_pipeline, "index_chunks_batch", side_effect=fake_index_chunks_batch) as mock_index_batch,
     ):
         summary = run_pipeline.run()
 
@@ -48,14 +56,22 @@ def test_run_orchestrates_search_fetch_filter_chunk_index(monkeypatch):
     assert mock_fetch_prec.call_count == 2
     mock_fetch_expc.assert_called_once_with("313517", "test-oc")
 
+    # I3(OOM): 컬렉션 삭제/재생성은 파이프라인 실행당 한 번만 해야 한다.
+    mock_reset.assert_called_once()
+
     assert summary["law_articles"] == 1
     assert summary["prec_cases"] == 1  # 622745는 fetch_prec이 None을 반환해서 제외됨
     assert summary["expc_cases"] == 1
+
+    all_indexed_chunks = [chunk for batch in indexed_batches for chunk in batch]
+    assert len(all_indexed_chunks) == 3  # law 1건 + prec 1건 + expc 1건
     assert summary["total_chunks"] == 3
 
-    mock_rebuild.assert_called_once()
-    passed_chunks = mock_rebuild.call_args.args[0]
-    assert len(passed_chunks) == 3
+    # I3(OOM): 전체 데이터를 한 번에 메모리에 모아 인덱싱하지 않고, law/prec/expc를
+    # 각각 별도 배치로 나눠 index_chunks_batch를 여러 번 호출해야 한다 — 판례가
+    # 1000건 이상이라 전부 모았다가 한 번에 임베딩하면 무료 호스팅 환경(512MB)에서
+    # 실제로 OOM이 재현됐다.
+    assert mock_index_batch.call_count >= 2
 
 
 def test_run_continues_when_one_fetch_raises_after_exhausting_retries(monkeypatch):
@@ -87,16 +103,66 @@ def test_run_continues_when_one_fetch_raises_after_exhausting_retries(monkeypatc
             raise Exception("network error - retries exhausted")
         return prec_detail
 
+    fake_index = MagicMock()
+
     with (
         patch.object(run_pipeline.law_api_client, "search", side_effect=fake_search),
         patch.object(run_pipeline.law_api_client, "fetch_law", return_value=law_detail),
         patch.object(run_pipeline.law_api_client, "fetch_prec", side_effect=fake_fetch_prec) as mock_fetch_prec,
         patch.object(run_pipeline.law_api_client, "fetch_expc", return_value=expc_detail),
-        patch.object(run_pipeline, "rebuild_law_api_collection") as mock_rebuild,
+        patch.object(run_pipeline, "reset_law_api_collection", return_value=fake_index),
+        patch.object(run_pipeline, "index_chunks_batch") as mock_index_batch,
     ):
         summary = run_pipeline.run()
 
     assert mock_fetch_prec.call_count == 2
     assert summary["prec_cases"] == 1  # 618513은 예외로 제외, 622745만 반영됨
     assert summary["expc_cases"] == 1
-    mock_rebuild.assert_called_once()
+    assert mock_index_batch.call_count >= 1
+
+
+def test_run_indexes_prec_results_in_batches_without_holding_entire_dataset(monkeypatch):
+    # I3(OOM): INDEX_BATCH_SIZE보다 많은 판례가 있으면, 전부 모았다가 한 번에
+    # 인덱싱하는 게 아니라 배치 크기가 찰 때마다 즉시 인덱싱하고 그 배치를
+    # 비워야 한다 — 실제 Render 512MB 무료 인스턴스에서 전체 일괄 인덱싱 방식이
+    # OOM으로 프로세스를 죽이는 것을 확인했다.
+    monkeypatch.setattr(run_pipeline.settings, "LAW_API_OC", "test-oc")
+    monkeypatch.setattr(run_pipeline.time, "sleep", lambda s: None)
+    monkeypatch.setattr(run_pipeline, "INDEX_BATCH_SIZE", 3)
+
+    law_search_result = [
+        {"법령일련번호": "280405", "법령명한글": "소득세법", "법령구분명": "법률"},
+    ]
+    # 배치 크기(3)보다 많은 7건의 판례
+    prec_search_result = [{"판례일련번호": str(i)} for i in range(7)]
+    expc_search_result = []
+
+    law_detail = {"조문": {"조문단위": []}}
+
+    def fake_search(target, query, oc):
+        return {"law": law_search_result, "prec": prec_search_result, "expc": expc_search_result}[target]
+
+    def fake_fetch_prec(prec_id, oc):
+        return {"사건번호": prec_id, "사건명": "x", "판시사항": "", "판결요지": "", "참조조문": ""}
+
+    fake_index = MagicMock()
+    batch_sizes = []
+
+    def fake_index_chunks_batch(index, chunks):
+        if chunks:
+            batch_sizes.append(len(chunks))
+
+    with (
+        patch.object(run_pipeline.law_api_client, "search", side_effect=fake_search),
+        patch.object(run_pipeline.law_api_client, "fetch_law", return_value=law_detail),
+        patch.object(run_pipeline.law_api_client, "fetch_prec", side_effect=fake_fetch_prec),
+        patch.object(run_pipeline, "reset_law_api_collection", return_value=fake_index),
+        patch.object(run_pipeline, "index_chunks_batch", side_effect=fake_index_chunks_batch),
+    ):
+        summary = run_pipeline.run()
+
+    # 7건이 배치 크기 3으로 나뉘면: 3, 3, 1 (마지막 나머지) — 어느 배치도
+    # 배치 크기를 넘지 않아야 한다.
+    assert all(size <= 3 for size in batch_sizes)
+    assert sum(batch_sizes) == 7
+    assert summary["prec_cases"] == 7

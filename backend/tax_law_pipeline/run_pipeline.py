@@ -24,7 +24,7 @@ from tax_law_pipeline.chunk_and_index import (
 from tax_law_pipeline.filter_articles import filter_comprehensive_income_articles
 
 FETCH_SLEEP_SECONDS = 0.15
-INDEX_BATCH_SIZE = 50
+INDEX_BATCH_SIZE = 20
 
 
 def run() -> dict:
@@ -50,8 +50,8 @@ def run() -> dict:
 
     # 컬렉션 삭제/재생성은 파이프라인 실행당 한 번만 한다. 이후 문서 추가는
     # index_chunks_batch()로 작은 배치씩 흘려보낸다.
-    index = reset_law_api_collection()
-    index_chunks_batch(index, law_chunks)
+    vector_store = reset_law_api_collection()
+    index_chunks_batch(vector_store, law_chunks)
 
     total_chunks = len(law_chunks)
 
@@ -75,11 +75,11 @@ def run() -> dict:
         prec_count += 1
         batch.extend(build_prec_chunks([detail]))
         if len(batch) >= INDEX_BATCH_SIZE:
-            index_chunks_batch(index, batch)
+            index_chunks_batch(vector_store, batch)
             total_chunks += len(batch)
             batch = []
     if batch:
-        index_chunks_batch(index, batch)
+        index_chunks_batch(vector_store, batch)
         total_chunks += len(batch)
         batch = []
 
@@ -101,11 +101,11 @@ def run() -> dict:
         expc_count += 1
         batch.extend(build_expc_chunks([detail]))
         if len(batch) >= INDEX_BATCH_SIZE:
-            index_chunks_batch(index, batch)
+            index_chunks_batch(vector_store, batch)
             total_chunks += len(batch)
             batch = []
     if batch:
-        index_chunks_batch(index, batch)
+        index_chunks_batch(vector_store, batch)
         total_chunks += len(batch)
 
     return {
